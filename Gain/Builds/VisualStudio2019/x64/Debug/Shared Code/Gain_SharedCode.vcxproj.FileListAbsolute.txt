@@ -1,0 +1,1 @@
+C:\Users\Jacob\Documents\Juce Projects\Gain\Builds\VisualStudio2019\x64\Debug\Shared Code\Gain.lib
