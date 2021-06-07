@@ -2,11 +2,16 @@
 
 This is a repository of audio plugins made in C++ using the Juce Framework.
 
+The Juce website is here: 
+https://juce.com/
+
 Much inspiration has been taken from The Audio Programmer on Youtube.
 
 His channel can be found here:
 
 https://www.youtube.com/channel/UCpKb02FsH4WH4X_2xhIoJ1A
+
+# 
 
 Since I'm using Reaper on Windows for debugging, the plugin format is VST3.
 
