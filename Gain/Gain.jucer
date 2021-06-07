@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="eL5CtY" name="Gain" projectType="audioplug" useAppConfig="0"
+<JUCERPROJECT id="QOOyw5" name="Gain" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
-              pluginFormats="buildVST3">
-  <MAINGROUP id="i8gEli" name="Gain">
-    <GROUP id="{6FB35993-353B-D9AE-AB88-39A2EFAC64BF}" name="Source">
-      <FILE id="UNvCBU" name="PluginProcessor.cpp" compile="1" resource="0"
+              companyName="JacobCurtis" pluginFormats="buildVST3" pluginVST3Category="Tools">
+  <MAINGROUP id="Jxp2Kw" name="Gain">
+    <GROUP id="{3396E75E-3067-FCF6-8D43-EA9ABD345ED6}" name="Source">
+      <FILE id="TKGVVS" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
-      <FILE id="rEIKZf" name="PluginProcessor.h" compile="0" resource="0"
+      <FILE id="XTFdjC" name="PluginProcessor.h" compile="0" resource="0"
             file="Source/PluginProcessor.h"/>
-      <FILE id="vqNwBT" name="PluginEditor.cpp" compile="1" resource="0"
+      <FILE id="ha9VvQ" name="PluginEditor.cpp" compile="1" resource="0"
             file="Source/PluginEditor.cpp"/>
-      <FILE id="VVOHfC" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+      <FILE id="cptJoL" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
     </GROUP>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>

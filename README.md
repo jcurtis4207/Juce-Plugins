@@ -13,9 +13,11 @@ https://www.youtube.com/channel/UCpKb02FsH4WH4X_2xhIoJ1A
 
 # 
 
-Since I'm using Reaper on Windows for debugging, the plugin format is VST3.
+Since I'm using Reaper on Windows for testing, the plugin format is VST3.
 
 The completed plugin builds are in the VST3_Plugins folder.
+
+Since I'm primarily a Pro Tools user, I will hopefully build them as AAX at some point.
 
 # 
 

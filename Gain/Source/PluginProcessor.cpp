@@ -12,20 +12,23 @@
 //==============================================================================
 GainAudioProcessor::GainAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
-     : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
-                      #endif
-                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
-                     #endif
-                       ),
+    : AudioProcessor(BusesProperties()
+#if ! JucePlugin_IsMidiEffect
+#if ! JucePlugin_IsSynth
+        .withInput("Input", juce::AudioChannelSet::stereo(), true)
+#endif
+        .withOutput("Output", juce::AudioChannelSet::stereo(), true)
+#endif
+    ),
     parameters(*this, nullptr)   // initialize parameters for this processor and no undo manager
 #endif
 {
     // create parameter for gain
     juce::NormalisableRange<float> gainRange(GAIN_RANGE_LOW, GAIN_RANGE_HIGH, GAIN_RANGE_INTERVAL);
-    parameters.createAndAddParameter(std::make_unique<juce::AudioProcessorValueTreeState::Parameter>(GAIN_ID, GAIN_NAME, GAIN_NAME, gainRange, 0.5f, nullptr, nullptr));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioProcessorValueTreeState::Parameter>(GAIN_ID, GAIN_NAME, GAIN_NAME, gainRange, 0.0f, nullptr, nullptr));
+    // create parameter for phase
+    juce::NormalisableRange<float> phaseRange(0.0f, 1.0f, 1.0f);
+    parameters.createAndAddParameter(std::make_unique<juce::AudioProcessorValueTreeState::Parameter>(PHASE_ID, PHASE_NAME, PHASE_NAME, phaseRange, 1.0f, nullptr, nullptr));
     // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
 }
@@ -34,48 +37,42 @@ GainAudioProcessor::~GainAudioProcessor()
 {
 }
 
-void GainAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void GainAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    // before audio begins, get gain value from parameters
-    previousGain =*parameters.getRawParameterValue(GAIN_ID);
-
+    // before audio begins, get gain and phase values from parameters
+    previousGain = *parameters.getRawParameterValue(GAIN_ID);
 }
 
-void GainAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void GainAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
+    auto totalNumInputChannels = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
-    // fetch gain from parameters
+    // fetch gain and phase from parameters
     float currentGain = *parameters.getRawParameterValue(GAIN_ID);
+    phase = *parameters.getRawParameterValue(PHASE_ID);
+    // if phase is flipped (0) need to multiply gain by -1
+    int phaseCoefficient = (phase == 1.0f) ? 1 : -1;
+
     // clear the buffer
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
+        buffer.clear(i, 0, buffer.getNumSamples());
 
+    // convert gain values from dBFS to 0-1 float gain values
+    // multiply phase * gain for inversion
     // if gain value is changed before playing, smoothly ramp from old to new
     if (currentGain == previousGain)
     {
-        buffer.applyGain(juce::Decibels::decibelsToGain(currentGain));
+        buffer.applyGain(juce::Decibels::decibelsToGain(currentGain) * phaseCoefficient);
     }
     else
-    {   // convert gain values from dBFS to 0-1 float gain values
-        buffer.applyGainRamp(0, buffer.getNumSamples(), juce::Decibels::decibelsToGain(previousGain), juce::Decibels::decibelsToGain(currentGain));
+    {
+        buffer.applyGainRamp(0, buffer.getNumSamples(), juce::Decibels::decibelsToGain(previousGain), juce::Decibels::decibelsToGain(currentGain) * phaseCoefficient);
         previousGain = currentGain;
     }
-
-    // old way to manually changed sample gain based on slider value
-    /*for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-
-        for (int sample = 0; sample < buffer.getNumSamples(); sample++) 
-        {
-            channelData[sample] = channelData[sample] * juce::Decibels::decibelsToGain(gain);
-        }
-    }*/
 }
 
-void GainAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+void GainAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
     // create xml with state information
     std::unique_ptr <juce::XmlElement> outputXml(parameters.state.createXml());
@@ -83,7 +80,7 @@ void GainAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     copyXmlToBinary(*outputXml, destData);
 }
 
-void GainAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void GainAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
     // create xml from binary
     std::unique_ptr<juce::XmlElement> inputXml(getXmlFromBinary(data, sizeInBytes));
