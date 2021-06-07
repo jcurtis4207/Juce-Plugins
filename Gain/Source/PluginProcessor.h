@@ -11,8 +11,8 @@
 #include <JuceHeader.h>
 #define GAIN_ID "gain"
 #define GAIN_NAME "Gain"
-#define GAIN_RANGE_LOW -60.0f
-#define GAIN_RANGE_HIGH 0.0f
+#define GAIN_RANGE_LOW -30.0f
+#define GAIN_RANGE_HIGH 30.0f
 #define GAIN_RANGE_INTERVAL 0.5f
 #define PHASE_ID "phase"
 #define PHASE_NAME "Phase"

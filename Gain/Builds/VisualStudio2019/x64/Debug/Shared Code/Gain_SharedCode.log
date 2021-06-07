@@ -1,10 +1,94 @@
 ﻿  PluginEditor.cpp
   PluginProcessor.cpp
+C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(62,129): warning C4244: 'argument': conversion from 'ValueType' to 'ValueType', possible loss of data
+          with
+          [
+              ValueType=int
+          ]
+          and
+          [
+              ValueType=float
+          ] (compiling source file ..\..\Source\PluginProcessor.cpp)
+C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(62,105): warning C4244: 'argument': conversion from 'ValueType' to 'ValueType', possible loss of data
+          with
+          [
+              ValueType=int
+          ]
+          and
+          [
+              ValueType=float
+          ] (compiling source file ..\..\Source\PluginProcessor.cpp)
+C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(62,82): warning C4244: 'argument': conversion from 'ValueType' to 'ValueType', possible loss of data
+          with
+          [
+              ValueType=int
+          ]
+          and
+          [
+              ValueType=float
+          ] (compiling source file ..\..\Source\PluginProcessor.cpp)
+C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(62,63): warning C4244: 'argument': conversion from 'ValueType' to 'ValueType', possible loss of data
+          with
+          [
+              ValueType=int
+          ]
+          and
+          [
+              ValueType=float
+          ] (compiling source file ..\..\Source\PluginProcessor.cpp)
+C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(73,71): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data (compiling source file ..\..\Source\PluginProcessor.cpp)
+C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(56,139): warning C4100: 'isButtonClicked': unreferenced formal parameter (compiling source file ..\..\Source\PluginProcessor.cpp)
+C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(56,115): warning C4100: 'isMouseOverButton': unreferenced formal parameter (compiling source file ..\..\Source\PluginProcessor.cpp)
+C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(56,92): warning C4100: 'backgroundColour': unreferenced formal parameter (compiling source file ..\..\Source\PluginProcessor.cpp)
+C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(76,99): warning C4100: 'isButtonClicked': unreferenced formal parameter (compiling source file ..\..\Source\PluginProcessor.cpp)
+C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(76,75): warning C4100: 'isMouseOverButton': unreferenced formal parameter (compiling source file ..\..\Source\PluginProcessor.cpp)
 C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginProcessor.cpp(40,63): warning C4100: 'samplesPerBlock': unreferenced formal parameter
 C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginProcessor.cpp(40,47): warning C4100: 'sampleRate': unreferenced formal parameter
 C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginProcessor.cpp(46,91): warning C4100: 'midiMessages': unreferenced formal parameter
 C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginProcessor.cpp(151,48): warning C4100: 'index': unreferenced formal parameter
 C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginProcessor.cpp(155,59): warning C4100: 'index': unreferenced formal parameter
 C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginProcessor.cpp(160,75): warning C4100: 'newName': unreferenced formal parameter
+C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(62,129): warning C4244: 'argument': conversion from 'ValueType' to 'ValueType', possible loss of data
+          with
+          [
+              ValueType=int
+          ]
+          and
+          [
+              ValueType=float
+          ] (compiling source file ..\..\Source\PluginEditor.cpp)
+C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(62,105): warning C4244: 'argument': conversion from 'ValueType' to 'ValueType', possible loss of data
+          with
+          [
+              ValueType=int
+          ]
+          and
+          [
+              ValueType=float
+          ] (compiling source file ..\..\Source\PluginEditor.cpp)
 C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginProcessor.cpp(160,48): warning C4100: 'index': unreferenced formal parameter
+C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(62,82): warning C4244: 'argument': conversion from 'ValueType' to 'ValueType', possible loss of data
+          with
+          [
+              ValueType=int
+          ]
+          and
+          [
+              ValueType=float
+          ] (compiling source file ..\..\Source\PluginEditor.cpp)
+C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(62,63): warning C4244: 'argument': conversion from 'ValueType' to 'ValueType', possible loss of data
+          with
+          [
+              ValueType=int
+          ]
+          and
+          [
+              ValueType=float
+          ] (compiling source file ..\..\Source\PluginEditor.cpp)
+C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(73,71): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data (compiling source file ..\..\Source\PluginEditor.cpp)
+C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(56,139): warning C4100: 'isButtonClicked': unreferenced formal parameter (compiling source file ..\..\Source\PluginEditor.cpp)
+C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(56,115): warning C4100: 'isMouseOverButton': unreferenced formal parameter (compiling source file ..\..\Source\PluginEditor.cpp)
+C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(56,92): warning C4100: 'backgroundColour': unreferenced formal parameter (compiling source file ..\..\Source\PluginEditor.cpp)
+C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(76,99): warning C4100: 'isButtonClicked': unreferenced formal parameter (compiling source file ..\..\Source\PluginEditor.cpp)
+C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(76,75): warning C4100: 'isMouseOverButton': unreferenced formal parameter (compiling source file ..\..\Source\PluginEditor.cpp)
   Gain_SharedCode.vcxproj -> C:\Users\Jacob\Documents\Juce Projects\Gain\Builds\VisualStudio2019\x64\Debug\Shared Code\Gain.lib

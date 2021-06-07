@@ -16,18 +16,16 @@ GainAudioProcessorEditor::GainAudioProcessorEditor(GainAudioProcessor& p)
     // setup slider
     gainSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);   // set slider to rotary
     gainSlider.setRange(GAIN_RANGE_LOW, GAIN_RANGE_HIGH, 0.01f);                // set range, and increment is overridden by parameter
-    gainSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 80, 20);       // move text box to bottom, set readonly, set size
     gainSlider.setBounds(80, 80, 80, 80);                                       // set bounds of slider
+    gainSlider.setLookAndFeel(&gainLookAndFeel);                                // set custom appearance
     gainSlider.addListener(this);                                               // apply listener to slider
     addAndMakeVisible(gainSlider);
     // attach slider to parameter via GAIN_ID
     sliderAttach.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, GAIN_ID, gainSlider));
     // setup button
     phaseButton.setButtonText(juce::CharPointer_UTF8("\xc3\x98"));  // set button text - unicode U+00D8 -> ascii -> hex = \xc3\x98
-    phaseButton.setClickingTogglesState(true);                      // make button a toggle
     phaseButton.setBounds(20, 80, 30, 30);                          // set bounds and size of button
-    phaseButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0xff87ceeb));  // when phase is flipped, set background to bright blue
-    phaseButton.setColour(juce::TextButton::textColourOffId, juce::Colours::black);     // when phase is flipped, set text to black
+    phaseButton.setLookAndFeel(&gainLookAndFeel);                   // set custom appearance
     phaseButton.addListener(this);                                  // apply listener to button
     addAndMakeVisible(phaseButton);
     // attach button to parameter via PHASE_ID
@@ -39,6 +37,7 @@ GainAudioProcessorEditor::GainAudioProcessorEditor(GainAudioProcessor& p)
 
 GainAudioProcessorEditor::~GainAudioProcessorEditor()
 {
+    // bad things happen if look and feel isn't reset here
     setLookAndFeel(nullptr);
 }
 
