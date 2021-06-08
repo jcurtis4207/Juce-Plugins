@@ -29,8 +29,9 @@ public:
         auto angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
 
         // setup textbox
-        slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);      // move text box to bottom, set not readonly, set size
+        slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 70, 20);      // move text box to bottom, set not readonly, set size
         slider.setTextValueSuffix(" dB");                                       // add 'dB' to slider value
+        slider.setColour(juce::Slider::textBoxOutlineColourId, findColour(juce::Slider::textBoxBackgroundColourId));    // set textbox outline to background color
 
         // set knob fill color
         g.setColour(juce::Colour(0xfff0f0f0));
@@ -58,7 +59,7 @@ public:
         button.setClickingTogglesState(true);
         // get dimensions
         auto buttonArea = button.getLocalBounds();
-        juce::Rectangle<float> buttonRectangle(buttonArea.getX(), buttonArea.getY(), buttonArea.getWidth(), buttonArea.getHeight());
+        juce::Rectangle<float> buttonRectangle = buttonArea.toFloat();
         // set background color based on toggle state
         if (button.getToggleState())
         {
@@ -66,7 +67,7 @@ public:
         }
         else
         {
-            g.setColour(juce::Colour(0xff87ceeb));  // if phase is flipped set background to bright blue
+            g.setColour(juce::Colour(0xff65c9f2));  // if phase is flipped set background to bright blue
         }
         // create circle via rounded rectange
         g.fillRoundedRectangle(buttonRectangle, buttonArea.getWidth() / 2);
@@ -122,10 +123,11 @@ public:
     std::unique_ptr <juce::AudioProcessorValueTreeState::ButtonAttachment> buttonAttach;
 
 private:
-    // define slider
+    // define components
     juce::Slider gainSlider;
-    // define phase button
+    juce::Label gainLabel;
     juce::TextButton phaseButton;
+    juce::Label phaseLabel;
     // define look and feel object
     GainLookAndFeel gainLookAndFeel;
 

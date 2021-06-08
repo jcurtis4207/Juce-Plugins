@@ -16,20 +16,30 @@ GainAudioProcessorEditor::GainAudioProcessorEditor(GainAudioProcessor& p)
     // setup slider
     gainSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);   // set slider to rotary
     gainSlider.setRange(GAIN_RANGE_LOW, GAIN_RANGE_HIGH, 0.01f);                // set range, and increment is overridden by parameter
-    gainSlider.setBounds(80, 80, 80, 80);                                       // set bounds of slider
+    gainSlider.setBounds(80, 80, 80, 80);                                       // set bounds and size
     gainSlider.setLookAndFeel(&gainLookAndFeel);                                // set custom appearance
     gainSlider.addListener(this);                                               // apply listener to slider
     addAndMakeVisible(gainSlider);
     // attach slider to parameter via GAIN_ID
     sliderAttach.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, GAIN_ID, gainSlider));
+    // setup gain label
+    gainLabel.setText("Gain", juce::NotificationType::dontSendNotification);    // set label text
+    gainLabel.setJustificationType(juce::Justification::centred);               // set center justification
+    gainLabel.setBounds(80, 60, 80, 20);                                        // set bounds and size
+    addAndMakeVisible(gainLabel);
     // setup button
     phaseButton.setButtonText(juce::CharPointer_UTF8("\xc3\x98"));  // set button text - unicode U+00D8 -> ascii -> hex = \xc3\x98
-    phaseButton.setBounds(20, 80, 30, 30);                          // set bounds and size of button
+    phaseButton.setBounds(35, 90, 30, 30);                          // set bounds and size of button
     phaseButton.setLookAndFeel(&gainLookAndFeel);                   // set custom appearance
     phaseButton.addListener(this);                                  // apply listener to button
     addAndMakeVisible(phaseButton);
     // attach button to parameter via PHASE_ID
     buttonAttach.reset(new juce::AudioProcessorValueTreeState::ButtonAttachment(audioProcessor.parameters, PHASE_ID, phaseButton));
+    // setup phase label
+    phaseLabel.setText("Phase", juce::NotificationType::dontSendNotification);  // set label text
+    phaseLabel.setJustificationType(juce::Justification::centred);              // set center justification
+    phaseLabel.setBounds(20, 60, 60, 20);                                       // set bounds and size
+    addAndMakeVisible(phaseLabel);
 
     // set default plugin window size
     setSize(200, 300);
