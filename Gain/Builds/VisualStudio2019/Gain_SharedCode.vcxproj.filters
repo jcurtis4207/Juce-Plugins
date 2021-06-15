@@ -2490,6 +2490,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Source\GainLookAndFeel.h">
+      <Filter>Gain\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Meter.h">
+      <Filter>Gain\Source</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\Source\PluginProcessor.h">
       <Filter>Gain\Source</Filter>
     </ClInclude>

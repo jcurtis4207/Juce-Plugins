@@ -1,8 +1,0 @@
-﻿  PluginEditor.cpp
-C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(73,71): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(56,139): warning C4100: 'isButtonClicked': unreferenced formal parameter
-C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(56,115): warning C4100: 'isMouseOverButton': unreferenced formal parameter
-C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(56,92): warning C4100: 'backgroundColour': unreferenced formal parameter
-C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(76,99): warning C4100: 'isButtonClicked': unreferenced formal parameter
-C:\Users\Jacob\Documents\Juce Projects\Gain\Source\PluginEditor.h(76,75): warning C4100: 'isMouseOverButton': unreferenced formal parameter
-  Gain_SharedCode.vcxproj -> C:\Users\Jacob\Documents\Juce Projects\Gain\Builds\VisualStudio2019\x64\Debug\Shared Code\Gain.lib
