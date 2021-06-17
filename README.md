@@ -25,6 +25,12 @@ The highpass and lowpass filters have optional slopes of 12, 24, and 36dB/Oct.
 The high and low shelf bands can be switched to a bell, and two fully parametric bands.
 All of the bands have access to the entire frequency spectrum.
 
+### Tilt-eq
+A tilting equalizer, similar to the Tonelux Tilt.
+It uses a high and low shelf with a fixed Q and inverse gain.
+As the tilt knob turns clockwise, the high shelf increases and the low shelf decreases, and visa versa for the other direction.
+There is also a frequency control to adjust where the tilt occurs.
+
 ### Modules
 Various modular components that can be easily added to a plugin. Includes:
 * DualFilter - a dsp module with highpass and lowpass filters
