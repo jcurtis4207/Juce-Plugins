@@ -1,15 +1,8 @@
 # Juce-Plugins
 
-This is a repository of audio plugins made in C++ using the Juce Framework.
+This is a collection of audio plugins made in C++ using the [Juce](https://juce.com) Framework.
 
-The Juce website is here: 
-https://juce.com/
-
-Much inspiration has been taken from The Audio Programmer on Youtube.
-
-His channel can be found here:
-
-https://www.youtube.com/channel/UCpKb02FsH4WH4X_2xhIoJ1A
+Much inspiration has been taken from [The Audio Programmer](https://www.youtube.com/channel/UCpKb02FsH4WH4X_2xhIoJ1A) on Youtube.
 
 # 
 
