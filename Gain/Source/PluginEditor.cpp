@@ -15,7 +15,6 @@ GainAudioProcessorEditor::GainAudioProcessorEditor(GainAudioProcessor& p)
 {
     // setup slider
     gainSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
-    gainSlider.setRange(audioProcessor.gainRangeLow, audioProcessor.gainRangeHigh, audioProcessor.gainRangeInterval);
     gainSlider.setBounds(gainSliderBounds);
     gainSlider.setLookAndFeel(&gainLookAndFeel);
     gainSlider.addListener(this);
