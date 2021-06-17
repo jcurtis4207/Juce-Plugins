@@ -1,0 +1,1 @@
+C:\Users\Jacob\Documents\Juce Projects\E-eq\Builds\VisualStudio2019\x64\Debug\VST3\E-eq.vst3

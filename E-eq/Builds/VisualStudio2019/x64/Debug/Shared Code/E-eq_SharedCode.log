@@ -1,0 +1,13 @@
+﻿  PluginEditor.cpp
+C:\Users\Jacob\Documents\Juce Projects\E-eq\Source\PluginProcessor.h(49,32): warning C4100: 'index': unreferenced formal parameter
+C:\Users\Jacob\Documents\Juce Projects\E-eq\Source\PluginProcessor.h(50,43): warning C4100: 'index': unreferenced formal parameter
+C:\Users\Jacob\Documents\Juce Projects\E-eq\Source\PluginProcessor.h(51,59): warning C4100: 'newName': unreferenced formal parameter
+C:\Users\Jacob\Documents\Juce Projects\E-eq\Source\PluginProcessor.h(51,32): warning C4100: 'index': unreferenced formal parameter
+C:\Users\Jacob\Documents\Juce Projects\E-eq\Source\EqLookAndFeel.h(27,95): warning C4100: 'tip': unreferenced formal parameter
+C:\Users\Jacob\Documents\Juce Projects\E-eq\Source\EqLookAndFeel.h(27,63): warning C4100: 'comp': unreferenced formal parameter
+C:\Users\Jacob\Documents\Juce Projects\E-eq\Source\EqLookAndFeel.h(64,139): warning C4100: 'isButtonClicked': unreferenced formal parameter
+C:\Users\Jacob\Documents\Juce Projects\E-eq\Source\EqLookAndFeel.h(64,115): warning C4100: 'isMouseOverButton': unreferenced formal parameter
+C:\Users\Jacob\Documents\Juce Projects\E-eq\Source\EqLookAndFeel.h(64,92): warning C4100: 'backgroundColour': unreferenced formal parameter
+C:\Users\Jacob\Documents\Juce Projects\E-eq\Source\EqLookAndFeel.h(86,99): warning C4100: 'isButtonClicked': unreferenced formal parameter
+C:\Users\Jacob\Documents\Juce Projects\E-eq\Source\EqLookAndFeel.h(86,75): warning C4100: 'isMouseOverButton': unreferenced formal parameter
+  E-eq_SharedCode.vcxproj -> C:\Users\Jacob\Documents\Juce Projects\E-eq\Builds\VisualStudio2019\x64\Debug\Shared Code\E-eq.lib

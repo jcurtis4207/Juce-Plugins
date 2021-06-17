@@ -25,10 +25,10 @@ My ultimate goal for this is to be able to mix an entire song using only plugins
 
 These are the plugins I think are necessary (though I'm not sure how many will be doable):
 
-* Phase Inversion
-* Metering and Spectrum
-* Filter (highpass and lowpass)
-* Parametric Equalizer
+* <s>Phase Inversion</s>
+* <s>Metering</s> and Spectrum
+* <s>Filter (highpass and lowpass)</s>
+* <s>Parametric Equalizer</s>
 * Compressor (with Sidechain)
 * Limiter
 * Clipper
