@@ -27,6 +27,7 @@ All of the bands have access to the entire frequency spectrum.
 
 ### Modules
 Various modular components that can be easily added to a plugin. Includes:
+* DualFilter - a dsp module with highpass and lowpass filters
 * Meter - A simple stereo level meter
 
 #

@@ -91,6 +91,7 @@ EeqAudioProcessorEditor::EeqAudioProcessorEditor(EeqAudioProcessor& p)
 
 EeqAudioProcessorEditor::~EeqAudioProcessorEditor()
 {
+	setLookAndFeel(nullptr);
 }
 
 void EeqAudioProcessorEditor::paint(juce::Graphics& g)
