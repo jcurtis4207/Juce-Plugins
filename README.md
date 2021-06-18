@@ -25,6 +25,9 @@ The highpass and lowpass filters have optional slopes of 12, 24, and 36dB/Oct.
 The high and low shelf bands can be switched to a bell, and two fully parametric bands.
 All of the bands have access to the entire frequency spectrum.
 
+### Limiter
+A ripoff of the L1 limiter. I think the layout of the L1 is the best out there, so I haven't tried to reinvent the wheel (yet).
+
 ### Tilt-eq
 A tilting equalizer, similar to the Tonelux Tilt.
 It uses a high and low shelf with a fixed Q and inverse gain.
@@ -47,7 +50,7 @@ These are the plugins I think are necessary (though I'm not sure how many will b
 * <s>Filter (highpass and lowpass)</s>
 * <s>Parametric Equalizer</s>
 * Compressor (with Sidechain)
-* Limiter
+* <s>Limiter</s>
 * Expander/Gate
 * Clipper
 * Distortion
