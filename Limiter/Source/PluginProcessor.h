@@ -40,8 +40,8 @@ public:
     // object for parameters
     juce::AudioProcessorValueTreeState parameters;
     // variables for meter
-    float bufferMagnitudeL{ 0.0f };
-    float bufferMagnitudeR{ 0.0f };
+    float bufferMagnitudeIn{ 0.0f };
+    float bufferMagnitudeOut{ 0.0f };
 
 private:
     // variables for limiter

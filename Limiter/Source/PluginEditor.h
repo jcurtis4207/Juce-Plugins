@@ -34,8 +34,9 @@ private:
     bool linkFlag{ false };
     // create look and feel
     LimiterLookAndFeel limiterLookAndFeel;
-    // create meter object
-    Meter meter;
+    // create meter objects
+    Meter inputMeter;
+    Meter outputMeter;
     // function for trim knob to modify parameters
     void sliderValueChanged(juce::Slider* slider);
 

@@ -11,7 +11,7 @@
 #include "PluginEditor.h"
 
 LimiterAudioProcessorEditor::LimiterAudioProcessorEditor(LimiterAudioProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p), meter(audioProcessor.bufferMagnitudeL, audioProcessor.bufferMagnitudeR)
+    : AudioProcessorEditor(&p), audioProcessor(p), inputMeter(audioProcessor.bufferMagnitudeIn), outputMeter(audioProcessor.bufferMagnitudeOut)
 {
     // threshold
     thresholdSlider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
@@ -61,10 +61,11 @@ LimiterAudioProcessorEditor::LimiterAudioProcessorEditor(LimiterAudioProcessor& 
         audioProcessor.parameters.getParameter("ceiling")->endChangeGesture();
         linkKnob.setValue(0.0f);
     };
-    // meter
-    addAndMakeVisible(meter);
+    // meters
+    addAndMakeVisible(inputMeter);
+    addAndMakeVisible(outputMeter);
 
-    setSize(350, 270);
+    setSize(350, 300);
 }
 
 LimiterAudioProcessorEditor::~LimiterAudioProcessorEditor()
@@ -82,16 +83,17 @@ void LimiterAudioProcessorEditor::resized()
     int startXPosition = 20;
     int yPosition = 40;
     int sliderWidth = 50;
-    int sliderHeight = 200;
+    int sliderHeight = 225;
     thresholdSlider.setBounds(startXPosition, yPosition, sliderWidth, sliderHeight);
     thresholdLabel.setBounds(thresholdSlider.getX() - 10, thresholdSlider.getY() - 20, 70, 20);
-    ceilingSlider.setBounds(startXPosition + 100, yPosition, sliderWidth, sliderHeight);
+    ceilingSlider.setBounds(startXPosition + 150, yPosition, sliderWidth, sliderHeight);
     ceilingLabel.setBounds(ceilingSlider.getX() - 10, ceilingSlider.getY() - 20, 70, 20);
-    releaseSlider.setBounds(startXPosition + 170, yPosition, sliderWidth, sliderHeight);
+    releaseSlider.setBounds(startXPosition + 250, yPosition, sliderWidth, sliderHeight);
     releaseLabel.setBounds(releaseSlider.getX() - 10, releaseSlider.getY() - 20, 70, 20);
-    linkKnob.setBounds(startXPosition + 65, 130, 20, 20);
+    linkKnob.setBounds(startXPosition + 115, 130, 20, 20);
     linkLabel.setBounds(linkKnob.getX() - 25, linkKnob.getY() - 20, 70, 20);
-    meter.setBounds(startXPosition + 240, yPosition - 20, meter.getMeterWidth(), meter.getMeterHeight());
+    inputMeter.setBounds(thresholdSlider.getRight(), yPosition, outputMeter.getMeterWidth(), outputMeter.getMeterHeight());
+    outputMeter.setBounds(ceilingSlider.getRight(), yPosition, outputMeter.getMeterWidth(), outputMeter.getMeterHeight());
 }
 
 void LimiterAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)

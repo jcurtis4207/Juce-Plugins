@@ -54,6 +54,8 @@ void LimiterAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
+    // get buffer input magnitude for meter
+    bufferMagnitudeIn = buffer.getMagnitude(0, buffer.getNumSamples());
     // update limiter
     updateLimiterValues(parameters);
     // initialize dsp audio blocks
@@ -65,9 +67,8 @@ void LimiterAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     // process the blocks
     leftChain.process(leftContext);
     rightChain.process(rightContext);
-    // get buffer magnitudes for meter
-    bufferMagnitudeL = buffer.getMagnitude(0, 0, buffer.getNumSamples());
-    bufferMagnitudeR = buffer.getMagnitude((totalNumInputChannels > 1) ? 1 : 0, 0, buffer.getNumSamples());
+    // get buffer output magnitude for meter
+    bufferMagnitudeOut = buffer.getMagnitude(0, buffer.getNumSamples());
 }
 
 void LimiterAudioProcessor::getStateInformation(juce::MemoryBlock& destData)

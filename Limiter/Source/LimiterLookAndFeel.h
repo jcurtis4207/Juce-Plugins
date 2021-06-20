@@ -49,26 +49,30 @@ public:
     void drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPos,
         const float rotaryStartAngle, const float rotaryEndAngle, juce::Slider& slider) override
     {
+        float xFloat = (float)x;
+        float yFloat = (float)y;
+        float widthFloat = (float)width;
+        float heightFloat = (float)height;
         // disable textbox
         slider.setTextBoxStyle(juce::Slider::NoTextBox, true, 0, 0);
         // fill knob
         g.setColour(juce::Colours::grey);
-        g.fillRoundedRectangle(x, y, width, height, 3.0f);
+        g.fillRoundedRectangle(xFloat, yFloat, widthFloat, heightFloat, 3.0f);
         // draw outline
         g.setColour(juce::Colours::black);
-        g.drawRoundedRectangle(x, y, width, height, 3.0f, 1.0f);
+        g.drawRoundedRectangle(xFloat, yFloat, widthFloat, heightFloat, 3.0f, 1.0f);
         // draw triangles
         g.setColour(juce::Colours::white);
         juce::Path leftTriangle;
-        leftTriangle.startNewSubPath(width / 2 - 1, y + 7);
-        leftTriangle.lineTo(width / 2 - 1, height - 7);
-        leftTriangle.lineTo(x + 5, height / 2);
+        leftTriangle.startNewSubPath(widthFloat / 2 - 1, yFloat + 7);
+        leftTriangle.lineTo(widthFloat / 2 - 1, heightFloat - 7);
+        leftTriangle.lineTo(xFloat + 5, heightFloat / 2);
         leftTriangle.closeSubPath();
         g.fillPath(leftTriangle);
         juce::Path rightTriangle;
-        rightTriangle.startNewSubPath(width / 2 + 1, y + 7);
-        rightTriangle.lineTo(width / 2 + 1, height - 7);
-        rightTriangle.lineTo(width - 5, height / 2);
+        rightTriangle.startNewSubPath(widthFloat / 2 + 1, yFloat + 7);
+        rightTriangle.lineTo(widthFloat / 2 + 1, heightFloat - 7);
+        rightTriangle.lineTo(widthFloat - 5, heightFloat / 2);
         rightTriangle.closeSubPath();
         g.fillPath(rightTriangle);
     }
