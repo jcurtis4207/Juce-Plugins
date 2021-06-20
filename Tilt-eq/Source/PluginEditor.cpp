@@ -28,13 +28,13 @@ TilteqAudioProcessorEditor::TilteqAudioProcessorEditor(TilteqAudioProcessor& p)
     gainAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "gain", gainKnob);
     // setup labels
     freqLabel.setText("Freq", juce::NotificationType::dontSendNotification);
-    freqLabel.setFont(freqLabel.getFont().withHeight(12));
+    freqLabel.setFont(12.0f);
     freqLabel.setColour(juce::Label::ColourIds::textColourId, juce::Colours::grey);
     freqLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(freqLabel);
     freqLabel.setBounds(freqKnob.getX(), freqKnob.getBottom(), 50, 20);
     gainLabel.setText("Tilt", juce::NotificationType::dontSendNotification);
-    gainLabel.setFont(gainLabel.getFont().withHeight(12));
+    gainLabel.setFont(12.0f);
     gainLabel.setColour(juce::Label::ColourIds::textColourId, juce::Colours::grey);
     gainLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(gainLabel);

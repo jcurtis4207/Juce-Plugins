@@ -17,7 +17,7 @@ EeqAudioProcessorEditor::EeqAudioProcessorEditor(EeqAudioProcessor& p)
     for (int i = 0; i < 14; i++)
     {
         knobLabels[i].setText(knobLabelText[i], juce::NotificationType::dontSendNotification);
-        knobLabels[i].setFont(knobLabels[i].getFont().withHeight(12));
+        knobLabels[i].setFont(12.0f);
         knobLabels[i].setColour(juce::Label::ColourIds::textColourId, juce::Colours::grey);
         knobLabels[i].setJustificationType(juce::Justification::centred);
         addAndMakeVisible(knobLabels[i]);

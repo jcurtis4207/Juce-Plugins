@@ -53,7 +53,7 @@ public:
         g.setColour(outlineColor);
         g.drawRect(meterOutlineBounds, 1);
         // draw scale markings
-        g.setFont(g.getCurrentFont().withHeight(markFontHeight));
+        g.setFont(markFontHeight);
         for (const int& mark : marksText)
         {
             int markYPosition = (int)round(1 + meterYPosition + meterTotalHeight * (mark * 1.0 / meterBottomLevel));
