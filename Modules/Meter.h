@@ -103,11 +103,11 @@ public:
         g.setFont(g.getCurrentFont().withHeight(markFontHeight));
         for (const int& mark : marksText)
         {
-            int markYPosition = (int)round(meterYPosition + meterTotalHeight * (mark * 1.0 / meterBottomLevel));
+            int markYPosition = (int)round(1 + meterYPosition + meterTotalHeight * (mark * 1.0 / meterBottomLevel));
             g.setColour(markTextColor);
             g.drawText(juce::String(mark), markTextXPosition, (int)(markYPosition - markFontHeight / 2) - 1, 20, 10, juce::Justification::centred, false);
             g.setColour(markTickColor);
-            g.drawRect(markTickXPosition, markYPosition, 4, 1);
+            g.drawRect(markTickXPosition, markYPosition - 1, 4, 1);
         }
         // get magnitude from processor
         float bufferLevel[2] = { *bufferMagnitudeL, *bufferMagnitudeR };
