@@ -19,10 +19,8 @@ GainAudioProcessorEditor::GainAudioProcessorEditor(GainAudioProcessor& p)
     gainSlider.setLookAndFeel(&gainLookAndFeel);
     gainSlider.addListener(this);
     addAndMakeVisible(gainSlider);
-    // attach slider to parameter via gain id
     sliderAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "gain", gainSlider);
     // setup gain label
-    gainLabel.setText("Gain", juce::NotificationType::dontSendNotification);
     gainLabel.setJustificationType(juce::Justification::centred);
     gainLabel.setBounds(gainLabelBounds);
     addAndMakeVisible(gainLabel);
@@ -32,10 +30,8 @@ GainAudioProcessorEditor::GainAudioProcessorEditor(GainAudioProcessor& p)
     phaseButton.setLookAndFeel(&gainLookAndFeel);
     phaseButton.onClick = [&]() { /* toggle phase */ audioProcessor.phase = (audioProcessor.phase == 0.0f) ? 1.0f : 0.0f; };
     addAndMakeVisible(phaseButton);
-    // attach button to parameter via phase id
     buttonAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.parameters, "phase", phaseButton);
     // setup phase label
-    phaseLabel.setText("Phase", juce::NotificationType::dontSendNotification);
     phaseLabel.setJustificationType(juce::Justification::centred);
     phaseLabel.setBounds(phaseLabelBounds);
     addAndMakeVisible(phaseLabel);
@@ -48,14 +44,15 @@ GainAudioProcessorEditor::GainAudioProcessorEditor(GainAudioProcessor& p)
 
 GainAudioProcessorEditor::~GainAudioProcessorEditor()
 {
-    // bad things happen if look and feel isn't reset here
     setLookAndFeel(nullptr);
 }
 
 void GainAudioProcessorEditor::paint(juce::Graphics& g)
 {
-    // fill background with dark grey (argb)
     g.fillAll(juce::Colour(0xff121212));
+    // create powerlines
+    powerLine.drawPowerLine(g, 75.0f, 10.0f, 105.0f, 25.0f, 8, 0, "Jacob Curtis");
+    powerLine.drawPowerLine(g, 10.0f, 10.0f, 60.0f, 25.0f, 4, 0, "GAIN");
 }
 
 // listener override for slider

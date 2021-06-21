@@ -12,6 +12,7 @@
 #include "PluginProcessor.h"
 #include "Meter.h"
 #include "GainLookAndFeel.h"
+#include "PowerLine.h"
 
 class GainAudioProcessorEditor : public juce::AudioProcessorEditor, public juce::Slider::Listener
 {
@@ -31,9 +32,9 @@ private:
     Meter meter;
     // define components
     juce::Slider gainSlider;
-    juce::Label gainLabel;
+    juce::Label gainLabel{ "Gain" };
     juce::TextButton phaseButton;
-    juce::Label phaseLabel;
+    juce::Label phaseLabel{ "Phase" };
     // define parameter attachments
     std::unique_ptr <juce::AudioProcessorValueTreeState::SliderAttachment> sliderAttach;
     std::unique_ptr <juce::AudioProcessorValueTreeState::ButtonAttachment> buttonAttach;
@@ -49,9 +50,11 @@ private:
     const juce::Rectangle<int> gainLabelBounds{ gainXPosition, gainYPosition - labelHeight, gainSliderWidth, labelHeight };
     const juce::Rectangle<int> phaseButtonBounds{ phaseXPosition, phaseYPosition, phaseButtonWidth, phaseButtonWidth };
     const juce::Rectangle<int> phaseLabelBounds{ phaseXPosition - 15, phaseYPosition - labelHeight, 60, labelHeight };
-    const juce::Rectangle<int> meterBounds{ 120, 40, meter.getMeterWidth(), meter.getMeterHeight() };
+    const juce::Rectangle<int> meterBounds{ 120, 50, meter.getMeterWidth(), meter.getMeterHeight() };
     // create look and feel object
     GainLookAndFeel gainLookAndFeel;
+    // create powerline object
+    PowerLine powerLine;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GainAudioProcessorEditor)
 };
