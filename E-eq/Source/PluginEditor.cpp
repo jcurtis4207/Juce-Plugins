@@ -86,7 +86,7 @@ EeqAudioProcessorEditor::EeqAudioProcessorEditor(EeqAudioProcessor& p)
     addAndMakeVisible(band4BellButton);
     band4BellAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.parameters, "band4Bell", band4BellButton);
     // set plugin size
-    setSize(870, 250);
+    setSize(870, 255);
 }
 
 EeqAudioProcessorEditor::~EeqAudioProcessorEditor()
@@ -97,50 +97,54 @@ EeqAudioProcessorEditor::~EeqAudioProcessorEditor()
 void EeqAudioProcessorEditor::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colour(0xff303030));
+    // draw powerlines
+    powerLine.drawPowerLine(g, 85.0f, 10.0f, 110.0f, 30.0f, 8, 0, "Jacob Curtis");
+    powerLine.drawPowerLine(g, 10.0f, 10.0f, 70.0f, 30.0f, 4, 0, "E-EQ");
     // draw divider lines
+    float topPosition = 60.0f;
     g.setColour(juce::Colours::grey);
     juce::Path p;
-    p.addLineSegment(juce::Line<float>(81, 34, 75, 40), 1.0f);
-    p.addLineSegment(juce::Line<float>(75, 40, 75, 100), 1.0f);
-    p.addLineSegment(juce::Line<float>(75, 100, 25, 140), 1.0f);
-    p.addLineSegment(juce::Line<float>(25, 140, 25, 200), 1.0f);
-    p.addLineSegment(juce::Line<float>(25, 200, 31, 206), 1.0f);
+    p.addLineSegment(juce::Line<float>(81, topPosition - 6, 75, topPosition), 1.0f);
+    p.addLineSegment(juce::Line<float>(75, topPosition, 75, topPosition + 60), 1.0f);
+    p.addLineSegment(juce::Line<float>(75, topPosition + 60, 25, topPosition + 100), 1.0f);
+    p.addLineSegment(juce::Line<float>(25, topPosition + 100, 25, topPosition + 160), 1.0f);
+    p.addLineSegment(juce::Line<float>(25, topPosition + 160, 31, topPosition + 166), 1.0f);
 
-    p.addLineSegment(juce::Line<float>(181, 34, 175, 40), 1.0f);
-    p.addLineSegment(juce::Line<float>(175, 40, 175, 100), 1.0f);
-    p.addLineSegment(juce::Line<float>(175, 100, 125, 140), 1.0f);
-    p.addLineSegment(juce::Line<float>(125, 140, 125, 200), 1.0f);
-    p.addLineSegment(juce::Line<float>(125, 200, 131, 206), 1.0f);
+    p.addLineSegment(juce::Line<float>(181, topPosition - 6, 175, topPosition), 1.0f);
+    p.addLineSegment(juce::Line<float>(175, topPosition, 175, topPosition + 60), 1.0f);
+    p.addLineSegment(juce::Line<float>(175, topPosition + 60, 125, topPosition + topPosition + 60), 1.0f);
+    p.addLineSegment(juce::Line<float>(125, topPosition + topPosition + 60, 125, topPosition + 160), 1.0f);
+    p.addLineSegment(juce::Line<float>(125, topPosition + 160, 131, topPosition + 166), 1.0f);
 
-    p.addLineSegment(juce::Line<float>(281, 34, 275, 40), 1.0f);
-    p.addLineSegment(juce::Line<float>(275, 40, 275, 100), 1.0f);
-    p.addLineSegment(juce::Line<float>(275, 100, 225, 140), 1.0f);
-    p.addLineSegment(juce::Line<float>(225, 140, 225, 200), 1.0f);
-    p.addLineSegment(juce::Line<float>(225, 200, 231, 206), 1.0f);
+    p.addLineSegment(juce::Line<float>(281, topPosition - 6, 275, topPosition), 1.0f);
+    p.addLineSegment(juce::Line<float>(275, topPosition, 275, topPosition + 60), 1.0f);
+    p.addLineSegment(juce::Line<float>(275, topPosition + 60, 225, topPosition + topPosition + 60), 1.0f);
+    p.addLineSegment(juce::Line<float>(225, topPosition + topPosition + 60, 225, topPosition + 160), 1.0f);
+    p.addLineSegment(juce::Line<float>(225, topPosition + 160, 231, topPosition + 166), 1.0f);
 
-    p.addLineSegment(juce::Line<float>(420, 34, 425, 40), 1.0f);
-    p.addLineSegment(juce::Line<float>(431, 34, 425, 40), 1.0f);
-    p.addLineSegment(juce::Line<float>(425, 40, 425, 200), 1.0f);
-    p.addLineSegment(juce::Line<float>(420, 206, 425, 200), 1.0f);
-    p.addLineSegment(juce::Line<float>(431, 206, 425, 200), 1.0f);
+    p.addLineSegment(juce::Line<float>(420, topPosition - 6, 425, topPosition), 1.0f);
+    p.addLineSegment(juce::Line<float>(431, topPosition - 6, 425, topPosition), 1.0f);
+    p.addLineSegment(juce::Line<float>(425, topPosition, 425, topPosition + 160), 1.0f);
+    p.addLineSegment(juce::Line<float>(420, topPosition + 166, 425, topPosition + 160), 1.0f);
+    p.addLineSegment(juce::Line<float>(431, topPosition + 166, 425, topPosition + 160), 1.0f);
 
-    p.addLineSegment(juce::Line<float>(569, 34, 575, 40), 1.0f);
-    p.addLineSegment(juce::Line<float>(575, 40, 575, 100), 1.0f);
-    p.addLineSegment(juce::Line<float>(575, 100, 625, 140), 1.0f);
-    p.addLineSegment(juce::Line<float>(625, 140, 625, 200), 1.0f);
-    p.addLineSegment(juce::Line<float>(625, 200, 620, 206), 1.0f);
+    p.addLineSegment(juce::Line<float>(569, topPosition - 6, 575, topPosition), 1.0f);
+    p.addLineSegment(juce::Line<float>(575, topPosition, 575, topPosition + 60), 1.0f);
+    p.addLineSegment(juce::Line<float>(575, topPosition + 60, 625, topPosition + topPosition + 60), 1.0f);
+    p.addLineSegment(juce::Line<float>(625, topPosition + topPosition + 60, 625, topPosition + 160), 1.0f);
+    p.addLineSegment(juce::Line<float>(625, topPosition + 160, 620, topPosition + 166), 1.0f);
 
-    p.addLineSegment(juce::Line<float>(669, 34, 675, 40), 1.0f);
-    p.addLineSegment(juce::Line<float>(675, 40, 675, 100), 1.0f);
-    p.addLineSegment(juce::Line<float>(675, 100, 725, 140), 1.0f);
-    p.addLineSegment(juce::Line<float>(725, 140, 725, 200), 1.0f);
-    p.addLineSegment(juce::Line<float>(725, 200, 720, 206), 1.0f);
+    p.addLineSegment(juce::Line<float>(669, topPosition - 6, 675, topPosition), 1.0f);
+    p.addLineSegment(juce::Line<float>(675, topPosition, 675, topPosition + 60), 1.0f);
+    p.addLineSegment(juce::Line<float>(675, topPosition + 60, 725, topPosition + topPosition + 60), 1.0f);
+    p.addLineSegment(juce::Line<float>(725, topPosition + topPosition + 60, 725, topPosition + 160), 1.0f);
+    p.addLineSegment(juce::Line<float>(725, topPosition + 160, 720, topPosition + 166), 1.0f);
 
-    p.addLineSegment(juce::Line<float>(769, 34, 775, 40), 1.0f);
-    p.addLineSegment(juce::Line<float>(775, 40, 775, 100), 1.0f);
-    p.addLineSegment(juce::Line<float>(775, 100, 825, 140), 1.0f);
-    p.addLineSegment(juce::Line<float>(825, 140, 825, 200), 1.0f);
-    p.addLineSegment(juce::Line<float>(825, 200, 820, 206), 1.0f);
+    p.addLineSegment(juce::Line<float>(769, topPosition - 6, 775, topPosition), 1.0f);
+    p.addLineSegment(juce::Line<float>(775, topPosition, 775, topPosition + 60), 1.0f);
+    p.addLineSegment(juce::Line<float>(775, topPosition + 60, 825, topPosition + topPosition + 60), 1.0f);
+    p.addLineSegment(juce::Line<float>(825, topPosition + topPosition + 60, 825, topPosition + 160), 1.0f);
+    p.addLineSegment(juce::Line<float>(825, topPosition + 160, 820, topPosition + 166), 1.0f);
 
     g.fillPath(p);
 }
@@ -148,8 +152,8 @@ void EeqAudioProcessorEditor::paint(juce::Graphics& g)
 void EeqAudioProcessorEditor::resized()
 {
     int knobWidth = 50;
-    int topRowYPosition = 50;
-    int bottomRowYPosition = 130;
+    int topRowYPosition = 70;
+    int bottomRowYPosition = 150;
     int startXPosition = 150;
     // parametric knobs
     bandKnobs[0].setBounds(startXPosition, bottomRowYPosition, knobWidth, knobWidth);           // band 1 freq

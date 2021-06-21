@@ -10,6 +10,7 @@
 #pragma once
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include "PowerLine.h"
 
 class TiltLookAndFeel : public juce::LookAndFeel_V4
 {
@@ -79,6 +80,8 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> freqAttach, gainAttach;
     // create look and feel object
     TiltLookAndFeel tiltLookAndFeel;
+    // create powerline object
+    PowerLine powerLine;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TilteqAudioProcessorEditor)
 };

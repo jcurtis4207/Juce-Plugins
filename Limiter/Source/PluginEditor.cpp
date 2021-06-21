@@ -65,7 +65,7 @@ LimiterAudioProcessorEditor::LimiterAudioProcessorEditor(LimiterAudioProcessor& 
     addAndMakeVisible(inputMeter);
     addAndMakeVisible(outputMeter);
 
-    setSize(350, 300);
+    setSize(350, 330);
 }
 
 LimiterAudioProcessorEditor::~LimiterAudioProcessorEditor()
@@ -76,12 +76,15 @@ LimiterAudioProcessorEditor::~LimiterAudioProcessorEditor()
 void LimiterAudioProcessorEditor::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colour(0xff242424));
+    // draw powerlines
+    powerLine.drawPowerLine(g, 95.0f, 10.0f, 100.0f, 30.0f, 8, 0, "Jacob Curtis");
+    powerLine.drawPowerLine(g, 10.0f, 10.0f, 80.0f, 30.0f, 4, 0, "Limiter");
 }
 
 void LimiterAudioProcessorEditor::resized()
 {
     int startXPosition = 20;
-    int yPosition = 40;
+    int yPosition = 80;
     int sliderWidth = 50;
     int sliderHeight = 225;
     thresholdSlider.setBounds(startXPosition, yPosition, sliderWidth, sliderHeight);
@@ -92,8 +95,8 @@ void LimiterAudioProcessorEditor::resized()
     releaseLabel.setBounds(releaseSlider.getX() - 10, releaseSlider.getY() - 20, 70, 20);
     linkKnob.setBounds(startXPosition + 115, 130, 20, 20);
     linkLabel.setBounds(linkKnob.getX() - 25, linkKnob.getY() - 20, 70, 20);
-    inputMeter.setBounds(thresholdSlider.getRight(), yPosition, outputMeter.getMeterWidth(), outputMeter.getMeterHeight());
-    outputMeter.setBounds(ceilingSlider.getRight(), yPosition, outputMeter.getMeterWidth(), outputMeter.getMeterHeight());
+    inputMeter.setBounds(thresholdSlider.getRight() - 17, yPosition, outputMeter.getMeterWidth(), outputMeter.getMeterHeight());
+    outputMeter.setBounds(ceilingSlider.getRight() - 17, yPosition, outputMeter.getMeterWidth(), outputMeter.getMeterHeight());
 }
 
 void LimiterAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)

@@ -11,6 +11,7 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include "EqLookAndFeel.h"
+#include "PowerLine.h"
 
 class EeqAudioProcessorEditor : public juce::AudioProcessorEditor
 {
@@ -53,6 +54,8 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> band4BellAttach;
     // create look and feel object
     EqLookAndFeel eqLookAndFeel;
+    // create powerline object
+    PowerLine powerLine;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EeqAudioProcessorEditor)
 };

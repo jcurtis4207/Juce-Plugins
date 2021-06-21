@@ -12,6 +12,7 @@
 #include "PluginProcessor.h"
 #include "LimiterLookAndFeel.h"
 #include "Meter.h"
+#include "PowerLine.h"
 
 class LimiterAudioProcessorEditor : public juce::AudioProcessorEditor, public juce::Slider::Listener
 {
@@ -37,6 +38,8 @@ private:
     // create meter objects
     Meter inputMeter;
     Meter outputMeter;
+    // create powerline object
+    PowerLine powerLine;
     // function for trim knob to modify parameters
     void sliderValueChanged(juce::Slider* slider);
 

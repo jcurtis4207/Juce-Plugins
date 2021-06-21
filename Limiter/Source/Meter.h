@@ -19,6 +19,7 @@ public:
         auto buttonArea = button.getLocalBounds();
         juce::Rectangle<int> buttonRectangle = buttonArea;
         // button background is always transparent
+        g.setFont(11.0f);
         g.setColour(juce::Colours::transparentBlack);
         g.fillRect(buttonRectangle);
     }
@@ -130,7 +131,7 @@ private:
     const juce::Colour meterFgColor{ juce::Colours::yellow };
     const juce::Colour meterBgColor{ juce::Colour(0xff121212) };
     // meter bounds
-    const int meterXPosition{ 2 };
+    const int meterXPosition{ 17 };
     const int meterYPosition{ 12 };
     const int meterWidth{ 10 };
     const int meterTotalHeight{ 200 };

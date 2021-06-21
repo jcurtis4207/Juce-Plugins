@@ -18,13 +18,13 @@ TilteqAudioProcessorEditor::TilteqAudioProcessorEditor(TilteqAudioProcessor& p)
     freqKnob.setLookAndFeel(&tiltLookAndFeel);
     freqKnob.setTextValueSuffix(" Hz");
     addAndMakeVisible(freqKnob);
-    freqKnob.setBounds(30, 40, 50, 50);
+    freqKnob.setBounds(40, 60, 50, 50);
     freqAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "freq", freqKnob);
     gainKnob.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
     gainKnob.setLookAndFeel(&tiltLookAndFeel);
     gainKnob.setTextValueSuffix(" dB");
     addAndMakeVisible(gainKnob);
-    gainKnob.setBounds(120, 40, 50, 50);
+    gainKnob.setBounds(140, 60, 50, 50);
     gainAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "gain", gainKnob);
     // setup labels
     freqLabel.setText("Freq", juce::NotificationType::dontSendNotification);
@@ -40,7 +40,7 @@ TilteqAudioProcessorEditor::TilteqAudioProcessorEditor(TilteqAudioProcessor& p)
     addAndMakeVisible(gainLabel);
     gainLabel.setBounds(gainKnob.getX(), gainKnob.getBottom(), 50, 20);
 
-    setSize(200, 150);
+    setSize(230, 150);
 }
 
 TilteqAudioProcessorEditor::~TilteqAudioProcessorEditor()
@@ -51,6 +51,9 @@ TilteqAudioProcessorEditor::~TilteqAudioProcessorEditor()
 void TilteqAudioProcessorEditor::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colour(0xff242424));
+    // draw powerlines
+    powerLine.drawPowerLine(g, 95.0f, 10.0f, 110.0f, 30.0f, 8, 0, "Jacob Curtis");
+    powerLine.drawPowerLine(g, 10.0f, 10.0f, 80.0f, 30.0f, 4, 0, "Tilt-EQ");
     // draw tilt diagrams around gain label
     float yPosition = gainLabel.getY() + gainLabel.getHeight() / 2;
     float leftXPosition = gainLabel.getX() + 2;
