@@ -24,8 +24,8 @@ TilteqAudioProcessor::TilteqAudioProcessor()
 #endif
 {
     // create filter parameters
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("freq", "Frequency", juce::NormalisableRange<float>{500.0f, 2000.0f, 1.0f, 0.63f}, 1000.0f));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("gain", "Gain", juce::NormalisableRange<float>{-6.0f, 6.0f, 0.25f}, 0.0f));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("freq", "Frequency", juce::NormalisableRange<float>{500.0f, 2000.0f, 1.0f, 0.63f}, 1000.0f, "Hz"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("gain", "Gain", juce::NormalisableRange<float>{-6.0f, 6.0f, 0.25f}, 0.0f, "dB"));
     // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
 }

@@ -24,9 +24,9 @@ LimiterAudioProcessor::LimiterAudioProcessor()
 #endif
 {
     // create limiter parameters
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("threshold", "Threshold", juce::NormalisableRange<float>{-40.0f, 0.0f, 0.1f}, 0.0f));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("release", "Release", juce::NormalisableRange<float>{0.1f, 200.0f, 0.1f, 0.35f}, 1.0f));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("ceiling", "Ceiling", juce::NormalisableRange<float>{-40.0f, 0.0f, 0.1f}, 0.0f));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("threshold", "Threshold", juce::NormalisableRange<float>{-40.0f, 0.0f, 0.1f}, 0.0f, "dB"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("release", "Release", juce::NormalisableRange<float>{0.1f, 200.0f, 0.1f, 0.35f}, 1.0f, "ms"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("ceiling", "Ceiling", juce::NormalisableRange<float>{-40.0f, 0.0f, 0.1f}, 0.0f, "dB"));
     // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
 }

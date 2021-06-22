@@ -63,18 +63,10 @@ public:
         g.drawRoundedRectangle(xFloat, yFloat, widthFloat, heightFloat, 3.0f, 1.0f);
         // draw triangles
         g.setColour(juce::Colours::white);
-        juce::Path leftTriangle;
-        leftTriangle.startNewSubPath(widthFloat / 2 - 1, yFloat + 7);
-        leftTriangle.lineTo(widthFloat / 2 - 1, heightFloat - 7);
-        leftTriangle.lineTo(xFloat + 5, heightFloat / 2);
-        leftTriangle.closeSubPath();
-        g.fillPath(leftTriangle);
-        juce::Path rightTriangle;
-        rightTriangle.startNewSubPath(widthFloat / 2 + 1, yFloat + 7);
-        rightTriangle.lineTo(widthFloat / 2 + 1, heightFloat - 7);
-        rightTriangle.lineTo(widthFloat - 5, heightFloat / 2);
-        rightTriangle.closeSubPath();
-        g.fillPath(rightTriangle);
+        juce::Path triangles;
+        triangles.addTriangle(widthFloat / 2 - 1, yFloat + 7, widthFloat / 2 - 1, heightFloat - 7, xFloat + 5, heightFloat / 2);
+        triangles.addTriangle(widthFloat / 2 + 1, yFloat + 7, widthFloat / 2 + 1, heightFloat - 7, widthFloat - 5, heightFloat / 2);
+        g.fillPath(triangles);
     }
 
     // override labels

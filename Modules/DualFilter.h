@@ -45,8 +45,8 @@ public:
     DualFilter(juce::AudioProcessorValueTreeState& apvts)
     {
         // create filter parameters
-        apvts.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("hpfFreq", "HPF Frequency", juce::NormalisableRange<float>{20.0f, 20000.0f, 1.0f, 0.25f}, 20.0f));
-        apvts.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("lpfFreq", "LPF Frequency", juce::NormalisableRange<float>{20.0f, 20000.0f, 1.0f, 0.25f}, 20000.0f));
+        apvts.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("hpfFreq", "HPF Frequency", juce::NormalisableRange<float>{20.0f, 20000.0f, 1.0f, 0.25f}, 20.0f, "Hz"));
+        apvts.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("lpfFreq", "LPF Frequency", juce::NormalisableRange<float>{20.0f, 20000.0f, 1.0f, 0.25f}, 20000.0f, "Hz"));
         apvts.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("hpfBypass", "HPF Bypass", false));
         apvts.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("lpfBypass", "LPF Bypass", false));
     }

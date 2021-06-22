@@ -24,7 +24,7 @@ GainAudioProcessor::GainAudioProcessor()
 #endif
 {
     // create parameters for gain and phase
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("gain", "Gain", juce::NormalisableRange<float>{gainRangeLow, gainRangeHigh, gainRangeInterval}, 0.0f));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("gain", "Gain", juce::NormalisableRange<float>{gainRangeLow, gainRangeHigh, gainRangeInterval}, 0.0f, "dB"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("phase", "Phase", true));
     // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
