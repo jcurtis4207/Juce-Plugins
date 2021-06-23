@@ -16,6 +16,10 @@ Since I'm primarily a Pro Tools user, I will hopefully build them as AAX at some
 
 The collection currently includes:
 
+### Clipper
+A simple hard clipper.
+The GUI is yet another shameless ripoff of Waves L1 with only threshold and ceiling controls.
+
 ### Compressor
 A rather versatile compressor. 
 It includes a stereo gain reduction meter, a highpass filter sidechain, as well as switchable stereo and multi-mono linking modes.
@@ -59,7 +63,7 @@ These are the plugins I think are necessary (though I'm not sure how many will b
 * De-esser and/or Parametric sidechain compressor
 * <s>Limiter</s>
 * Expander/Gate
-* Clipper
+* <s>Clipper</s>
 * Distortion
 * Delay
 * Reverb
