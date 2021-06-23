@@ -31,6 +31,7 @@ CompressorAudioProcessor::CompressorAudioProcessor()
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("makeUp", "MakeUp Gain", juce::NormalisableRange<float>(-10.0f, 20.0f, 0.1f), 0.0f, "dB"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("scFreq", "Side Chain Frequency", juce::NormalisableRange<float>(20.0f, 2000.0f, 1.0f), 20.0f, "Hz"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("scBypass", "Side Chain Bypass", true));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("stereo", "Stereo Mode", true));
     // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
 }
@@ -64,7 +65,8 @@ void CompressorAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
     juce::dsp::ProcessContextReplacing<float> context(block);
     compressor.process(context, getSampleRate());
     // get gain reduction for meter
-    gainReductionValue = compressor.getMaxGainReductionInDecibels();
+    gainReductionLeft = compressor.getGainReductionLeft();
+    gainReductionRight = compressor.getGainReductionRight();
 }
 
 void CompressorAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
@@ -101,6 +103,7 @@ void CompressorAudioProcessor::updateCompressorValues(juce::AudioProcessorValueT
     float makeUp = apvts.getRawParameterValue("makeUp")->load();
     float scFreq = apvts.getRawParameterValue("scFreq")->load();
     bool scBypass = apvts.getRawParameterValue("scBypass")->load();
+    bool stereo = apvts.getRawParameterValue("stereo")->load();
     // apply values to compressor module
     compressor.setThreshold(threshold);
     compressor.setAttackTime(attack);
@@ -109,6 +112,7 @@ void CompressorAudioProcessor::updateCompressorValues(juce::AudioProcessorValueT
     compressor.setMakeUpGain(makeUp);
     compressor.setFilterFrequency(scFreq);
     compressor.setFilterBypass(scBypass);
+    compressor.setStereoMode(stereo);
 }
 
 //==============================================================================

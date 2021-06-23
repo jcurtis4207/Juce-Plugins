@@ -62,56 +62,124 @@ public:
         scBypass = scFilterBypass;
     }
 
-    // Computes the gain reduction for a given side-chain signal. The values will be in decibels and will NOT contain the make-up gain.
-    void computeGainFromSidechainSignal(const float* sideChainSignal, float* destination, const int numSamples)
+    void setStereoMode(const bool isStereo)
     {
-        maxInputLevel = -std::numeric_limits<float>::infinity();
-        maxGainReduction = 0.0f;
+        stereo = isStereo;
+    }
+
+    // Computes the gain reduction separately for each side-chain signal. The values will be in decibels and will NOT contain the make-up gain.
+    void computeGainReductionDualMono(const float* sideChainLeft, const float* sideChainRight, float* destinationLeft, float* destinationRight, const int numSamples)
+    {
+        maxGainReductionLeft = 0.0f;
+        maxGainReductionRight = 0.0f;
         // for each sample in buffer
         for (int sample = 0; sample < numSamples; ++sample)
         {
-            // convert sample to decibels
-            const float levelInDecibels = 20.0f * std::log10(abs(sideChainSignal[sample]));
-            // set new max level
-            if (levelInDecibels > maxInputLevel)
-            {
-                maxInputLevel = levelInDecibels;
-            }
+            // convert samples to decibels
+            const float levelInDecibelsLeft = 20.0f * std::log10(abs(sideChainLeft[sample]));
+            const float levelInDecibelsRight = 20.0f * std::log10(abs(sideChainRight[sample]));
             // calculate overshoot and apply ratio
-            const float overShoot = levelInDecibels - threshold;
-            const float gainReduction = (overShoot <= 0.0f) ? 0.0f : slope * overShoot;
-            // apply ballistics
-            const float diff = gainReduction - state;
-            if (diff < 0.0f)
+            const float overShootLeft = levelInDecibelsLeft - threshold;
+            const float overShootRight = levelInDecibelsRight - threshold;
+            const float gainReductionLeft = (overShootLeft <= 0.0f) ? 0.0f : slope * overShootLeft;
+            const float gainReductionRight = (overShootRight <= 0.0f) ? 0.0f : slope * overShootRight;
+            // apply ballistics to left
+            const float diffLeft = gainReductionLeft - stateLeft;
+            if (diffLeft < 0.0f)
             {
                 // wanted gain reduction is below state -> attack phase
-                state += attackTime * diff;
+                stateLeft += attackTime * diffLeft;
             }
             else
             {
                 // release phase
-                state += releaseTime * diff;
+                stateLeft += releaseTime * diffLeft;
+            }
+            // apply ballistics to right
+            const float diffRight = gainReductionRight - stateRight;
+            if (diffRight < 0.0f)
+            {
+                // wanted gain reduction is below state -> attack phase
+                stateRight += attackTime * diffRight;
+            }
+            else
+            {
+                // release phase
+                stateRight += releaseTime * diffRight;
             }
             // write back gain reduction
-            destination[sample] = state;
-            // set gain reduction value
-            if (state < maxGainReduction)
+            destinationLeft[sample] = stateLeft;
+            destinationRight[sample] = stateRight;
+            // set gain reduction values
+            if (stateLeft < maxGainReductionLeft)
             {
-                maxGainReduction = state;
+                maxGainReductionLeft = stateLeft;
+            }
+            if (stateRight < maxGainReductionRight)
+            {
+                maxGainReductionRight = stateRight;
             }
         }
         // convert gain to linear values and add makeup gain
         for (int i = 0; i < numSamples; ++i)
         {
-            destination[i] = std::pow(10.0f, 0.05f * (destination[i] + makeUpGain));
+            destinationLeft[i] = std::pow(10.0f, 0.05f * (destinationLeft[i] + makeUpGain));
+            destinationRight[i] = std::pow(10.0f, 0.05f * (destinationRight[i] + makeUpGain));
+        }
+    }
+
+    // Computes the gain reduction for both side-chain signals. The values will be in decibels and will NOT contain the make-up gain.
+    void computeGainReductionStereo(const float* sideChainLeft, const float* sideChainRight, float* destinationLeft, float* destinationRight, const int numSamples)
+    {
+        maxGainReductionLeft = 0.0f;
+        maxGainReductionRight = 0.0f;
+        // for each sample in buffer
+        for (int sample = 0; sample < numSamples; ++sample)
+        {
+            // find max of input channels
+            float maxSample = juce::jmax(sideChainLeft[sample], sideChainRight[sample]);
+
+            // convert samples to decibels
+            const float levelInDecibels = 20.0f * std::log10(abs(maxSample));
+            // calculate overshoot and apply ratio
+            const float overShoot = levelInDecibels - threshold;
+            const float gainReduction = (overShoot <= 0.0f) ? 0.0f : slope * overShoot;
+            // apply ballistics
+            const float diff = gainReduction - stateLeft;
+            if (diff < 0.0f)
+            {
+                // wanted gain reduction is below state -> attack phase
+                stateLeft += attackTime * diff;
+            }
+            else
+            {
+                // release phase
+                stateLeft += releaseTime * diff;
+            }
+            // write back gain reduction to both channels
+            destinationLeft[sample] = stateLeft;
+            destinationRight[sample] = stateLeft;
+            // set gain reduction value
+            if (stateLeft < maxGainReductionLeft)
+            {
+                maxGainReductionLeft = stateLeft;
+                maxGainReductionRight = stateLeft;
+            }
+        }
+        // convert gain to linear values and add makeup gain
+        for (int i = 0; i < numSamples; ++i)
+        {
+            destinationLeft[i] = std::pow(10.0f, 0.05f * (destinationLeft[i] + makeUpGain));
+            destinationRight[i] = std::pow(10.0f, 0.05f * (destinationRight[i] + makeUpGain));
         }
     }
 
     void prepare(const double newSampleRate, const int numChannels, const int maxBlockSize)
     {
         sampleRate = newSampleRate;
-        // initialize sidechain buffer
+        // initialize buffers
         sideChainBuffer.setSize(numChannels, maxBlockSize);
+        grBuffer.setSize(numChannels, maxBlockSize);
         // initialize sidechain filters
         auto hpfCoefficients = juce::IIRCoefficients::makeHighPass(newSampleRate, scFreq);
         leftFilter.setCoefficients(hpfCoefficients);
@@ -123,12 +191,9 @@ public:
         auto outBlock = context.getOutputBlock();
         const int numChannels = static_cast<int> (outBlock.getNumChannels());
         const int numSamples = static_cast<int> (outBlock.getNumSamples());
-
-        /* STEP 1: get max buffer values and store in sidechain */
         // copy the absolute values from the input buffer to the sideChainBuffer
         juce::FloatVectorOperations::abs(sideChainBuffer.getWritePointer(0), outBlock.getChannelPointer(0), numSamples);
         juce::FloatVectorOperations::abs(sideChainBuffer.getWritePointer(1), outBlock.getChannelPointer(1), numSamples);
-
         // apply sidechain filter if not bypassed
         if (!scBypass)
         {
@@ -140,30 +205,36 @@ public:
             leftFilter.processSamples(dataLeft, numSamples);
             rightFilter.processSamples(dataRight, numSamples);
         }
-
-        // write max of both channels to channel 1
-        juce::FloatVectorOperations::max(sideChainBuffer.getWritePointer(0), sideChainBuffer.getReadPointer(0), sideChainBuffer.getReadPointer(1), numSamples);
-        // sideChainBuffer[0] = max buffer absolute values
-
-        /* STEP 2: calculate gain reduction */
-        computeGainFromSidechainSignal(sideChainBuffer.getReadPointer(0), sideChainBuffer.getWritePointer(1), numSamples);
-        // sideChainBuffer[1] = gain-reduction
-
-        /* STEP 3: apply gain-reduction to all channels */
+        // calculate gain reduction based on stereo mode
+        if (stereo)
+        {
+            computeGainReductionStereo(sideChainBuffer.getReadPointer(0), sideChainBuffer.getReadPointer(1), grBuffer.getWritePointer(0), grBuffer.getWritePointer(1), numSamples);
+        }
+        else
+        {
+            computeGainReductionDualMono(sideChainBuffer.getReadPointer(0), sideChainBuffer.getReadPointer(1), grBuffer.getWritePointer(0), grBuffer.getWritePointer(1), numSamples);
+        }
+        // apply gain reduction to output channels
         for (int channel = 0; channel < numChannels; ++channel)
         {
-            juce::FloatVectorOperations::multiply(outBlock.getChannelPointer(channel), sideChainBuffer.getReadPointer(1), numSamples);
+            juce::FloatVectorOperations::multiply(outBlock.getChannelPointer(channel), grBuffer.getReadPointer(channel), numSamples);
         }
     }
 
     void reset()
     {
-        state = 0.0f;
+        stateLeft = 0.0f;
+        stateRight = 0.0f;
     }
 
-    const float getMaxGainReductionInDecibels()
+    const float getGainReductionLeft()
     {
-        return maxGainReduction;
+        return maxGainReductionLeft;
+    }
+
+    const float getGainReductionRight()
+    {
+        return maxGainReductionRight;
     }
 
 private:
@@ -176,13 +247,14 @@ private:
     float makeUpGain{ 0.0f };
     float scFreq{ 20.0f };
     bool scBypass{ true };
-    // state variable
-    float state;
-    // atomic variables
-    std::atomic<float> maxInputLevel{ -std::numeric_limits<float>::infinity() };
-    std::atomic<float> maxGainReduction{ 0 };
-    // create sidechain buffer
-    juce::AudioBuffer<float> sideChainBuffer;
+    bool stereo{ true };
+    // state variables
+    float stateLeft, stateRight;
+    // gain reduction variables
+    std::atomic<float> maxGainReductionLeft{ 0 };
+    std::atomic<float> maxGainReductionRight{ 0 };
+    // create sidechain buffer and gain reduction buffers
+    juce::AudioBuffer<float> sideChainBuffer, grBuffer;
     // create sidechain filters
     juce::IIRFilter leftFilter, rightFilter;
 };

@@ -138,7 +138,8 @@ public:
             clipLight.setColour(juce::TextButton::buttonColourId, clipLightOn);
         }
         // for each channel
-        for (int channel = 0; channel < 2; channel++) {
+        for (int channel = 0; channel < 2; channel++)
+		{
             // test buffer level and meter level for decay purposes
             if (bufferLevel[channel] < meterLevel[channel])
             {

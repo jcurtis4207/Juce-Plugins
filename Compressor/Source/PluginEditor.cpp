@@ -11,7 +11,7 @@
 #include "PluginEditor.h"
 
 CompressorAudioProcessorEditor::CompressorAudioProcessorEditor(CompressorAudioProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p), meter(audioProcessor.gainReductionValue)
+    : AudioProcessorEditor(&p), audioProcessor(p), meter(audioProcessor.gainReductionLeft, audioProcessor.gainReductionRight)
 {
     // threshold
     thresholdSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
@@ -74,13 +74,20 @@ CompressorAudioProcessorEditor::CompressorAudioProcessorEditor(CompressorAudioPr
     scBypassLabel.setText("SC Filter", juce::NotificationType::dontSendNotification);
     scBypassLabel.setLookAndFeel(&compressorLookAndFeel);
     addAndMakeVisible(scBypassLabel);
+    // stereo
+    stereoButton.setLookAndFeel(&compressorLookAndFeel);
+    addAndMakeVisible(stereoButton);
+    stereoAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.parameters, "stereo", stereoButton);
+    stereoLabel.setText("Link Mode", juce::NotificationType::dontSendNotification);
+    stereoLabel.setLookAndFeel(&compressorLookAndFeel);
+    addAndMakeVisible(stereoLabel);
     // gr meter
     addAndMakeVisible(meter);
     grLabel.setText("GR", juce::NotificationType::dontSendNotification);
     grLabel.setLookAndFeel(&compressorLookAndFeel);
     addAndMakeVisible(grLabel);
 
-    setSize(250, 390);
+    setSize(250, 400);
 }
 
 CompressorAudioProcessorEditor::~CompressorAudioProcessorEditor()
@@ -108,6 +115,8 @@ void CompressorAudioProcessorEditor::resized()
     attackLabel.setBounds(attackSlider.getX(), attackSlider.getBottom(), sliderWidth, 20);
     makeUpSlider.setBounds(col1XPosition, 260, sliderWidth, sliderWidth);
     makeUpLabel.setBounds(makeUpSlider.getX(), makeUpSlider.getBottom(), sliderWidth, 20);
+    stereoButton.setBounds(col1XPosition, 340, sliderWidth, 20);
+    stereoLabel.setBounds(stereoButton.getX(), stereoButton.getBottom(), sliderWidth, 20);
     // col 2
     ratioSlider.setBounds(col2XPosition, 110, sliderWidth, sliderWidth);
     ratioLabel.setBounds(ratioSlider.getX(), ratioSlider.getBottom(), sliderWidth, 20);
@@ -116,8 +125,8 @@ void CompressorAudioProcessorEditor::resized()
     scFreqSlider.setBounds(col2XPosition, 310, sliderWidth, sliderWidth);
     scFreqLabel.setBounds(scFreqSlider.getX(), scFreqSlider.getBottom(), sliderWidth, 20);
     // col 3
-    grLabel.setBounds(col3XPosition, 55, 44, 20);
+    grLabel.setBounds(col3XPosition + 10, 55, 44, 20);
     meter.setBounds(col3XPosition, 70, meter.getMeterWidth(), meter.getMeterHeight());
-    scBypassButton.setBounds(col3XPosition, 325, sliderWidth, 20);
+    scBypassButton.setBounds(col3XPosition, 340, sliderWidth, 20);
     scBypassLabel.setBounds(scBypassButton.getX(), scBypassButton.getBottom(), sliderWidth, 20);
 }
