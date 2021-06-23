@@ -16,6 +16,11 @@ Since I'm primarily a Pro Tools user, I will hopefully build them as AAX at some
 
 The collection currently includes:
 
+### Compressor
+A rather versatile compressor. 
+It includes a stereo gain reduction meter, a highpass filter sidechain, as well as switchable stereo and multi-mono linking modes.
+I adapted the compression algorithm from Daniel Rudrich's [Simple Compressor](https://github.com/DanielRudrich/SimpleCompressor).
+
 ### Gain
 A simple plugin that includes a gain knob with a range of -30dB to +30dB, a phase inversion button, and a level meter.
 
@@ -38,6 +43,7 @@ There is also a frequency control to adjust where the tilt occurs.
 Various modular components that can be easily added to a plugin. Includes:
 * DualFilter - a dsp module with highpass and lowpass filters
 * Meter - A simple stereo level meter
+* PowerLine - a graphics object for creating Linux-style powerline shapes with text
 
 #
 
@@ -49,7 +55,8 @@ These are the plugins I think are necessary (though I'm not sure how many will b
 * <s>Metering</s> and Spectrum
 * <s>Filter (highpass and lowpass)</s>
 * <s>Parametric Equalizer</s>
-* Compressor (with Sidechain)
+* <s>Compressor</s> (with Sidechain)
+* De-esser and/or Parametric sidechain compressor
 * <s>Limiter</s>
 * Expander/Gate
 * Clipper
