@@ -1,19 +1,17 @@
 /*
 *   Compressor Module
+*       by Jacob Curtis
 *
-*
-*   Adapted from SimpleCompressor by Daniel Rudrich
-*   Licensed under the GPL Version 3
-*   https://github.com/DanielRudrich/SimpleCompressor
-*   Copyright (c) 2019 Daniel Rudrich
-*
+*   Originally inspired by Daniel Rudrich's "Simple Compressor"
+* 
+*   Envelope implementaiton from:
+*   https://christianfloisand.wordpress.com/2014/06/09/dynamics-processing-compressorlimiter-part-1/
 *
 */
 
 #pragma once
 #include <JuceHeader.h>
 #include <limits>
-#include <atomic>
 
 class Compressor
 {
@@ -23,8 +21,12 @@ public:
         reset();
     }
 
-    ~Compressor()
+    ~Compressor() {}
+
+    void reset()
     {
+        compressionLevelLeft = 0.0f;
+        compressionLevelRight = 0.0f;
     }
 
     void updateCompressorValues(juce::AudioProcessorValueTreeState& apvts)
@@ -39,116 +41,9 @@ public:
         scBypass = apvts.getRawParameterValue("scBypass")->load();
         stereo = apvts.getRawParameterValue("stereo")->load();
         // calculate values
-        attackTime = 1.0f - std::exp(-1.0f / (static_cast<float> (sampleRate) * (attackInput / 1000)));
-        releaseTime = 1.0f - std::exp(-1.0f / (static_cast<float> (sampleRate) * (releaseInput / 1000)));
-        slope = 1.0f / ratio - 1.0f;
-    }
-
-    // Computes the gain reduction separately for each side-chain signal. The values will be in decibels and will NOT contain the make-up gain.
-    void computeGainReductionDualMono(const float* sideChainLeft, const float* sideChainRight, float* destinationLeft, float* destinationRight, const int numSamples)
-    {
-        maxGainReductionLeft = 0.0f;
-        maxGainReductionRight = 0.0f;
-        // for each sample in buffer
-        for (int sample = 0; sample < numSamples; ++sample)
-        {
-            // convert samples to decibels
-            const float levelInDecibelsLeft = 20.0f * std::log10(abs(sideChainLeft[sample]));
-            const float levelInDecibelsRight = 20.0f * std::log10(abs(sideChainRight[sample]));
-            // calculate overshoot and apply ratio
-            const float overShootLeft = levelInDecibelsLeft - threshold;
-            const float overShootRight = levelInDecibelsRight - threshold;
-            const float gainReductionLeft = (overShootLeft <= 0.0f) ? 0.0f : slope * overShootLeft;
-            const float gainReductionRight = (overShootRight <= 0.0f) ? 0.0f : slope * overShootRight;
-            // apply ballistics to left
-            const float diffLeft = gainReductionLeft - stateLeft;
-            if (diffLeft < 0.0f)
-            {
-                // wanted gain reduction is below state -> attack phase
-                stateLeft += attackTime * diffLeft;
-            }
-            else
-            {
-                // release phase
-                stateLeft += releaseTime * diffLeft;
-            }
-            // apply ballistics to right
-            const float diffRight = gainReductionRight - stateRight;
-            if (diffRight < 0.0f)
-            {
-                // wanted gain reduction is below state -> attack phase
-                stateRight += attackTime * diffRight;
-            }
-            else
-            {
-                // release phase
-                stateRight += releaseTime * diffRight;
-            }
-            // write back gain reduction
-            destinationLeft[sample] = stateLeft;
-            destinationRight[sample] = stateRight;
-            // set gain reduction values
-            if (stateLeft < maxGainReductionLeft)
-            {
-                maxGainReductionLeft = stateLeft;
-            }
-            if (stateRight < maxGainReductionRight)
-            {
-                maxGainReductionRight = stateRight;
-            }
-        }
-        // convert gain to linear values and add makeup gain
-        for (int i = 0; i < numSamples; ++i)
-        {
-            destinationLeft[i] = std::pow(10.0f, 0.05f * (destinationLeft[i] + makeUpGain));
-            destinationRight[i] = std::pow(10.0f, 0.05f * (destinationRight[i] + makeUpGain));
-        }
-    }
-
-    // Computes the gain reduction for both side-chain signals. The values will be in decibels and will NOT contain the make-up gain.
-    void computeGainReductionStereo(const float* sideChainLeft, const float* sideChainRight, float* destinationLeft, float* destinationRight, const int numSamples)
-    {
-        maxGainReductionLeft = 0.0f;
-        maxGainReductionRight = 0.0f;
-        // for each sample in buffer
-        for (int sample = 0; sample < numSamples; ++sample)
-        {
-            // find max of input channels
-            float maxSample = juce::jmax(sideChainLeft[sample], sideChainRight[sample]);
-
-            // convert samples to decibels
-            const float levelInDecibels = 20.0f * std::log10(abs(maxSample));
-            // calculate overshoot and apply ratio
-            const float overShoot = levelInDecibels - threshold;
-            const float gainReduction = (overShoot <= 0.0f) ? 0.0f : slope * overShoot;
-            // apply ballistics
-            const float diff = gainReduction - stateLeft;
-            if (diff < 0.0f)
-            {
-                // wanted gain reduction is below state -> attack phase
-                stateLeft += attackTime * diff;
-            }
-            else
-            {
-                // release phase
-                stateLeft += releaseTime * diff;
-            }
-            // write back gain reduction to both channels
-            destinationLeft[sample] = stateLeft;
-            destinationRight[sample] = stateLeft;
-            // set gain reduction value
-            if (stateLeft < maxGainReductionLeft)
-            {
-                maxGainReductionLeft = stateLeft;
-                maxGainReductionRight = stateLeft;
-            }
-        }
-        // convert gain to linear values and add makeup gain
-        for (int i = 0; i < numSamples; ++i)
-        {
-            destinationLeft[i] = std::pow(10.0f, 0.05f * (destinationLeft[i] + makeUpGain));
-            destinationRight[i] = std::pow(10.0f, 0.05f * (destinationRight[i] + makeUpGain));
-        }
+        attackTime = std::exp(-1.0f / ((attackInput / 1000.0f) * (float)sampleRate));
+        releaseTime = std::exp(-1.0f / ((releaseInput / 1000.0f) * (float)sampleRate));
+        slope = 1.0f - (1.0f / ratio);
     }
 
     void prepare(const double newSampleRate, const int numChannels, const int maxBlockSize)
@@ -156,7 +51,7 @@ public:
         sampleRate = newSampleRate;
         // initialize buffers
         sideChainBuffer.setSize(numChannels, maxBlockSize);
-        grBuffer.setSize(numChannels, maxBlockSize);
+        envelopeBuffer.setSize(numChannels, maxBlockSize);
         // initialize sidechain filters
         auto hpfCoefficients = juce::IIRCoefficients::makeHighPass(newSampleRate, scFreq);
         leftFilter.setCoefficients(hpfCoefficients);
@@ -165,12 +60,11 @@ public:
 
     void process(const juce::dsp::ProcessContextReplacing<float>& context, double inputSampleRate)
     {
-        auto outBlock = context.getOutputBlock();
-        const int numChannels = static_cast<int> (outBlock.getNumChannels());
-        const int numSamples = static_cast<int> (outBlock.getNumSamples());
-        // copy the absolute values from the input buffer to the sideChainBuffer
-        juce::FloatVectorOperations::abs(sideChainBuffer.getWritePointer(0), outBlock.getChannelPointer(0), numSamples);
-        juce::FloatVectorOperations::abs(sideChainBuffer.getWritePointer(1), outBlock.getChannelPointer(1), numSamples);
+        const auto& outputBuffer = context.getOutputBlock();
+        const int bufferSize = outputBuffer.getNumSamples();
+        // copy the buffer into the sidechain
+        juce::FloatVectorOperations::copy(sideChainBuffer.getWritePointer(0), outputBuffer.getChannelPointer(0), bufferSize);
+        juce::FloatVectorOperations::copy(sideChainBuffer.getWritePointer(1), outputBuffer.getChannelPointer(1), bufferSize);
         // apply sidechain filter if not bypassed
         if (!scBypass)
         {
@@ -179,57 +73,127 @@ public:
             rightFilter.setCoefficients(hpfCoefficients);
             float* dataLeft = sideChainBuffer.getWritePointer(0);
             float* dataRight = sideChainBuffer.getWritePointer(1);
-            leftFilter.processSamples(dataLeft, numSamples);
-            rightFilter.processSamples(dataRight, numSamples);
+            leftFilter.processSamples(dataLeft, bufferSize);
+            rightFilter.processSamples(dataRight, bufferSize);
         }
-        // calculate gain reduction based on stereo mode
-        if (stereo)
-        {
-            computeGainReductionStereo(sideChainBuffer.getReadPointer(0), sideChainBuffer.getReadPointer(1), grBuffer.getWritePointer(0), grBuffer.getWritePointer(1), numSamples);
-        }
-        else
-        {
-            computeGainReductionDualMono(sideChainBuffer.getReadPointer(0), sideChainBuffer.getReadPointer(1), grBuffer.getWritePointer(0), grBuffer.getWritePointer(1), numSamples);
-        }
-        // apply gain reduction to output channels
-        juce::FloatVectorOperations::multiply(outBlock.getChannelPointer(0), grBuffer.getReadPointer(0), numSamples);
-        juce::FloatVectorOperations::multiply(outBlock.getChannelPointer(1), grBuffer.getReadPointer(1), numSamples);
+        // create envelope
+        createEnvelope(sideChainBuffer.getReadPointer(0), sideChainBuffer.getReadPointer(1), envelopeBuffer.getWritePointer(0), 
+            envelopeBuffer.getWritePointer(1), bufferSize, stereo);
+        // calculate reduciton
+        calculateGainReduction(sideChainBuffer.getWritePointer(0), sideChainBuffer.getWritePointer(1), envelopeBuffer.getReadPointer(0), 
+            envelopeBuffer.getReadPointer(1), bufferSize);
+        // apply gain reduction to output
+        juce::FloatVectorOperations::multiply(outputBuffer.getChannelPointer(0), sideChainBuffer.getReadPointer(0), bufferSize);
+        juce::FloatVectorOperations::multiply(outputBuffer.getChannelPointer(1), sideChainBuffer.getReadPointer(1), bufferSize);
     }
 
-    void reset()
+    void createEnvelope(const float* inputLeft, const float* inputRight, float* outputLeft,
+        float* outputRight, const int bufferSize, bool isStereo)
     {
-        stateLeft = 0.0f;
-        stateRight = 0.0f;
+        for (int sample = 0; sample < bufferSize; sample++)
+        {
+            // stereo mode - max channel value used and output stored in both channels
+            if (isStereo)
+            {
+                // find max of input samples
+                const float maxSample = juce::jmax(std::abs(inputLeft[sample]), std::abs(inputRight[sample]));
+                // apply attack
+                if (compressionLevelLeft < maxSample) {
+                    compressionLevelLeft = maxSample + attackTime * (compressionLevelLeft - maxSample);
+                }
+                // apply release
+                else {
+                    compressionLevelLeft = maxSample + releaseTime * (compressionLevelLeft - maxSample);
+                }
+                // write envelope
+                outputLeft[sample] = compressionLevelLeft;
+                outputRight[sample] = compressionLevelLeft;
+            }
+            // dual mono mode - channels used individually and output stored separately
+            else
+            {
+                // get absolute value of each sample
+                const float sampleLeft = std::abs(inputLeft[sample]);
+                const float sampleRight = std::abs(inputRight[sample]);
+                // apply attack to left
+                if (compressionLevelLeft < sampleLeft) {
+                    compressionLevelLeft = sampleLeft + attackTime * (compressionLevelLeft - sampleLeft);
+                }
+                // apply release to left
+                else {
+                    compressionLevelLeft = sampleLeft + releaseTime * (compressionLevelLeft - sampleLeft);
+                }
+                // apply attack to right
+                if (compressionLevelRight < sampleRight) {
+                    compressionLevelRight = sampleRight + attackTime * (compressionLevelRight - sampleRight);
+                }
+                // apply release to right
+                else {
+                    compressionLevelRight = sampleRight + releaseTime * (compressionLevelRight - sampleRight);
+                }
+                // write envelope
+                outputLeft[sample] = compressionLevelLeft;
+                outputRight[sample] = compressionLevelRight;
+            }
+        }
+    }
+
+    void calculateGainReduction(float* inputLeft, float* inputRight, const float* envelopeLeft, const float* envelopeRight, const int bufferSize)
+    {
+        outputGainReductionLeft = 0.0f;
+        outputGainReductionRight = 0.0f;
+        for (int sample = 0; sample < bufferSize; sample++)
+        {
+            // apply threshold and ratio to envelope
+            float gainReductionLeft = slope * (threshold - juce::Decibels::gainToDecibels(envelopeLeft[sample]));
+            float gainReductionRight = slope * (threshold - juce::Decibels::gainToDecibels(envelopeRight[sample]));
+            // remove "negative" gain reduction
+            gainReductionLeft = juce::jmin(0.0f, gainReductionLeft);
+            gainReductionRight = juce::jmin(0.0f, gainReductionRight);
+            // set gr meter values
+            if (gainReductionLeft < outputGainReductionLeft)
+            {
+                outputGainReductionLeft = gainReductionLeft;
+            }
+            if (gainReductionRight < outputGainReductionRight)
+            {
+                outputGainReductionRight = gainReductionRight;
+            }
+            // add makeup gain and convert decibels to gain values
+            gainReductionLeft = std::pow(10.0f, 0.05f * (gainReductionLeft + makeUpGain));
+            gainReductionRight = std::pow(10.0f, 0.05f * (gainReductionRight + makeUpGain));
+            // output gain reduction back to input
+            inputLeft[sample] = gainReductionLeft;
+            inputRight[sample] = gainReductionRight;
+        }
     }
 
     const float getGainReductionLeft()
     {
-        return maxGainReductionLeft;
+        return outputGainReductionLeft;
     }
 
     const float getGainReductionRight()
     {
-        return maxGainReductionRight;
+        return outputGainReductionRight;
     }
 
 private:
     double sampleRate{ 0.0f };
-    // parameters
+    // input parameters
     float threshold{ -10.0f };
     float attackTime{ 10.0f };
     float releaseTime{ 50.0f };
-    float slope{ 0.3f };
+    float slope{ 0.75f };
     float makeUpGain{ 0.0f };
     float scFreq{ 20.0f };
     bool scBypass{ true };
     bool stereo{ true };
-    // state variables
-    float stateLeft, stateRight;
-    // gain reduction variables
-    std::atomic<float> maxGainReductionLeft{ 0 };
-    std::atomic<float> maxGainReductionRight{ 0 };
-    // create sidechain buffer and gain reduction buffers
-    juce::AudioBuffer<float> sideChainBuffer, grBuffer;
-    // create sidechain filters
+    // compression values
+    float compressionLevelLeft, compressionLevelRight;
+    float outputGainReductionLeft, outputGainReductionRight;
+    // auxiliary buffers
+    juce::AudioBuffer<float> sideChainBuffer, envelopeBuffer;
+    // sidechain filters
     juce::IIRFilter leftFilter, rightFilter;
 };
