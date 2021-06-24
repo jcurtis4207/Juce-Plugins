@@ -100,53 +100,44 @@ void EeqAudioProcessorEditor::paint(juce::Graphics& g)
     // draw powerlines
     powerLine.drawPowerLine(g, 85.0f, 10.0f, 110.0f, 30.0f, 8, 0, "Jacob Curtis");
     powerLine.drawPowerLine(g, 10.0f, 10.0f, 70.0f, 30.0f, 4, 0, "E-EQ");
-    // draw divider lines
-    float topPosition = 60.0f;
-    g.setColour(juce::Colours::grey);
+    // calculate divider lines
+    int xPosition;
+    int bigOffset = 50;
+    int smallOffset = 6;
+    float yPosition[6] = { 54.0f, 60.0f, 120.0f, 160.0f, 220.0f, 226.0f };
     juce::Path p;
-    p.addLineSegment(juce::Line<float>(81, topPosition - 6, 75, topPosition), 1.0f);
-    p.addLineSegment(juce::Line<float>(75, topPosition, 75, topPosition + 60), 1.0f);
-    p.addLineSegment(juce::Line<float>(75, topPosition + 60, 25, topPosition + 100), 1.0f);
-    p.addLineSegment(juce::Line<float>(25, topPosition + 100, 25, topPosition + 160), 1.0f);
-    p.addLineSegment(juce::Line<float>(25, topPosition + 160, 31, topPosition + 166), 1.0f);
-
-    p.addLineSegment(juce::Line<float>(181, topPosition - 6, 175, topPosition), 1.0f);
-    p.addLineSegment(juce::Line<float>(175, topPosition, 175, topPosition + 60), 1.0f);
-    p.addLineSegment(juce::Line<float>(175, topPosition + 60, 125, topPosition + topPosition + 60), 1.0f);
-    p.addLineSegment(juce::Line<float>(125, topPosition + topPosition + 60, 125, topPosition + 160), 1.0f);
-    p.addLineSegment(juce::Line<float>(125, topPosition + 160, 131, topPosition + 166), 1.0f);
-
-    p.addLineSegment(juce::Line<float>(281, topPosition - 6, 275, topPosition), 1.0f);
-    p.addLineSegment(juce::Line<float>(275, topPosition, 275, topPosition + 60), 1.0f);
-    p.addLineSegment(juce::Line<float>(275, topPosition + 60, 225, topPosition + topPosition + 60), 1.0f);
-    p.addLineSegment(juce::Line<float>(225, topPosition + topPosition + 60, 225, topPosition + 160), 1.0f);
-    p.addLineSegment(juce::Line<float>(225, topPosition + 160, 231, topPosition + 166), 1.0f);
-
-    p.addLineSegment(juce::Line<float>(420, topPosition - 6, 425, topPosition), 1.0f);
-    p.addLineSegment(juce::Line<float>(431, topPosition - 6, 425, topPosition), 1.0f);
-    p.addLineSegment(juce::Line<float>(425, topPosition, 425, topPosition + 160), 1.0f);
-    p.addLineSegment(juce::Line<float>(420, topPosition + 166, 425, topPosition + 160), 1.0f);
-    p.addLineSegment(juce::Line<float>(431, topPosition + 166, 425, topPosition + 160), 1.0f);
-
-    p.addLineSegment(juce::Line<float>(569, topPosition - 6, 575, topPosition), 1.0f);
-    p.addLineSegment(juce::Line<float>(575, topPosition, 575, topPosition + 60), 1.0f);
-    p.addLineSegment(juce::Line<float>(575, topPosition + 60, 625, topPosition + topPosition + 60), 1.0f);
-    p.addLineSegment(juce::Line<float>(625, topPosition + topPosition + 60, 625, topPosition + 160), 1.0f);
-    p.addLineSegment(juce::Line<float>(625, topPosition + 160, 620, topPosition + 166), 1.0f);
-
-    p.addLineSegment(juce::Line<float>(669, topPosition - 6, 675, topPosition), 1.0f);
-    p.addLineSegment(juce::Line<float>(675, topPosition, 675, topPosition + 60), 1.0f);
-    p.addLineSegment(juce::Line<float>(675, topPosition + 60, 725, topPosition + topPosition + 60), 1.0f);
-    p.addLineSegment(juce::Line<float>(725, topPosition + topPosition + 60, 725, topPosition + 160), 1.0f);
-    p.addLineSegment(juce::Line<float>(725, topPosition + 160, 720, topPosition + 166), 1.0f);
-
-    p.addLineSegment(juce::Line<float>(769, topPosition - 6, 775, topPosition), 1.0f);
-    p.addLineSegment(juce::Line<float>(775, topPosition, 775, topPosition + 60), 1.0f);
-    p.addLineSegment(juce::Line<float>(775, topPosition + 60, 825, topPosition + topPosition + 60), 1.0f);
-    p.addLineSegment(juce::Line<float>(825, topPosition + topPosition + 60, 825, topPosition + 160), 1.0f);
-    p.addLineSegment(juce::Line<float>(825, topPosition + 160, 820, topPosition + 166), 1.0f);
-
-    g.fillPath(p);
+    for (int i = 0; i < 3; i++)
+    {
+        xPosition = i * 100 + 75;
+        p.startNewSubPath(xPosition + smallOffset, yPosition[0]);
+        p.lineTo(xPosition, yPosition[1]);
+        p.lineTo(xPosition, yPosition[2]);
+        p.lineTo(xPosition - bigOffset, yPosition[3]);
+        p.lineTo(xPosition - bigOffset, yPosition[4]);
+        p.lineTo(xPosition - bigOffset + smallOffset, yPosition[5]);
+    }
+    xPosition = 425;
+    p.startNewSubPath(xPosition - smallOffset, yPosition[0]);
+    p.lineTo(xPosition, yPosition[1]);
+    p.lineTo(xPosition, yPosition[4]);
+    p.lineTo(xPosition - smallOffset, yPosition[5]);
+    p.startNewSubPath(xPosition + smallOffset, yPosition[0]);
+    p.lineTo(xPosition, yPosition[1]);
+    p.lineTo(xPosition, yPosition[4]);
+    p.lineTo(xPosition + smallOffset, yPosition[5]);
+    for (int i = 0; i < 3; i++)
+    {
+        xPosition = i * 100 + 575;
+        p.startNewSubPath(xPosition - smallOffset, yPosition[0]);
+        p.lineTo(xPosition, yPosition[1]);
+        p.lineTo(xPosition, yPosition[2]);
+        p.lineTo(xPosition + bigOffset, yPosition[3]);
+        p.lineTo(xPosition + bigOffset, yPosition[4]);
+        p.lineTo(xPosition + bigOffset - smallOffset, yPosition[5]);
+    }
+    // draw divider lines
+    g.setColour(juce::Colours::grey);
+    g.strokePath(p, { 1, juce::PathStrokeType::mitered, juce::PathStrokeType::square });
 }
 
 void EeqAudioProcessorEditor::resized()
