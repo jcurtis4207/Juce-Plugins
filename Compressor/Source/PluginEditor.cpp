@@ -92,6 +92,7 @@ CompressorAudioProcessorEditor::CompressorAudioProcessorEditor(CompressorAudioPr
 
 CompressorAudioProcessorEditor::~CompressorAudioProcessorEditor()
 {
+	setLookAndFeel(nullptr);
 }
 
 void CompressorAudioProcessorEditor::paint(juce::Graphics& g)

@@ -253,7 +253,7 @@ private:
     // meter outline
     const juce::Colour outlineColor{ juce::Colours::darkgrey };
     const juce::Rectangle<int> meterOutlineBounds{ meterXPosition - 1, meterYPosition - clipLightHeight - 1, meterTotalWidth + 2, meterTotalHeight + clipLightHeight + 2 };
-    const juce::Line<int> meterSplitLine{ meterXPosition + meterWidth + 1, meterYPosition - clipLightHeight, meterXPosition + meterWidth + 1, meterTotalHeight + clipLightHeight };
+    const juce::Line<int> meterSplitLine{ meterXPosition + meterWidth + 1, meterYPosition, meterXPosition + meterWidth + 1, meterYPosition + meterTotalHeight };
     // create look and feel objects
     LevelLabelLookAndFeel levelLabelLookAndFeel;
     ClipLightLookAndFeel clipLightLookAndFeel;

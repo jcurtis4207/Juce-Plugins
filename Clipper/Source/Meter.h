@@ -147,7 +147,7 @@ private:
     // meter outline
     const juce::Colour outlineColor{ juce::Colours::darkgrey };
     const juce::Rectangle<int> meterOutlineBounds{ meterXPosition - 1, meterYPosition - 1, meterTotalWidth + 2, meterTotalHeight + 2 };
-    const juce::Line<int> meterSplitLine{ meterXPosition + meterWidth + 1, meterYPosition, meterXPosition + meterWidth + 1, meterTotalHeight };
+    const juce::Line<int> meterSplitLine{ meterXPosition + meterWidth + 1, meterYPosition, meterXPosition + meterWidth + 1, meterYPosition + meterTotalHeight };
     // create look and feel objects
     LevelLabelLookAndFeel levelLabelLookAndFeel;
     // pointers for processor gain reduction variables
