@@ -1,6 +1,6 @@
 /*
 *   Clipper Module
-*
+*       by Jacob Curtis
 *
 *   Adapted from SimpleClipper by Daniel Rudrich
 *   Licensed under the GPL Version 3
@@ -22,12 +22,14 @@ public:
 
     ~Clipper() {}
 
-    void setThreshold(const float thresholdInDecibels)
+    void updateClipperValues(juce::AudioProcessorValueTreeState& apvts)
     {
-        threshold = thresholdInDecibels;
+        // get parameter values
+        threshold = apvts.getRawParameterValue("threshold")->load();
+        ceiling = apvts.getRawParameterValue("ceiling")->load();
     }
 
-    // take in a buffer, clip based on threshold, output to a buffer
+    // take in a buffer, clip based on threshold, apply gain based on ceiling, output to a buffer
     void clipBuffer(const float* inputLeft, const float* inputRight, float* outputLeft, float* outputRight, const int numSamples)
     {
         maxGainReductionLeft = 0.0f;
@@ -70,6 +72,14 @@ public:
             {
                 outputRight[sample] = inputRight[sample];
             }
+            // apply autogain
+            float autoGain = juce::Decibels::decibelsToGain(threshold * -1.0f);
+            outputLeft[sample] *= autoGain;
+            outputRight[sample] *= autoGain;
+            // apply ceiling
+            float ceilingGain = juce::Decibels::decibelsToGain(ceiling);
+            outputLeft[sample] *= ceilingGain;
+            outputRight[sample] *= ceilingGain;
             // calculate gain reduction
             maxGainReductionLeft = (tempGainReductionLeft > maxGainReductionLeft) ? tempGainReductionLeft : maxGainReductionLeft;
             maxGainReductionRight = (tempGainReductionRight > maxGainReductionRight) ? tempGainReductionRight : maxGainReductionRight;
@@ -79,7 +89,6 @@ public:
     void prepare(const double newSampleRate, const int numChannels, const int maxBlockSize)
     {
         sampleRate = newSampleRate;
-        // initialize sidechain buffer
         sideChainBuffer.setSize(numChannels, maxBlockSize);
         clippedBuffer.setSize(numChannels, maxBlockSize);
     }
@@ -92,9 +101,9 @@ public:
         // copy audio block into sidechain buffer
         juce::FloatVectorOperations::copy(sideChainBuffer.getWritePointer(0), outBlock.getChannelPointer(0), numSamples);
         juce::FloatVectorOperations::copy(sideChainBuffer.getWritePointer(1), outBlock.getChannelPointer(1), numSamples);
-        // clip sidechain buffer and output on clipped buffer
+        // clip sidechain buffer and output to clipped buffer
         clipBuffer(sideChainBuffer.getReadPointer(0), sideChainBuffer.getReadPointer(1), clippedBuffer.getWritePointer(0), clippedBuffer.getWritePointer(1), numSamples);
-        // copy clipped buffer to audio block
+        // copy clipped buffer to output audio block
         juce::FloatVectorOperations::copy(outBlock.getChannelPointer(0), clippedBuffer.getReadPointer(0), numSamples);
         juce::FloatVectorOperations::copy(outBlock.getChannelPointer(1), clippedBuffer.getReadPointer(1), numSamples);
     }
@@ -112,6 +121,7 @@ private:
     double sampleRate{ 0.0f };
     // parameters
     float threshold{ 0.0f };
+    float ceiling{ 0.0f };
     // gain reduction values
     std::atomic<float> maxGainReductionLeft{ 0.0f };
     std::atomic<float> maxGainReductionRight{ 0.0f };

@@ -47,9 +47,6 @@ public:
 private:
     // create clipper object
     Clipper clipper;
-    void updateClipperValues(juce::AudioProcessorValueTreeState& apvts);
-    // create processing chain for gain
-    juce::dsp::ProcessorChain<juce::dsp::Gain<float>, juce::dsp::Gain<float>> processChain;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ClipperAudioProcessor)
 };

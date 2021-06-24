@@ -31,12 +31,6 @@ ClipperAudioProcessor::ClipperAudioProcessor()
 
 void ClipperAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    // initialize dsp
-    juce::dsp::ProcessSpec spec;
-    spec.sampleRate = sampleRate;
-    spec.maximumBlockSize = samplesPerBlock;
-    spec.numChannels = 2;
-    processChain.prepare(spec);
     // setup clipper
     clipper.prepare(sampleRate, 2, samplesPerBlock);
 }
@@ -51,7 +45,7 @@ void ClipperAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
         buffer.clear(i, 0, buffer.getNumSamples());
 
     // set clipper values from parameters
-    updateClipperValues(parameters);
+    clipper.updateClipperValues(parameters);
     // apply dsp
     juce::dsp::AudioBlock<float> block(buffer);
     juce::dsp::ProcessContextReplacing<float> context(block);
@@ -59,8 +53,6 @@ void ClipperAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     // get gain reduction for meter
     gainReductionLeft = clipper.getGainReductionLeft();
     gainReductionRight = clipper.getGainReductionRight();
-    // apply dsp gain chain
-    processChain.process(context);
 }
 
 void ClipperAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
@@ -85,19 +77,6 @@ void ClipperAudioProcessor::setStateInformation(const void* data, int sizeInByte
             parameters.state = juce::ValueTree::fromXml(*inputXml);
         }
     }
-}
-
-void ClipperAudioProcessor::updateClipperValues(juce::AudioProcessorValueTreeState& apvts)
-{
-    // get parameter values
-    float threshold = apvts.getRawParameterValue("threshold")->load();
-    float ceiling = apvts.getRawParameterValue("ceiling")->load();
-    // set threshold in clipper module
-    clipper.setThreshold(threshold);
-    // apply autogain based on threshold
-    processChain.get<0>().setGainDecibels(threshold * -1.0f);
-    // apply ceiling gain
-    processChain.get<1>().setGainDecibels(ceiling);
 }
 
 //==============================================================================
