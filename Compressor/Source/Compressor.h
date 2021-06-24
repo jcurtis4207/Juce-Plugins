@@ -27,44 +27,21 @@ public:
     {
     }
 
-    void setAttackTime(const float attackTimeInMilliseconds)
+    void updateCompressorValues(juce::AudioProcessorValueTreeState& apvts)
     {
-        attackTime = 1.0f - std::exp(-1.0f / (static_cast<float> (sampleRate) * (attackTimeInMilliseconds / 1000)));
-    }
-
-    void setReleaseTime(const float releaseTimeInMilliseconds)
-    {
-        releaseTime = 1.0f - std::exp(-1.0f / (static_cast<float> (sampleRate) * (releaseTimeInMilliseconds / 1000)));
-    }
-
-    void setThreshold(const float thresholdInDecibels)
-    {
-        threshold = thresholdInDecibels;
-    }
-
-    void setMakeUpGain(const float makeUpGainInDecibels)
-    {
-        makeUpGain = makeUpGainInDecibels;
-    }
-
-    void setRatio(const float ratio)
-    {
+        // get parameter values
+        threshold = apvts.getRawParameterValue("threshold")->load();
+        float attackInput = apvts.getRawParameterValue("attack")->load();
+        float releaseInput = apvts.getRawParameterValue("release")->load();
+        float ratio = apvts.getRawParameterValue("ratio")->load();
+        makeUpGain = apvts.getRawParameterValue("makeUp")->load();
+        scFreq = apvts.getRawParameterValue("scFreq")->load();
+        scBypass = apvts.getRawParameterValue("scBypass")->load();
+        stereo = apvts.getRawParameterValue("stereo")->load();
+        // calculate values
+        attackTime = 1.0f - std::exp(-1.0f / (static_cast<float> (sampleRate) * (attackInput / 1000)));
+        releaseTime = 1.0f - std::exp(-1.0f / (static_cast<float> (sampleRate) * (releaseInput / 1000)));
         slope = 1.0f / ratio - 1.0f;
-    }
-
-    void setFilterFrequency(const float scFilterFrequency)
-    {
-        scFreq = scFilterFrequency;
-    }
-
-    void setFilterBypass(const bool scFilterBypass)
-    {
-        scBypass = scFilterBypass;
-    }
-
-    void setStereoMode(const bool isStereo)
-    {
-        stereo = isStereo;
     }
 
     // Computes the gain reduction separately for each side-chain signal. The values will be in decibels and will NOT contain the make-up gain.
@@ -215,10 +192,8 @@ public:
             computeGainReductionDualMono(sideChainBuffer.getReadPointer(0), sideChainBuffer.getReadPointer(1), grBuffer.getWritePointer(0), grBuffer.getWritePointer(1), numSamples);
         }
         // apply gain reduction to output channels
-        for (int channel = 0; channel < numChannels; ++channel)
-        {
-            juce::FloatVectorOperations::multiply(outBlock.getChannelPointer(channel), grBuffer.getReadPointer(channel), numSamples);
-        }
+        juce::FloatVectorOperations::multiply(outBlock.getChannelPointer(0), grBuffer.getReadPointer(0), numSamples);
+        juce::FloatVectorOperations::multiply(outBlock.getChannelPointer(1), grBuffer.getReadPointer(1), numSamples);
     }
 
     void reset()

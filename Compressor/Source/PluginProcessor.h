@@ -47,8 +47,6 @@ public:
 private:
     // create compressor
     Compressor compressor;
-    // function to update compressor values
-    void updateCompressorValues(juce::AudioProcessorValueTreeState& apvts);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CompressorAudioProcessor)
 };

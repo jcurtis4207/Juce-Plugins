@@ -46,7 +46,7 @@ void CompressorAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
     // setup compressor
     compressor.prepare(sampleRate, 2, samplesPerBlock);
     // apply compressor values from parameters
-    updateCompressorValues(parameters);
+    compressor.updateCompressorValues(parameters);
 }
 
 void CompressorAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
@@ -59,7 +59,7 @@ void CompressorAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         buffer.clear(i, 0, buffer.getNumSamples());
 
     // set compressor values from parameters
-    updateCompressorValues(parameters);
+    compressor.updateCompressorValues(parameters);
     // apply dsp
     juce::dsp::AudioBlock<float> block(buffer);
     juce::dsp::ProcessContextReplacing<float> context(block);
@@ -91,28 +91,6 @@ void CompressorAudioProcessor::setStateInformation(const void* data, int sizeInB
             parameters.state = juce::ValueTree::fromXml(*inputXml);
         }
     }
-}
-
-void CompressorAudioProcessor::updateCompressorValues(juce::AudioProcessorValueTreeState& apvts)
-{
-    // get parameter values
-    float threshold = apvts.getRawParameterValue("threshold")->load();
-    float attack = apvts.getRawParameterValue("attack")->load();
-    float release = apvts.getRawParameterValue("release")->load();
-    float ratio = apvts.getRawParameterValue("ratio")->load();
-    float makeUp = apvts.getRawParameterValue("makeUp")->load();
-    float scFreq = apvts.getRawParameterValue("scFreq")->load();
-    bool scBypass = apvts.getRawParameterValue("scBypass")->load();
-    bool stereo = apvts.getRawParameterValue("stereo")->load();
-    // apply values to compressor module
-    compressor.setThreshold(threshold);
-    compressor.setAttackTime(attack);
-    compressor.setReleaseTime(release);
-    compressor.setRatio(ratio);
-    compressor.setMakeUpGain(makeUp);
-    compressor.setFilterFrequency(scFreq);
-    compressor.setFilterBypass(scBypass);
-    compressor.setStereoMode(stereo);
 }
 
 //==============================================================================
