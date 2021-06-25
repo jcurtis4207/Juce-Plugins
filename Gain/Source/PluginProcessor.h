@@ -42,10 +42,6 @@ public:
     float gain;
     float previousGain;
     bool phase;
-    // constants for gain range
-    const float gainRangeLow{ -30.0f };
-    const float gainRangeHigh{ 30.0f };
-    const float gainRangeInterval{ 0.5f };
     // buffer magnitudes for meter
     float bufferMagnitudeL;
     float bufferMagnitudeR;

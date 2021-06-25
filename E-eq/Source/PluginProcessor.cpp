@@ -24,22 +24,22 @@ EeqAudioProcessor::EeqAudioProcessor()
 #endif
 {
     // create parameters for the highpass filter
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("hpfFreq", "HPF Frequency", juce::NormalisableRange<float>{20.0f, 20000.0f, 1.0f, 0.25f}, 20.0f, "Hz"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("hpfFreq", "HPF Frequency", juce::NormalisableRange<float>(20.0f, 20000.0f, 1.0f, 0.25f), 20.0f, "Hz"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterChoice>("hpfSlope", "HPF Slope", filterSlopes, 0));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("hpfBypass", "HPF Bypass", false));
     // create parameters for the lowpass filter
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("lpfFreq", "LPF Frequency", juce::NormalisableRange<float>{20.0f, 20000.0f, 1.0f, 0.25f}, 20000.0f, "Hz"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("lpfFreq", "LPF Frequency", juce::NormalisableRange<float>(20.0f, 20000.0f, 1.0f, 0.25f), 20000.0f, "Hz"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterChoice>("lpfSlope", "LPF Slope", filterSlopes, 0));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("lpfBypass", "LPF Bypass", false));
     // create parameters for the peak filters
     for (int i = 1; i <= 4; i++)
     {
-        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("band" + juce::String(i) + "Freq", "Band " + juce::String(i) + " Frequency", juce::NormalisableRange<float>{20.0f, 20000.0f, 1.0f, 0.25f}, defaultFreq[i-1], "Hz"));
-        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("band" + juce::String(i) + "Gain", "Band " + juce::String(i) + " Gain", juce::NormalisableRange<float>{-20.0f, 20.0f, 0.25f}, 0.0f, "dB"));
+        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("band" + juce::String(i) + "Freq", "Band " + juce::String(i) + " Frequency", juce::NormalisableRange<float>(20.0f, 20000.0f, 1.0f, 0.25f), defaultFreq[i-1], "Hz"));
+        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("band" + juce::String(i) + "Gain", "Band " + juce::String(i) + " Gain", juce::NormalisableRange<float>(-20.0f, 20.0f, 0.25f), 0.0f, "dB"));
         // bands 2 and 3 have Q parameters
         if (i == 2 || i == 3)
         {
-            parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("band" + juce::String(i) + "Q", "Band " + juce::String(i) + " Q", juce::NormalisableRange<float>{0.1f, 10.0f, 0.1f, 0.4f}, 1.0f, "Q"));
+            parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("band" + juce::String(i) + "Q", "Band " + juce::String(i) + " Q", juce::NormalisableRange<float>(0.1f, 10.0f, 0.1f, 0.4f), 1.0f, "Q"));
         }
         // bands 1 and 4 have shelf parameters
         else
