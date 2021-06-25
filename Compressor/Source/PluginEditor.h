@@ -25,10 +25,10 @@ public:
 private:
     CompressorAudioProcessor& audioProcessor;
     // define gui components
-    juce::Slider thresholdSlider, attackSlider, releaseSlider, ratioSlider, makeUpSlider, scFreqSlider;
+    juce::Slider thresholdSlider, attackSlider, releaseSlider, ratioSlider, makeUpSlider, scFreqSlider, mixSlider;
     juce::TextButton scBypassButton{ "Bypass" }, stereoButton{ "Stereo" };
-    juce::Label thresholdLabel, attackLabel, releaseLabel, ratioLabel, makeUpLabel, scFreqLabel, scBypassLabel, grLabel, stereoLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> thresholdAttach, attackAttach, releaseAttach, ratioAttach, makeUpAttach, scFreqAttach;
+    juce::Label thresholdLabel, attackLabel, releaseLabel, ratioLabel, makeUpLabel, scFreqLabel, scBypassLabel, grLabel, stereoLabel, mixLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> thresholdAttach, attackAttach, releaseAttach, ratioAttach, makeUpAttach, scFreqAttach, mixAttach;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> scBypassAttach, stereoAttach;
     // create gr meter
     Meter meter;

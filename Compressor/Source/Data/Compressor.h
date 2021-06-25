@@ -39,16 +39,19 @@ public:
         scFreq = apvts.getRawParameterValue("scFreq")->load();
         scBypass = apvts.getRawParameterValue("scBypass")->load();
         stereo = apvts.getRawParameterValue("stereo")->load();
+        float mixInput = apvts.getRawParameterValue("mix")->load();
         // calculate values
         attackTime = std::exp(-1.0f / ((attackInput / 1000.0f) * (float)sampleRate));
         releaseTime = std::exp(-1.0f / ((releaseInput / 1000.0f) * (float)sampleRate));
         slope = 1.0f - (1.0f / ratio);
+        mix = mixInput / 100.0f;
     }
 
     void prepare(const double newSampleRate, const int numChannels, const int maxBlockSize)
     {
         sampleRate = newSampleRate;
         // initialize buffers
+        dryBuffer.setSize(numChannels, maxBlockSize);
         sideChainBuffer.setSize(numChannels, maxBlockSize);
         envelopeBuffer.setSize(numChannels, maxBlockSize);
         // initialize sidechain filters
@@ -61,7 +64,9 @@ public:
     {
         const auto& outputBuffer = context.getOutputBlock();
         const int bufferSize = static_cast<int>(outputBuffer.getNumSamples());
-        // copy the buffer into the sidechain
+        // copy the buffer into the dry buffer and sidechain
+        juce::FloatVectorOperations::copy(dryBuffer.getWritePointer(0), outputBuffer.getChannelPointer(0), bufferSize);
+        juce::FloatVectorOperations::copy(dryBuffer.getWritePointer(1), outputBuffer.getChannelPointer(1), bufferSize);
         juce::FloatVectorOperations::copy(sideChainBuffer.getWritePointer(0), outputBuffer.getChannelPointer(0), bufferSize);
         juce::FloatVectorOperations::copy(sideChainBuffer.getWritePointer(1), outputBuffer.getChannelPointer(1), bufferSize);
         // apply sidechain filter if not bypassed
@@ -78,12 +83,12 @@ public:
         // create envelope
         createEnvelope(sideChainBuffer.getReadPointer(0), sideChainBuffer.getReadPointer(1), envelopeBuffer.getWritePointer(0), 
             envelopeBuffer.getWritePointer(1), bufferSize, stereo);
-        // calculate reduciton
+        // apply gain reduction to sidechain
         calculateGainReduction(sideChainBuffer.getWritePointer(0), sideChainBuffer.getWritePointer(1), envelopeBuffer.getReadPointer(0), 
-            envelopeBuffer.getReadPointer(1), bufferSize);
-        // apply gain reduction to output
-        juce::FloatVectorOperations::multiply(outputBuffer.getChannelPointer(0), sideChainBuffer.getReadPointer(0), bufferSize);
-        juce::FloatVectorOperations::multiply(outputBuffer.getChannelPointer(1), sideChainBuffer.getReadPointer(1), bufferSize);
+            envelopeBuffer.getReadPointer(1), dryBuffer.getWritePointer(0), dryBuffer.getWritePointer(1), bufferSize);
+        // copy compressed signal to output
+        juce::FloatVectorOperations::copy(outputBuffer.getChannelPointer(0), sideChainBuffer.getReadPointer(0), bufferSize);
+        juce::FloatVectorOperations::copy(outputBuffer.getChannelPointer(1), sideChainBuffer.getReadPointer(1), bufferSize);
     }
 
     void createEnvelope(const float* inputLeft, const float* inputRight, float* outputLeft,
@@ -143,10 +148,14 @@ public:
         }
     }
 
-    void calculateGainReduction(float* inputLeft, float* inputRight, const float* envelopeLeft, const float* envelopeRight, const int bufferSize)
+    void calculateGainReduction(float* inputLeft, float* inputRight, const float* envelopeLeft, 
+        const float* envelopeRight, float* dryLeft, float* dryRight, const int bufferSize)
     {
         outputGainReductionLeft = 0.0f;
         outputGainReductionRight = 0.0f;
+        // convert mix to sin6dB
+        float dryMix = static_cast<float> (std::pow(std::sin(0.5 * juce::MathConstants<double>::pi * (1.0 - mix)), 2.0));
+        float wetMix = static_cast<float> (std::pow(std::sin(0.5 * juce::MathConstants<double>::pi * mix), 2.0));
         for (int sample = 0; sample < bufferSize; sample++)
         {
             // apply threshold and ratio to envelope
@@ -167,9 +176,17 @@ public:
             // add makeup gain and convert decibels to gain values
             gainReductionLeft = std::pow(10.0f, 0.05f * (gainReductionLeft + makeUpGain));
             gainReductionRight = std::pow(10.0f, 0.05f * (gainReductionRight + makeUpGain));
-            // output gain reduction back to input
-            inputLeft[sample] = gainReductionLeft;
-            inputRight[sample] = gainReductionRight;
+            // output compressed signal back to input
+            inputLeft[sample] = dryLeft[sample] * gainReductionLeft;
+            inputRight[sample] = dryRight[sample] * gainReductionRight;
+            // compute mix
+            inputLeft[sample] *= wetMix;
+            inputRight[sample] *= wetMix;
+            dryLeft[sample] *= dryMix;
+            dryRight[sample] *= dryMix;
+            // sum wet and dry to input
+            inputLeft[sample] = inputLeft[sample] + dryLeft[sample];
+            inputRight[sample] = inputRight[sample] + dryRight[sample];
         }
     }
 
@@ -194,11 +211,12 @@ private:
     float scFreq{ 20.0f };
     bool scBypass{ true };
     bool stereo{ true };
+    float mix{ 100.0f };
     // compression values
     float compressionLevelLeft, compressionLevelRight;
     float outputGainReductionLeft, outputGainReductionRight;
     // auxiliary buffers
-    juce::AudioBuffer<float> sideChainBuffer, envelopeBuffer;
+    juce::AudioBuffer<float> dryBuffer, sideChainBuffer, envelopeBuffer;
     // sidechain filters
     juce::IIRFilter leftFilter, rightFilter;
 };

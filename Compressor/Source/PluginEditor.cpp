@@ -81,6 +81,15 @@ CompressorAudioProcessorEditor::CompressorAudioProcessorEditor(CompressorAudioPr
     stereoLabel.setText("Link Mode", juce::NotificationType::dontSendNotification);
     stereoLabel.setLookAndFeel(&compressorLookAndFeel);
     addAndMakeVisible(stereoLabel);
+    // mix
+    mixSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    mixSlider.setTextValueSuffix(" %");
+    mixSlider.setLookAndFeel(&compressorLookAndFeel);
+    addAndMakeVisible(mixSlider);
+    mixAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "mix", mixSlider);
+    mixLabel.setText("Mix", juce::NotificationType::dontSendNotification);
+    mixLabel.setLookAndFeel(&compressorLookAndFeel);
+    addAndMakeVisible(mixLabel);
     // gr meter
     addAndMakeVisible(meter);
     grLabel.setText("GR", juce::NotificationType::dontSendNotification);
@@ -119,15 +128,17 @@ void CompressorAudioProcessorEditor::resized()
     stereoButton.setBounds(col1XPosition, 340, sliderWidth, 20);
     stereoLabel.setBounds(stereoButton.getX(), stereoButton.getBottom(), sliderWidth, 20);
     // col 2
-    ratioSlider.setBounds(col2XPosition, 110, sliderWidth, sliderWidth);
+    ratioSlider.setBounds(col2XPosition, 60, sliderWidth, sliderWidth);
     ratioLabel.setBounds(ratioSlider.getX(), ratioSlider.getBottom(), sliderWidth, 20);
-    releaseSlider.setBounds(col2XPosition, 210, sliderWidth, sliderWidth);
+    releaseSlider.setBounds(col2XPosition, 160, sliderWidth, sliderWidth);
     releaseLabel.setBounds(releaseSlider.getX(), releaseSlider.getBottom(), sliderWidth, 20);
-    scFreqSlider.setBounds(col2XPosition, 310, sliderWidth, sliderWidth);
+    scFreqSlider.setBounds(col2XPosition, 260, sliderWidth, sliderWidth);
     scFreqLabel.setBounds(scFreqSlider.getX(), scFreqSlider.getBottom(), sliderWidth, 20);
-    // col 3
-    grLabel.setBounds(col3XPosition + 10, 55, 44, 20);
-    meter.setBounds(col3XPosition, 70, meter.getMeterWidth(), meter.getMeterHeight());
-    scBypassButton.setBounds(col3XPosition, 340, sliderWidth, 20);
+    scBypassButton.setBounds(col2XPosition, 340, sliderWidth, 20);
     scBypassLabel.setBounds(scBypassButton.getX(), scBypassButton.getBottom(), sliderWidth, 20);
+    // col 3
+    grLabel.setBounds(col3XPosition + 5, 55, 44, 20);
+    meter.setBounds(col3XPosition, 70, meter.getMeterWidth(), meter.getMeterHeight());
+    mixSlider.setBounds(col3XPosition + 4, 325, sliderWidth, sliderWidth);
+    mixLabel.setBounds(mixSlider.getX(), mixSlider.getBottom(), sliderWidth, 20);
 }
