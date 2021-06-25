@@ -32,7 +32,7 @@ ClipperAudioProcessor::ClipperAudioProcessor()
 void ClipperAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     // setup clipper
-    clipper.prepare(sampleRate, 2, samplesPerBlock);
+    clipper.prepare(sampleRate);
 	// set clipper values from parameters
     clipper.updateClipperValues(parameters);
 }
@@ -51,7 +51,7 @@ void ClipperAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     // apply dsp
     juce::dsp::AudioBlock<float> block(buffer);
     juce::dsp::ProcessContextReplacing<float> context(block);
-    clipper.process(context, getSampleRate());
+    clipper.process(context);
     // get gain reduction for meter
     gainReductionLeft = clipper.getGainReductionLeft();
     gainReductionRight = clipper.getGainReductionRight();

@@ -5,15 +5,12 @@
 *   Adapted from SimpleClipper by Daniel Rudrich
 *   Licensed under the GPL Version 3
 *   https://github.com/DanielRudrich/SimpleClipper
-*   Copyright (c) 2019 Daniel Rudrich
 *
 *
 */
 
 #pragma once
 #include <JuceHeader.h>
-#include <limits>
-#include <atomic>
 
 class Clipper
 {
@@ -29,92 +26,79 @@ public:
         ceiling = apvts.getRawParameterValue("ceiling")->load();
     }
 
-    // take in a buffer, clip based on threshold, apply gain based on ceiling, output to a buffer
-    void clipBuffer(const float* inputLeft, const float* inputRight, float* outputLeft, float* outputRight, const int numSamples)
+    void prepare(const double inputSampleRate)
     {
-        maxGainReductionLeft = 0.0f;
-        maxGainReductionRight = 0.0f;
+        sampleRate = inputSampleRate;
+    }
+
+    void process(const juce::dsp::ProcessContextReplacing<float>& context)
+    {
+        auto outputBuffer = context.getOutputBlock();
+        const int bufferSize = outputBuffer.getNumSamples();
+        // clip output buffer
+        clipBuffer(outputBuffer.getChannelPointer(0), outputBuffer.getChannelPointer(1), bufferSize);
+    }
+
+    // take in a buffer, clip based on threshold, apply gain based on ceiling, output to the same buffer
+    void clipBuffer(float* bufferLeft, float* bufferRight, const int bufferSize)
+    {
+        outputGainReductionLeft = 0.0f;
+        outputGainReductionRight = 0.0f;
         float tempGainReductionLeft = 0.0f;
         float tempGainReductionRight = 0.0f;
-        // for each sample in buffer
-        for (int sample = 0; sample < numSamples; ++sample)
+        for (int sample = 0; sample < bufferSize; ++sample)
         {
             // get threshold in gain units
             const float thresholdHigh = juce::Decibels::decibelsToGain(threshold);
             const float thresholdLow = thresholdHigh * -1.0f;
+            float outputLeft = bufferLeft[sample];
+            float outputRight = bufferRight[sample];
             // clip left
-            if (inputLeft[sample] > thresholdHigh)
+            if (outputLeft > thresholdHigh)
             {
-                outputLeft[sample] = thresholdHigh;
-                tempGainReductionLeft = juce::Decibels::gainToDecibels(inputLeft[sample]) - threshold;
+                tempGainReductionLeft = juce::Decibels::gainToDecibels(outputLeft) - threshold;
+                outputLeft = thresholdHigh;
             }
-            else if (inputLeft[sample] < thresholdLow)
+            else if (outputLeft < thresholdLow)
             {
-                outputLeft[sample] = thresholdLow;
-                tempGainReductionLeft = juce::Decibels::gainToDecibels(inputLeft[sample]) - threshold;
-            }
-            else
-            {
-                outputLeft[sample] = inputLeft[sample];
+                tempGainReductionLeft = juce::Decibels::gainToDecibels(outputLeft) - threshold;
+                outputLeft = thresholdLow;
             }
             // clip right
-            if (inputRight[sample] > thresholdHigh)
+            if (outputRight > thresholdHigh)
             {
-                outputRight[sample] = thresholdHigh;
-                tempGainReductionRight = juce::Decibels::gainToDecibels(inputRight[sample]) - threshold;
+                tempGainReductionRight = juce::Decibels::gainToDecibels(outputRight) - threshold;
+                outputRight = thresholdHigh;
             }
-            else if (inputRight[sample] < thresholdLow)
+            else if (outputRight < thresholdLow)
             {
-                outputRight[sample] = thresholdLow;
-                tempGainReductionRight = juce::Decibels::gainToDecibels(inputRight[sample]) - threshold;
-            }
-            else
-            {
-                outputRight[sample] = inputRight[sample];
+                tempGainReductionRight = juce::Decibels::gainToDecibels(outputRight) - threshold;
+                outputRight = thresholdLow;
             }
             // apply autogain
             float autoGain = juce::Decibels::decibelsToGain(threshold * -1.0f);
-            outputLeft[sample] *= autoGain;
-            outputRight[sample] *= autoGain;
+            outputLeft *= autoGain;
+            outputRight *= autoGain;
             // apply ceiling
             float ceilingGain = juce::Decibels::decibelsToGain(ceiling);
-            outputLeft[sample] *= ceilingGain;
-            outputRight[sample] *= ceilingGain;
+            outputLeft *= ceilingGain;
+            outputRight *= ceilingGain;
+            // write output to buffer
+            bufferLeft[sample] = outputLeft;
+            bufferRight[sample] = outputRight;
             // calculate gain reduction
-            maxGainReductionLeft = (tempGainReductionLeft > maxGainReductionLeft) ? tempGainReductionLeft : maxGainReductionLeft;
-            maxGainReductionRight = (tempGainReductionRight > maxGainReductionRight) ? tempGainReductionRight : maxGainReductionRight;
+            outputGainReductionLeft = (tempGainReductionLeft > outputGainReductionLeft) ? tempGainReductionLeft : outputGainReductionLeft;
+            outputGainReductionRight = (tempGainReductionRight > outputGainReductionRight) ? tempGainReductionRight : outputGainReductionRight;
         }
-    }
-
-    void prepare(const double newSampleRate, const int numChannels, const int maxBlockSize)
-    {
-        sampleRate = newSampleRate;
-        sideChainBuffer.setSize(numChannels, maxBlockSize);
-        clippedBuffer.setSize(numChannels, maxBlockSize);
-    }
-
-    void process(const juce::dsp::ProcessContextReplacing<float>& context, double inputSampleRate)
-    {
-        auto outBlock = context.getOutputBlock();
-        const int numChannels = static_cast<int> (outBlock.getNumChannels());
-        const int numSamples = static_cast<int> (outBlock.getNumSamples());
-        // copy audio block into sidechain buffer
-        juce::FloatVectorOperations::copy(sideChainBuffer.getWritePointer(0), outBlock.getChannelPointer(0), numSamples);
-        juce::FloatVectorOperations::copy(sideChainBuffer.getWritePointer(1), outBlock.getChannelPointer(1), numSamples);
-        // clip sidechain buffer and output to clipped buffer
-        clipBuffer(sideChainBuffer.getReadPointer(0), sideChainBuffer.getReadPointer(1), clippedBuffer.getWritePointer(0), clippedBuffer.getWritePointer(1), numSamples);
-        // copy clipped buffer to output audio block
-        juce::FloatVectorOperations::copy(outBlock.getChannelPointer(0), clippedBuffer.getReadPointer(0), numSamples);
-        juce::FloatVectorOperations::copy(outBlock.getChannelPointer(1), clippedBuffer.getReadPointer(1), numSamples);
     }
 
     const float getGainReductionLeft()
     {
-        return maxGainReductionLeft;
+        return outputGainReductionLeft;
     }
     const float getGainReductionRight()
     {
-        return maxGainReductionRight;
+        return outputGainReductionRight;
     }
 
 private:
@@ -123,8 +107,5 @@ private:
     float threshold{ 0.0f };
     float ceiling{ 0.0f };
     // gain reduction values
-    std::atomic<float> maxGainReductionLeft{ 0.0f };
-    std::atomic<float> maxGainReductionRight{ 0.0f };
-    // create processing buffers
-    juce::AudioBuffer<float> sideChainBuffer, clippedBuffer;;
+    float outputGainReductionLeft, outputGainReductionRight;
 };
