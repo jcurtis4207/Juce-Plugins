@@ -27,22 +27,22 @@ LimiterAudioProcessor::LimiterAudioProcessor()
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("threshold", "Threshold", juce::NormalisableRange<float>{-40.0f, 0.0f, 0.1f}, 0.0f, "dB"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("release", "Release", juce::NormalisableRange<float>{0.1f, 200.0f, 0.1f, 0.35f}, 1.0f, "ms"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("ceiling", "Ceiling", juce::NormalisableRange<float>{-40.0f, 0.0f, 0.1f}, 0.0f, "dB"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("stereo", "Stereo", true));
     // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
 }
 
+void LimiterAudioProcessor::releaseResources()
+{
+    limiter.reset();
+}
+
 void LimiterAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    // initialize dsp
-    juce::dsp::ProcessSpec spec;
-    spec.sampleRate = sampleRate;
-    spec.maximumBlockSize = samplesPerBlock;
-    spec.numChannels = 1;
-    // prepare processor chains
-    leftChain.prepare(spec);
-    rightChain.prepare(spec);
-    // update limiter
-    updateLimiterValues(parameters);
+    // setup limiter
+    limiter.prepare(sampleRate, 2, samplesPerBlock);
+    // apply limiter values from parameters
+    limiter.updateLimiterValues(parameters);
 }
 
 void LimiterAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
@@ -56,17 +56,15 @@ void LimiterAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
 
     // get buffer input magnitude for meter
     bufferMagnitudeIn = buffer.getMagnitude(0, buffer.getNumSamples());
-    // update limiter
-    updateLimiterValues(parameters);
-    // initialize dsp audio blocks
+    // set limiter values from parameters
+    limiter.updateLimiterValues(parameters);
+    // apply dsp
     juce::dsp::AudioBlock<float> block(buffer);
-    auto leftBlock = block.getSingleChannelBlock(0);
-    auto rightBlock = block.getSingleChannelBlock(1);
-    juce::dsp::ProcessContextReplacing<float> leftContext(leftBlock);
-    juce::dsp::ProcessContextReplacing<float> rightContext(rightBlock);
-    // process the blocks
-    leftChain.process(leftContext);
-    rightChain.process(rightContext);
+    juce::dsp::ProcessContextReplacing<float> context(block);
+    limiter.process(context, getSampleRate());
+    // get gain reduction for meter
+    gainReductionLeft = limiter.getGainReductionLeft();
+    gainReductionRight = limiter.getGainReductionRight();
     // get buffer output magnitude for meter
     bufferMagnitudeOut = buffer.getMagnitude(0, buffer.getNumSamples());
 }
@@ -93,22 +91,6 @@ void LimiterAudioProcessor::setStateInformation(const void* data, int sizeInByte
             parameters.state = juce::ValueTree::fromXml(*inputXml);
         }
     }
-}
-
-void LimiterAudioProcessor::updateLimiterValues(juce::AudioProcessorValueTreeState& apvts)
-{
-    // get values from parameters
-    threshold = apvts.getRawParameterValue("threshold")->load();
-    release = apvts.getRawParameterValue("release")->load();
-    ceiling = apvts.getRawParameterValue("ceiling")->load();
-    // update left chain
-    leftChain.get<ChainIndex::Limiter>().setThreshold(threshold);
-    leftChain.get<ChainIndex::Limiter>().setRelease(release);
-    leftChain.get<ChainIndex::Gain>().setGainDecibels(ceiling);
-    // update right chain
-    rightChain.get<ChainIndex::Limiter>().setThreshold(threshold);
-    rightChain.get<ChainIndex::Limiter>().setRelease(release);
-    rightChain.get<ChainIndex::Gain>().setGainDecibels(ceiling);
 }
 
 //==============================================================================

@@ -11,7 +11,8 @@
 #include "PluginEditor.h"
 
 LimiterAudioProcessorEditor::LimiterAudioProcessorEditor(LimiterAudioProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p), inputMeter(audioProcessor.bufferMagnitudeIn), outputMeter(audioProcessor.bufferMagnitudeOut)
+    : AudioProcessorEditor(&p), audioProcessor(p), inputMeter(audioProcessor.bufferMagnitudeIn), 
+    outputMeter(audioProcessor.bufferMagnitudeOut), grMeter(audioProcessor.gainReductionLeft, audioProcessor.gainReductionRight)
 {
     // threshold
     thresholdSlider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
@@ -61,9 +62,20 @@ LimiterAudioProcessorEditor::LimiterAudioProcessorEditor(LimiterAudioProcessor& 
         audioProcessor.parameters.getParameter("ceiling")->endChangeGesture();
         linkKnob.setValue(0.0f);
     };
+    // stereo
+    stereoButton.setLookAndFeel(&limiterLookAndFeel);
+    addAndMakeVisible(stereoButton);
+    stereoAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.parameters, "stereo", stereoButton);
+    stereoLabel.setText("Mono Link", juce::NotificationType::dontSendNotification);
+    stereoLabel.setLookAndFeel(&limiterLookAndFeel);
+    addAndMakeVisible(stereoLabel);
     // meters
     addAndMakeVisible(inputMeter);
     addAndMakeVisible(outputMeter);
+    addAndMakeVisible(grMeter);
+    grLabel.setText("GR", juce::NotificationType::dontSendNotification);
+    grLabel.setLookAndFeel(&limiterLookAndFeel);
+    addAndMakeVisible(grLabel);
 
     setSize(350, 330);
 }
@@ -89,14 +101,18 @@ void LimiterAudioProcessorEditor::resized()
     int sliderHeight = 225;
     thresholdSlider.setBounds(startXPosition, yPosition, sliderWidth, sliderHeight);
     thresholdLabel.setBounds(thresholdSlider.getX() - 10, thresholdSlider.getY() - 20, 70, 20);
-    ceilingSlider.setBounds(startXPosition + 150, yPosition, sliderWidth, sliderHeight);
+    ceilingSlider.setBounds(startXPosition + 120, yPosition, sliderWidth, sliderHeight);
     ceilingLabel.setBounds(ceilingSlider.getX() - 10, ceilingSlider.getY() - 20, 70, 20);
-    releaseSlider.setBounds(startXPosition + 250, yPosition, sliderWidth, sliderHeight);
+    releaseSlider.setBounds(startXPosition + 210, yPosition + 50, sliderWidth, sliderHeight - 50);
     releaseLabel.setBounds(releaseSlider.getX() - 10, releaseSlider.getY() - 20, 70, 20);
-    linkKnob.setBounds(startXPosition + 115, 130, 20, 20);
+    linkKnob.setBounds(startXPosition + 90, 130, 20, 20);
     linkLabel.setBounds(linkKnob.getX() - 25, linkKnob.getY() - 20, 70, 20);
-    inputMeter.setBounds(thresholdSlider.getRight() - 17, yPosition, outputMeter.getMeterWidth(), outputMeter.getMeterHeight());
+    stereoButton.setBounds(releaseSlider.getX(), ceilingSlider.getY() + 2, 50, 20);
+    stereoLabel.setBounds(stereoButton.getX() - 10, stereoButton.getY() - 22, 70, 20);
+    inputMeter.setBounds(thresholdSlider.getRight() - 17, yPosition, inputMeter.getMeterWidth(), inputMeter.getMeterHeight());
     outputMeter.setBounds(ceilingSlider.getRight() - 17, yPosition, outputMeter.getMeterWidth(), outputMeter.getMeterHeight());
+    grMeter.setBounds(releaseSlider.getRight(), yPosition, grMeter.getMeterWidth(), grMeter.getMeterHeight());
+    grLabel.setBounds(grMeter.getX() + 10, grMeter.getY() - 10, 34, 20);
 }
 
 void LimiterAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)

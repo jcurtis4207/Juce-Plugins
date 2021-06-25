@@ -83,4 +83,45 @@ public:
             juce::jmax(1, (int)((float)textArea.getHeight() / font.getHeight())),
             label.getMinimumHorizontalScale());
     }
+
+    // override how buttons look
+    void drawButtonBackground(juce::Graphics& g, juce::Button& button, const juce::Colour& backgroundColour, bool isMouseOverButton, bool isButtonClicked) override
+    {
+        // set button behavior to toggle
+        button.setClickingTogglesState(true);
+        // get dimensions
+        auto buttonArea = button.getLocalBounds();
+        juce::Rectangle<float> buttonRectangle = buttonArea.toFloat();
+        // set background color based on toggle state
+        if (button.getToggleState())
+        {
+            g.setGradientFill(juce::ColourGradient(juce::Colour(0xffe9e9e9), buttonRectangle.getCentreX(), buttonRectangle.getCentreY(), juce::Colour(0xffa0a0a0), buttonRectangle.getX(), buttonRectangle.getY(), true));
+        }
+        else
+        {
+            g.setColour(juce::Colour(0xffe9e9e9));
+        }
+        g.fillRoundedRectangle(buttonRectangle, 3.0f);
+        // draw outline
+        g.setColour(juce::Colours::black);
+        g.drawRoundedRectangle(buttonRectangle, 3.0f, 1.0f);
+    }
+    // override how button text looks
+    void drawButtonText(juce::Graphics& g, juce::TextButton& button, bool isMouseOverButton, bool isButtonClicked) override
+    {
+        auto font = getTextButtonFont(button, button.getHeight());
+        g.setFont(font);
+        g.setColour(juce::Colours::black);
+        // defaults from LookAndFeel_V2
+        auto yIndent = juce::jmin(4, button.proportionOfHeight(0.3f));
+        auto cornerSize = juce::jmin(button.getHeight(), button.getWidth()) / 2;
+        auto fontHeight = juce::roundToInt(font.getHeight() * 0.6f);
+        auto leftIndent = juce::jmin(fontHeight, 2 + cornerSize / (button.isConnectedOnLeft() ? 4 : 2));
+        auto rightIndent = juce::jmin(fontHeight, 2 + cornerSize / (button.isConnectedOnRight() ? 4 : 2));
+        auto textWidth = button.getWidth() - leftIndent - rightIndent;
+        if (textWidth > 0)
+            g.drawFittedText(button.getButtonText(),
+                leftIndent, yIndent, textWidth, button.getHeight() - yIndent * 2,
+                juce::Justification::centred, 2);
+    }
 };

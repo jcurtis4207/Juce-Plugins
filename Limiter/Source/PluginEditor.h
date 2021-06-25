@@ -26,8 +26,10 @@ private:
     LimiterAudioProcessor& audioProcessor;
     // gui components
     juce::Slider thresholdSlider, ceilingSlider, releaseSlider, linkKnob;
-    juce::Label thresholdLabel, ceilingLabel, releaseLabel, linkLabel;
+    juce::TextButton stereoButton{ "Stereo" };
+    juce::Label thresholdLabel, ceilingLabel, releaseLabel, linkLabel, stereoLabel, grLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> thresholdAttach, ceilingAttach, releaseAttach;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> stereoAttach;
     // linked parameter values
     float thresholdValue{ 0.0f };
     float ceilingValue{ 0.0f };
@@ -36,8 +38,8 @@ private:
     // create look and feel
     LimiterLookAndFeel limiterLookAndFeel;
     // create meter objects
-    Meter inputMeter;
-    Meter outputMeter;
+    Meter inputMeter, outputMeter;
+    GainReductionMeter grMeter;
     // create powerline object
     PowerLine powerLine;
     // function for trim knob to modify parameters
