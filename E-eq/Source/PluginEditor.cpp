@@ -101,14 +101,14 @@ void EeqAudioProcessorEditor::paint(juce::Graphics& g)
     powerLine.drawPowerLine(g, 85.0f, 10.0f, 110.0f, 30.0f, 8, 0, "Jacob Curtis");
     powerLine.drawPowerLine(g, 10.0f, 10.0f, 70.0f, 30.0f, 4, 0, "E-EQ");
     // calculate divider lines
-    int xPosition;
-    int bigOffset = 50;
-    int smallOffset = 6;
+    float xPosition;
+    float bigOffset = 50.0f;
+    float smallOffset = 6.0f;
     float yPosition[6] = { 54.0f, 60.0f, 120.0f, 160.0f, 220.0f, 226.0f };
     juce::Path p;
     for (int i = 0; i < 3; i++)
     {
-        xPosition = i * 100 + 75;
+        xPosition = i * 100.0f + 75.0f;
         p.startNewSubPath(xPosition + smallOffset, yPosition[0]);
         p.lineTo(xPosition, yPosition[1]);
         p.lineTo(xPosition, yPosition[2]);
@@ -127,7 +127,7 @@ void EeqAudioProcessorEditor::paint(juce::Graphics& g)
     p.lineTo(xPosition + smallOffset, yPosition[5]);
     for (int i = 0; i < 3; i++)
     {
-        xPosition = i * 100 + 575;
+        xPosition = i * 100.0f + 575.0f;
         p.startNewSubPath(xPosition - smallOffset, yPosition[0]);
         p.lineTo(xPosition, yPosition[1]);
         p.lineTo(xPosition, yPosition[2]);

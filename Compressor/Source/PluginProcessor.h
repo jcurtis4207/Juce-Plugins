@@ -9,7 +9,7 @@
 
 #pragma once
 #include <JuceHeader.h>
-#include "Compressor.h"
+#include "Data/Compressor.h"
 
 class CompressorAudioProcessor : public juce::AudioProcessor
 {
@@ -33,9 +33,9 @@ public:
     double getTailLengthSeconds() const override { return 0.0; }
     int getNumPrograms() override { return 1; }
     int getCurrentProgram() override { return 0; }
-    void setCurrentProgram(int index) override {}
-    const juce::String getProgramName(int index) override { return {}; }
-    void changeProgramName(int index, const juce::String& newName) override {}
+    void setCurrentProgram(int) override {}
+    const juce::String getProgramName(int) override { return {}; }
+    void changeProgramName(int, const juce::String&) override {}
     bool hasEditor() const override { return true; }
 
     // object for parameters

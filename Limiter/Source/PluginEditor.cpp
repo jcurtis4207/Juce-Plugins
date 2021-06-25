@@ -120,7 +120,7 @@ void LimiterAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
     if (slider == &linkKnob && linkFlag)
     {
         // get value from knob
-        float trim = linkKnob.getValue();
+        float trim = (float)linkKnob.getValue();
         // add to parameter value and convert to normalized range -40 - 0
         float newThreshold = (40.0f + thresholdValue + trim) / 40.0f;
         float newCeiling = (40.f + ceilingValue + trim) / 40.0f;

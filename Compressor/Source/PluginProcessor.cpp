@@ -49,7 +49,7 @@ void CompressorAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
     compressor.updateCompressorValues(parameters);
 }
 
-void CompressorAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void CompressorAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
 {
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels = getTotalNumInputChannels();

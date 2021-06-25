@@ -10,9 +10,9 @@
 #pragma once
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
-#include "Meter.h"
-#include "CompressorLookAndFeel.h"
-#include "PowerLine.h"
+#include "GUI/Meter.h"
+#include "GUI/CompressorLookAndFeel.h"
+#include "GUI/PowerLine.h"
 
 class CompressorAudioProcessorEditor : public juce::AudioProcessorEditor
 {

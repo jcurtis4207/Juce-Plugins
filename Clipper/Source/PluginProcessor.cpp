@@ -29,7 +29,7 @@ ClipperAudioProcessor::ClipperAudioProcessor()
     parameters.state = juce::ValueTree("savedParams");
 }
 
-void ClipperAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
+void ClipperAudioProcessor::prepareToPlay(double sampleRate, int)
 {
     // setup clipper
     clipper.prepare(sampleRate);
@@ -37,7 +37,7 @@ void ClipperAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
     clipper.updateClipperValues(parameters);
 }
 
-void ClipperAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void ClipperAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
 {
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels = getTotalNumInputChannels();

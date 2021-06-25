@@ -46,7 +46,7 @@ void TilteqAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     updateFilters();
 }
 
-void TilteqAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void TilteqAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
 {
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels = getTotalNumInputChannels();

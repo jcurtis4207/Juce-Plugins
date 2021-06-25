@@ -2,9 +2,9 @@
 *   Powerline Module
 *       by Jacob Curtis
 *       Created/tested on Windows using Reaper VST3
-* 
+*
 *  Draws a powerline shape with text
-* 
+*
 *  Implementation Instructions:
 *
 *   In PluginEditor.h
@@ -50,9 +50,10 @@ public:
         g.setFont(juce::Font("Constantia", height - 12.0f, 0));
         // draw text shadow
         g.setColour(themeColors[shapeColor].brighter());
-        g.drawText(text, x + offset - 1, y + 1, width - offset, height, juce::Justification::centred, false);
+        auto textArea = juce::Rectangle<float>(x + offset, y + 1, width - offset, height).toNearestInt();
+        g.drawText(text, textArea, juce::Justification::centred, false);
         // draw text
         g.setColour(themeColors[textColor]);
-        g.drawText(text, x + offset, y, width - offset, height, juce::Justification::centred, false);
+        g.drawText(text, textArea, juce::Justification::centred, false);
     }
 };

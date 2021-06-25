@@ -67,7 +67,7 @@ void EeqAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     setCoefficients(parameters);
 }
 
-void EeqAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void EeqAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
 {
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels = getTotalNumInputChannels();

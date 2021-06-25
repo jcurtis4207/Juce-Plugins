@@ -30,13 +30,13 @@ GainAudioProcessor::GainAudioProcessor()
     parameters.state = juce::ValueTree("savedParams");
 }
 
-void GainAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
+void GainAudioProcessor::prepareToPlay(double, int)
 {
     // before audio begins, get gain and phase values from parameters
     previousGain = *parameters.getRawParameterValue("gain");
 }
 
-void GainAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void GainAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
 {
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels = getTotalNumInputChannels();

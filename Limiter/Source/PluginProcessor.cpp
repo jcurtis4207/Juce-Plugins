@@ -45,7 +45,7 @@ void LimiterAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
     limiter.updateLimiterValues(parameters);
 }
 
-void LimiterAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void LimiterAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
 {
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels = getTotalNumInputChannels();
@@ -61,7 +61,7 @@ void LimiterAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     // apply dsp
     juce::dsp::AudioBlock<float> block(buffer);
     juce::dsp::ProcessContextReplacing<float> context(block);
-    limiter.process(context, getSampleRate());
+    limiter.process(context);
     // get gain reduction for meter
     gainReductionLeft = limiter.getGainReductionLeft();
     gainReductionRight = limiter.getGainReductionRight();

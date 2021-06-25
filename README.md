@@ -23,7 +23,8 @@ The GUI is yet another shameless ripoff of Waves L1 with only threshold and ceil
 ### Compressor
 A rather versatile compressor. 
 It includes a stereo gain reduction meter, a highpass filter sidechain, as well as switchable stereo and multi-mono linking modes.
-I adapted the compression algorithm from Daniel Rudrich's [Simple Compressor](https://github.com/DanielRudrich/SimpleCompressor).
+The original inspiration is from Daniel Rudrich's [Simple Compressor](https://github.com/DanielRudrich/SimpleCompressor).
+The envelope implementation is from [this flyingSand article](https://christianfloisand.wordpress.com/2014/06/09/dynamics-processing-compressorlimiter-part-1/).
 
 ### Gain
 A simple plugin that includes a gain knob with a range of -30dB to +30dB, a phase inversion button, and a level meter.
@@ -35,7 +36,10 @@ The high and low shelf bands can be switched to a bell, and two fully parametric
 All of the bands have access to the entire frequency spectrum.
 
 ### Limiter
-A ripoff of the L1 limiter. I think the layout of the L1 is the best out there, so I haven't tried to reinvent the wheel (yet).
+A ripoff of the L1 limiter. 
+I think the layout of the L1 is the best out there, so I haven't tried to reinvent the wheel (yet).
+It also includes a button to link and unlink the channels, which the L1 doesn't have.
+The backend is the same implementation as the Compressor plugin.
 
 ### Tilt-eq
 A tilting equalizer, similar to the Tonelux Tilt.

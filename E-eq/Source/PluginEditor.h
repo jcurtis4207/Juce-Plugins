@@ -10,8 +10,8 @@
 #pragma once
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
-#include "EqLookAndFeel.h"
-#include "PowerLine.h"
+#include "GUI/EqLookAndFeel.h"
+#include "GUI/PowerLine.h"
 
 class EeqAudioProcessorEditor : public juce::AudioProcessorEditor
 {

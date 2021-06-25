@@ -10,9 +10,9 @@
 #pragma once
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
-#include "Meter.h"
-#include "ClipperLookAndFeel.h"
-#include "PowerLine.h"
+#include "GUI/ClipperLookAndFeel.h"
+#include "GUI/Meter.h"
+#include "GUI/PowerLine.h"
 
 class ClipperAudioProcessorEditor : public juce::AudioProcessorEditor, public juce::Slider::Listener
 {

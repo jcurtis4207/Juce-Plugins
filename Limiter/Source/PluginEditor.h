@@ -10,9 +10,9 @@
 #pragma once
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
-#include "LimiterLookAndFeel.h"
-#include "Meter.h"
-#include "PowerLine.h"
+#include "GUI/LimiterLookAndFeel.h"
+#include "GUI/Meter.h"
+#include "GUI/PowerLine.h"
 
 class LimiterAudioProcessorEditor : public juce::AudioProcessorEditor, public juce::Slider::Listener
 {
