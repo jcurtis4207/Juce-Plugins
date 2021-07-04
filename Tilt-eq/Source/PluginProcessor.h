@@ -41,8 +41,9 @@ public:
     juce::AudioProcessorValueTreeState parameters;
 
 private:
-    // create processor chain objects with 2 filters
-    juce::dsp::ProcessorChain<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Filter<float>> leftChain, rightChain;
+    // create processor chain objects with 2 stereo filters
+    using StereoFilter = juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>>;
+    juce::dsp::ProcessorChain<StereoFilter, StereoFilter> processChain;
     // update filter coefficients
     void updateFilters();
 

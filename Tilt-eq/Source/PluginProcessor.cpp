@@ -36,12 +36,9 @@ void TilteqAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     juce::dsp::ProcessSpec spec;
     spec.sampleRate = sampleRate;
     spec.maximumBlockSize = samplesPerBlock;
-    spec.numChannels = 1;
-
-    // prepare processor chains
-    leftChain.prepare(spec);
-    rightChain.prepare(spec);
-
+    spec.numChannels = getTotalNumOutputChannels();
+    // prepare the process chain
+    processChain.prepare(spec);
     // set coefficients from parameters
     updateFilters();
 }
@@ -57,16 +54,10 @@ void TilteqAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
 
     // set coefficients from parameters
     updateFilters();
-
-    // initialize dsp audio blocks
+    // initialize dsp audio block and process filters
     juce::dsp::AudioBlock<float> block(buffer);
-    auto leftBlock = block.getSingleChannelBlock(0);
-    auto rightBlock = block.getSingleChannelBlock(1);
-    juce::dsp::ProcessContextReplacing<float> leftContext(leftBlock);
-    juce::dsp::ProcessContextReplacing<float> rightContext(rightBlock);
-    // process the blocks
-    leftChain.process(leftContext);
-    rightChain.process(rightContext);
+    juce::dsp::ProcessContextReplacing<float> context(block);
+    processChain.process(context);
 }
 
 void TilteqAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
@@ -97,18 +88,12 @@ void TilteqAudioProcessor::updateFilters()
 {
     float freq = parameters.getRawParameterValue("freq")->load();
     float gain = parameters.getRawParameterValue("gain")->load();
-    // create low shelf with fixed 0.4Q and inverted gain
+    // create shelves with fixed 0.4Q
     auto lowShelfCoefficients = juce::dsp::IIR::Coefficients<float>::makeLowShelf(getSampleRate(), freq, 0.4f, juce::Decibels::decibelsToGain(gain * -1.0f));
-    auto& leftLowShelf = leftChain.get<0>();
-    auto& rightLowShelf = rightChain.get<0>();
-    *leftLowShelf.coefficients = *lowShelfCoefficients;
-    *rightLowShelf.coefficients = *lowShelfCoefficients;
-    // create high shelf with fixed 0.4Q
     auto highShelfCoefficients = juce::dsp::IIR::Coefficients<float>::makeHighShelf(getSampleRate(), freq, 0.4f, juce::Decibels::decibelsToGain(gain));
-    auto& leftHighShelf = leftChain.get<1>();
-    auto& rightHighShelf = rightChain.get<1>();
-    *leftHighShelf.coefficients = *highShelfCoefficients;
-    *rightHighShelf.coefficients = *highShelfCoefficients;
+    // apply coefficients to filters
+    *processChain.get<0>().state = *lowShelfCoefficients;
+    *processChain.get<1>().state = *highShelfCoefficients;
 }
 
 //==============================================================================
