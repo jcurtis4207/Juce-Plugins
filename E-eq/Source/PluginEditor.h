@@ -23,24 +23,22 @@ public:
 
 private:
     EeqAudioProcessor& audioProcessor;
-    // labels
-    juce::Label knobLabels[14];
-    juce::String knobLabelText[14]{ "Hz", "Gain", "Hz", "Gain", "Q", "Hz", "Gain", "Q", "Hz", "Gain", "Hz", "Slope", "Hz", "Slope" };
     // filter sliders
     juce::Slider filterKnobs[4];
     juce::String filterParamIDs[4]{ "hpfFreq", "hpfSlope", "lpfFreq", "lpfSlope" };
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> filterKnobsAttach[4];
     // parametric band sliders
-    juce::Slider bandKnobs[10];
-    juce::String bandSuffixes[10]{ " Hz", " dB", " Hz", " dB", "", " Hz", " dB", "", " Hz", " dB" };
-    juce::String bandParamIDs[10]{ "band1Freq", "band1Gain", "band2Freq", "band2Gain", "band2Q", "band3Freq", "band3Gain", "band3Q", "band4Freq", "band4Gain" };
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> bandKnobsAttach[10];
-    juce::Colour bandColors[5]{ 
+    juce::Slider bandKnobs[12];
+    juce::String bandSuffixes[3]{ " Hz", " dB", " Q" };
+    juce::String bandParamIDSuffixes[3]{ "Freq", "Gain", "Q"};
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> bandKnobsAttach[12];
+    juce::Colour bandColors[6]{ 
         juce::Colour(0xff242424),   // black 
         juce::Colour(0xff35669e),   // blue
         juce::Colour(0xff346844),   // green
         juce::Colour(0xffa84130),   // red
-        juce::Colour(0xffe9e9e9)    // white
+        juce::Colour(0xffe9e9e9),   // white
+        juce::Colour(0xffc9c9c9)    // dark white
     };
     // filter bypass buttons
     juce::TextButton hpfBypassButton{ "Bypass" };
@@ -56,6 +54,8 @@ private:
     EqLookAndFeel eqLookAndFeel;
     // create powerline object
     PowerLine powerLine;
+    // function to draw knob diagrams
+    void drawKnobDiagram(juce::Graphics& g, juce::String textLeft, juce::String textRight, int xPosition, int yPosition);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EeqAudioProcessorEditor)
 };

@@ -31,18 +31,14 @@ EeqAudioProcessor::EeqAudioProcessor()
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("lpfFreq", "LPF Frequency", juce::NormalisableRange<float>(20.0f, 20000.0f, 1.0f, 0.25f), 20000.0f, "Hz"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterChoice>("lpfSlope", "LPF Slope", filterSlopes, 0));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("lpfBypass", "LPF Bypass", false));
-    // create parameters for the peak filters
+    // create parameters for peak bands
     for (int i = 1; i <= 4; i++)
     {
-        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("band" + juce::String(i) + "Freq", "Band " + juce::String(i) + " Frequency", juce::NormalisableRange<float>(20.0f, 20000.0f, 1.0f, 0.25f), defaultFreq[i-1], "Hz"));
-        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("band" + juce::String(i) + "Gain", "Band " + juce::String(i) + " Gain", juce::NormalisableRange<float>(-20.0f, 20.0f, 0.25f), 0.0f, "dB"));
-        // bands 2 and 3 have Q parameters
-        if (i == 2 || i == 3)
-        {
-            parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("band" + juce::String(i) + "Q", "Band " + juce::String(i) + " Q", juce::NormalisableRange<float>(0.1f, 10.0f, 0.1f, 0.4f), 1.0f, "Q"));
-        }
-        // bands 1 and 4 have shelf parameters
-        else
+        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("band" + juce::String(i) + "Freq", "Band " + juce::String(i) + " Frequency", juce::NormalisableRange<float>(20.0f, 20000.0f, 1.0f, 0.25f), defaultFreq[i - 1], "Hz"));
+        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("band" + juce::String(i) + "Gain", "Band " + juce::String(i) + " Gain", juce::NormalisableRange<float>(-20.0f, 20.0f, 0.25f), 0.0f, "dB"));  
+        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("band" + juce::String(i) + "Q", "Band " + juce::String(i) + " Q", juce::NormalisableRange<float>(0.1f, 10.0f, 0.1f, 0.4f), 1.0f, "Q"));
+        // create shelf/bell switch for bands 1 and 4
+        if (i == 1 || i == 4)
         {
             parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("band" + juce::String(i) + "Bell", "Band " + juce::String(i) + " Bell", false));
         }
@@ -57,12 +53,9 @@ void EeqAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     juce::dsp::ProcessSpec spec;
     spec.sampleRate = sampleRate;
     spec.maximumBlockSize = samplesPerBlock;
-    spec.numChannels = 1;
-
+    spec.numChannels = getTotalNumOutputChannels();
     // prepare processor chains
-    leftChain.prepare(spec);
-    rightChain.prepare(spec);
-
+    processChain.prepare(spec);
     // set coefficients from parameters
     setCoefficients(parameters);
 }
@@ -78,16 +71,11 @@ void EeqAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mid
 
     // set coefficients from parameters
     setCoefficients(parameters);
-
-    // initialize dsp audio blocks
+    // initialize dsp audio block
     juce::dsp::AudioBlock<float> block(buffer);
-    auto leftBlock = block.getSingleChannelBlock(0);
-    auto rightBlock = block.getSingleChannelBlock(1);
-    juce::dsp::ProcessContextReplacing<float> leftContext(leftBlock);
-    juce::dsp::ProcessContextReplacing<float> rightContext(rightBlock);
-    // process the blocks
-    leftChain.process(leftContext);
-    rightChain.process(rightContext);
+    juce::dsp::ProcessContextReplacing<float> context(block);
+    // process the block
+    processChain.process(context);
 }
 
 void EeqAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
@@ -115,109 +103,84 @@ void EeqAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 }
 
 // populate settings struct from parameters
-ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& parameters)
+ParameterValues getParameterValues(juce::AudioProcessorValueTreeState& apvts)
 {
-    ChainSettings settings;
+    ParameterValues newValues;
     // get all paramter values for filters
-    settings.hpfFreq = parameters.getRawParameterValue("hpfFreq")->load();
-    settings.hpfSlope = (int)parameters.getRawParameterValue("hpfSlope")->load();
-    settings.hpfBypass = parameters.getRawParameterValue("hpfBypass")->load();
-    settings.lpfFreq = parameters.getRawParameterValue("lpfFreq")->load();
-    settings.lpfSlope = (int)parameters.getRawParameterValue("lpfSlope")->load();
-    settings.lpfBypass = parameters.getRawParameterValue("lpfBypass")->load();
+    newValues.hpfFreq = apvts.getRawParameterValue("hpfFreq")->load();
+    newValues.hpfSlope = (int)apvts.getRawParameterValue("hpfSlope")->load();
+    newValues.hpfBypass = apvts.getRawParameterValue("hpfBypass")->load();
+    newValues.lpfFreq = apvts.getRawParameterValue("lpfFreq")->load();
+    newValues.lpfSlope = (int)apvts.getRawParameterValue("lpfSlope")->load();
+    newValues.lpfBypass = apvts.getRawParameterValue("lpfBypass")->load();
     // get all parameter values for parametric bands
-    settings.band1Freq = parameters.getRawParameterValue("band1Freq")->load();
-    settings.band1Gain = parameters.getRawParameterValue("band1Gain")->load();
-    settings.band1Bell = parameters.getRawParameterValue("band1Bell")->load();
-    settings.band2Freq = parameters.getRawParameterValue("band2Freq")->load();
-    settings.band2Gain = parameters.getRawParameterValue("band2Gain")->load();
-    settings.band2Q = parameters.getRawParameterValue("band2Q")->load();
-    settings.band3Freq = parameters.getRawParameterValue("band3Freq")->load();
-    settings.band3Gain = parameters.getRawParameterValue("band3Gain")->load();
-    settings.band3Q = parameters.getRawParameterValue("band3Q")->load();
-    settings.band4Freq = parameters.getRawParameterValue("band4Freq")->load();
-    settings.band4Gain = parameters.getRawParameterValue("band4Gain")->load();
-    settings.band4Bell = parameters.getRawParameterValue("band4Bell")->load();
-    return settings;
+    newValues.band1Freq = apvts.getRawParameterValue("band1Freq")->load();
+    newValues.band1Gain = apvts.getRawParameterValue("band1Gain")->load();
+    newValues.band1Q = apvts.getRawParameterValue("band1Q")->load();
+    newValues.band2Freq = apvts.getRawParameterValue("band2Freq")->load();
+    newValues.band2Gain = apvts.getRawParameterValue("band2Gain")->load();
+    newValues.band2Q = apvts.getRawParameterValue("band2Q")->load();
+    newValues.band3Freq = apvts.getRawParameterValue("band3Freq")->load();
+    newValues.band3Gain = apvts.getRawParameterValue("band3Gain")->load();
+    newValues.band3Q = apvts.getRawParameterValue("band3Q")->load();
+    newValues.band4Freq = apvts.getRawParameterValue("band4Freq")->load();
+    newValues.band4Gain = apvts.getRawParameterValue("band4Gain")->load();
+    newValues.band4Q = apvts.getRawParameterValue("band4Q")->load();
+    newValues.band1Bell = apvts.getRawParameterValue("band1Bell")->load();
+    newValues.band4Bell = apvts.getRawParameterValue("band4Bell")->load();
+    return newValues;
 }
 
 // update parametric bands coefficients from settings struct
-void EeqAudioProcessor::updateEqBands(const ChainSettings& chainSettings)
+void EeqAudioProcessor::updateEqBands(const ParameterValues& inputValues)
 {
-    // band 1 as shelf
-    if (!chainSettings.band1Bell)
+    // create peak coefficients for all bands
+    auto band1Coefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), inputValues.band1Freq, inputValues.band1Q, juce::Decibels::decibelsToGain(inputValues.band1Gain));
+    auto band2Coefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), inputValues.band2Freq, inputValues.band2Q, juce::Decibels::decibelsToGain(inputValues.band2Gain));
+    auto band3Coefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), inputValues.band3Freq, inputValues.band3Q, juce::Decibels::decibelsToGain(inputValues.band3Gain));
+    auto band4Coefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), inputValues.band4Freq, inputValues.band4Q, juce::Decibels::decibelsToGain(inputValues.band4Gain));
+    // create shelf coefficients if needed
+    if (!inputValues.band1Bell)
     {
-        auto band1Coefficients = juce::dsp::IIR::Coefficients<float>::makeLowShelf(getSampleRate(), chainSettings.band1Freq, 1.0, juce::Decibels::decibelsToGain(chainSettings.band1Gain));
-        *leftChain.get<ChainIndex::Band1>().coefficients = *band1Coefficients;
-        *rightChain.get<ChainIndex::Band1>().coefficients = *band1Coefficients;
+        band1Coefficients = juce::dsp::IIR::Coefficients<float>::makeLowShelf(getSampleRate(), inputValues.band1Freq, inputValues.band1Q, juce::Decibels::decibelsToGain(inputValues.band1Gain));
     }
-    // band 1 as peak
-    else
+    if (!inputValues.band4Bell)
     {
-        auto band1Coefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), chainSettings.band1Freq, 1.0, juce::Decibels::decibelsToGain(chainSettings.band1Gain));
-        *leftChain.get<ChainIndex::Band1>().coefficients = *band1Coefficients;
-        *rightChain.get<ChainIndex::Band1>().coefficients = *band1Coefficients;
+        band4Coefficients = juce::dsp::IIR::Coefficients<float>::makeHighShelf(getSampleRate(), inputValues.band4Freq, inputValues.band4Q, juce::Decibels::decibelsToGain(inputValues.band4Gain));
     }
-    // band 2
-    auto band2Coefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), chainSettings.band2Freq, chainSettings.band2Q, juce::Decibels::decibelsToGain(chainSettings.band2Gain));
-    *leftChain.get<ChainIndex::Band2>().coefficients = *band2Coefficients;
-    *rightChain.get<ChainIndex::Band2>().coefficients = *band2Coefficients;
-    // band 3
-    auto band3Coefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), chainSettings.band3Freq, chainSettings.band3Q, juce::Decibels::decibelsToGain(chainSettings.band3Gain));
-    *leftChain.get<ChainIndex::Band3>().coefficients = *band3Coefficients;
-    *rightChain.get<ChainIndex::Band3>().coefficients = *band3Coefficients;
-    // band 4 as shelf
-    if (!chainSettings.band4Bell)
-    {
-        auto band4Coefficients = juce::dsp::IIR::Coefficients<float>::makeHighShelf(getSampleRate(), chainSettings.band4Freq, 1.0, juce::Decibels::decibelsToGain(chainSettings.band4Gain));
-        *leftChain.get<ChainIndex::Band4>().coefficients = *band4Coefficients;
-        *rightChain.get<ChainIndex::Band4>().coefficients = *band4Coefficients;
-    }
-    // band 4 as peak
-    else
-    {
-        auto band4Coefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), chainSettings.band4Freq, 1.0, juce::Decibels::decibelsToGain(chainSettings.band4Gain));
-        *leftChain.get<ChainIndex::Band4>().coefficients = *band4Coefficients;
-        *rightChain.get<ChainIndex::Band4>().coefficients = *band4Coefficients;
-    }
+    // apply coefficients to process chain
+    *processChain.get<ChainIndex::Band1>().state = *band1Coefficients;
+    *processChain.get<ChainIndex::Band2>().state = *band2Coefficients;
+    *processChain.get<ChainIndex::Band3>().state = *band3Coefficients;
+    *processChain.get<ChainIndex::Band4>().state = *band4Coefficients;
 }
 
 // update filter coefficients from settings struct
-void EeqAudioProcessor::updateFilters(const ChainSettings& chainSettings)
+void EeqAudioProcessor::updateFilters(const ParameterValues& inputValues)
 {
     // bypass hpf
-    if (chainSettings.hpfBypass)
+    if (inputValues.hpfBypass)
     {
-        leftChain.setBypassed<ChainIndex::HPF>(true);
-        rightChain.setBypassed<ChainIndex::HPF>(true);
+        processChain.setBypassed<ChainIndex::HPF>(true);
     }
     // update hpf coefficients
     else
     {
-        leftChain.setBypassed<ChainIndex::HPF>(false);
-        rightChain.setBypassed<ChainIndex::HPF>(false);
-        auto hpfCoefficients = juce::dsp::FilterDesign<float>::designIIRHighpassHighOrderButterworthMethod(chainSettings.hpfFreq, getSampleRate(), 2 * (chainSettings.hpfSlope + 1));
-        auto& leftHPF = leftChain.get<ChainIndex::HPF>();
-        auto& rightHPF = rightChain.get<ChainIndex::HPF>();
-        *leftHPF.coefficients = *hpfCoefficients[0];
-        *rightHPF.coefficients = *hpfCoefficients[0];
+        processChain.setBypassed<ChainIndex::HPF>(false);
+        auto hpfCoefficients = juce::dsp::FilterDesign<float>::designIIRHighpassHighOrderButterworthMethod(inputValues.hpfFreq, getSampleRate(), 2 * (inputValues.hpfSlope + 1));
+        *processChain.get<ChainIndex::HPF>().state = *hpfCoefficients[0];
     }
     // bypass lpf
-    if (chainSettings.lpfBypass)
+    if (inputValues.lpfBypass)
     {
-        leftChain.setBypassed<ChainIndex::LPF>(true);
-        rightChain.setBypassed<ChainIndex::LPF>(true);
+        processChain.setBypassed<ChainIndex::LPF>(true);
     }
     // update lpf coefficients
     else
     {
-        leftChain.setBypassed<ChainIndex::LPF>(false);
-        rightChain.setBypassed<ChainIndex::LPF>(false);
-        auto lpfCoefficients = juce::dsp::FilterDesign<float>::designIIRLowpassHighOrderButterworthMethod(chainSettings.lpfFreq, getSampleRate(), 2 * (chainSettings.lpfSlope + 1));
-        auto& leftLPF = leftChain.get<ChainIndex::LPF>();
-        auto& rightLPF = rightChain.get<ChainIndex::LPF>();
-        *leftLPF.coefficients = *lpfCoefficients[0];
-        *rightLPF.coefficients = *lpfCoefficients[0];
+        processChain.setBypassed<ChainIndex::LPF>(false);
+        auto lpfCoefficients = juce::dsp::FilterDesign<float>::designIIRLowpassHighOrderButterworthMethod(inputValues.lpfFreq, getSampleRate(), 2 * (inputValues.lpfSlope + 1));
+        *processChain.get<ChainIndex::LPF>().state = *lpfCoefficients[0];
     }
 }
 
@@ -225,12 +188,11 @@ void EeqAudioProcessor::updateFilters(const ChainSettings& chainSettings)
 void EeqAudioProcessor::setCoefficients(juce::AudioProcessorValueTreeState& apvts)
 {
     // get parameters
-    auto chainSettings = getChainSettings(apvts);
+    auto parameterValues = getParameterValues(apvts);
     // set coefficients from parameters
-    updateFilters(chainSettings);
-    updateEqBands(chainSettings);
+    updateFilters(parameterValues);
+    updateEqBands(parameterValues);
 }
-
 
 //==============================================================================
 //==============================================================================
