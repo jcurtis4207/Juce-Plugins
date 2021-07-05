@@ -26,6 +26,11 @@ It includes a stereo gain reduction meter, a highpass filter sidechain, as well 
 The original inspiration is from Daniel Rudrich's [Simple Compressor](https://github.com/DanielRudrich/SimpleCompressor).
 The envelope implementation is from [this flyingSand article](https://christianfloisand.wordpress.com/2014/06/09/dynamics-processing-compressorlimiter-part-1/).
 
+### De-esser
+A filter-based de-esser plugin.
+It includes attack and release controls, as well as typical threshold and frequency controls.
+There is a button to control whether the compression affects the entire frequency range or just the sidechain, a button to switch between linked stereo and dual mono modes, and a button to listen to the filtered sidechain do dial in the frequency.
+
 ### Gain
 A simple plugin that includes a gain knob with a range of -30dB to +30dB, a phase inversion button, and a level meter.
 
@@ -64,7 +69,7 @@ These are the plugins I think are necessary (though I'm not sure how many will b
 * <s>Filter (highpass and lowpass)</s>
 * <s>Parametric Equalizer</s>
 * <s>Compressor</s> (with Sidechain)
-* De-esser and/or Parametric sidechain compressor
+* <s>De-esser</s> and/or Parametric sidechain compressor
 * <s>Limiter</s>
 * Expander/Gate
 * <s>Clipper</s>
