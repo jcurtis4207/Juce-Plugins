@@ -50,7 +50,7 @@ public:
         g.setFont(juce::Font("Constantia", height - 8.0f, 0));
         // draw text shadow
         g.setColour(themeColors[shapeColor].brighter());
-        auto textArea = juce::Rectangle<float>(x + offset, y + 1, width - offset, height).toNearestInt();
+        auto textArea = juce::Rectangle<float>(x + offset, y, width - offset, height).toNearestInt();
         g.drawText(text, textArea, juce::Justification::centred, false);
         // draw text
         g.setColour(themeColors[textColor]);
