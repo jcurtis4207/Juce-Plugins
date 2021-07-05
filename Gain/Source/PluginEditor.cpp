@@ -13,32 +13,21 @@
 GainAudioProcessorEditor::GainAudioProcessorEditor(GainAudioProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p), meter(audioProcessor.bufferMagnitudeL, audioProcessor.bufferMagnitudeR)
 {
-    // setup slider
-    gainSlider.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
-    gainSlider.setBounds(gainSliderBounds);
-    gainSlider.setLookAndFeel(&gainLookAndFeel);
-    gainSlider.addListener(this);
-    addAndMakeVisible(gainSlider);
-    sliderAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "gain", gainSlider);
-    // setup gain label
-    gainLabel.setJustificationType(juce::Justification::centred);
-    gainLabel.setBounds(gainLabelBounds);
+    // gain
+    gainKnob.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    gainKnob.setLookAndFeel(&gainLookAndFeel);
+    addAndMakeVisible(gainKnob);
+    sliderAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "gain", gainKnob);
     addAndMakeVisible(gainLabel);
-    // setup button
+    // phase
     phaseButton.setButtonText(juce::CharPointer_UTF8("\xc3\x98"));  // unicode U+00D8 -> ascii -> hex = \xc3\x98
-    phaseButton.setBounds(phaseButtonBounds);
     phaseButton.setLookAndFeel(&gainLookAndFeel);
-    phaseButton.onClick = [&]() { /* toggle phase */ audioProcessor.phase = (audioProcessor.phase == 0.0f) ? 1.0f : 0.0f; };
+   // phaseButton.onClick = [&]() { /* toggle phase */ audioProcessor.phase = (audioProcessor.phase == 0.0f) ? 1.0f : 0.0f; };
     addAndMakeVisible(phaseButton);
     buttonAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.parameters, "phase", phaseButton);
-    // setup phase label
-    phaseLabel.setJustificationType(juce::Justification::centred);
-    phaseLabel.setBounds(phaseLabelBounds);
     addAndMakeVisible(phaseLabel);
-    // setup meter
-    meter.setBounds(meterBounds);
+    //  meter
     addAndMakeVisible(meter);
-    // set default plugin window size
     setSize(200, 300);
 }
 
@@ -49,19 +38,17 @@ GainAudioProcessorEditor::~GainAudioProcessorEditor()
 
 void GainAudioProcessorEditor::paint(juce::Graphics& g)
 {
-    g.fillAll(juce::Colour(0xff121212));
+    g.fillAll(juce::Colour(0xff242424));
     // create powerlines
     powerLine.drawPowerLine(g, 75.0f, 10.0f, 105.0f, 25.0f, 8, 0, "Jacob Curtis");
     powerLine.drawPowerLine(g, 10.0f, 10.0f, 60.0f, 25.0f, 4, 0, "GAIN");
 }
 
-// listener override for slider
-void GainAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
+void GainAudioProcessorEditor::resized()
 {
-    // if listener is triggered by gain slider
-    if (slider == &gainSlider)
-    {
-        // tell the processor to set the gain according to the slider value
-        audioProcessor.gain = (float)gainSlider.getValue();
-    }
+    gainKnob.setBounds(20, 80, 80, 80);
+    gainLabel.setBounds(gainKnob.getX(), gainKnob.getY() - 20, 80, 20);
+    phaseButton.setBounds(45, 200, 30, 30);
+    phaseLabel.setBounds(phaseButton.getX() - 15, phaseButton.getY() - 20, 60, 20);
+    meter.setBounds(120, 50, meter.getMeterWidth(), meter.getMeterHeight());
 }

@@ -20,20 +20,19 @@ GainAudioProcessor::GainAudioProcessor()
         .withOutput("Output", juce::AudioChannelSet::stereo(), true)
 #endif
     ),
-    parameters(*this, nullptr)   // initialize parameters for this processor and no undo manager
+    parameters(*this, nullptr)
 #endif
 {
-    // create parameters for gain and phase
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("gain", "Gain", juce::NormalisableRange<float>(-30.0f, 30.0f, 0.5f), 0.0f, "dB"));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("phase", "Phase", true));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("phase", "Phase Invert", false));
     // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
 }
 
 void GainAudioProcessor::prepareToPlay(double, int)
 {
-    // before audio begins, get gain and phase values from parameters
-    previousGain = *parameters.getRawParameterValue("gain");
+    // get gain from parameters
+    previousGain = parameters.getRawParameterValue("gain")->load();
 }
 
 void GainAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
@@ -41,19 +40,16 @@ void GainAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mi
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
-    // fetch gain and phase from parameters
-    float currentGain = *parameters.getRawParameterValue("gain");
-    phase = *parameters.getRawParameterValue("phase");
-    // if phase is flipped (false) need to multiply gain by -1
-    int phaseCoefficient = (phase) ? 1 : -1;
 
-    // clear the buffer
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    // convert gain values from dBFS to 0-1 float gain values
-    // multiply phase * gain for inversion
-    // if gain value is changed before playing, smoothly ramp from old to new
+    // fetch gain and phase from parameters
+    float currentGain = parameters.getRawParameterValue("gain")->load();
+    float phase = parameters.getRawParameterValue("phase")->load();
+    // if phase is flipped (true) need to multiply gain by -1
+    int phaseCoefficient = (phase) ? -1 : 1;
+    // apply gain, or ramp gain if changed, and phase
     if (currentGain == previousGain)
     {
         buffer.applyGain(juce::Decibels::decibelsToGain(currentGain) * phaseCoefficient);
@@ -65,7 +61,7 @@ void GainAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mi
     }
     // get buffer magnitude for meter
     bufferMagnitudeL = buffer.getMagnitude(0, 0, buffer.getNumSamples());
-    bufferMagnitudeR = buffer.getMagnitude((totalNumInputChannels > 1) ? 1 : 0, 0, buffer.getNumSamples());
+    bufferMagnitudeR = buffer.getMagnitude(1, 0, buffer.getNumSamples());
 }
 
 void GainAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
@@ -133,13 +129,10 @@ bool GainAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) cons
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
         && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
-
-    // This checks if the input layout matches the output layout
 #if ! JucePlugin_IsSynth
     if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
         return false;
 #endif
-
     return true;
 #endif
 }

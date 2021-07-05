@@ -37,17 +37,13 @@ public:
     void releaseResources() override {}
     bool hasEditor() const override { return true; }
 
-    //====================================================================
-    // variables for slider gain and phase state
-    float gain;
-    float previousGain;
-    bool phase;
-    // buffer magnitudes for meter
-    float bufferMagnitudeL;
-    float bufferMagnitudeR;
     // object to hold plugin parameters
     juce::AudioProcessorValueTreeState parameters;
+    // values for meter
+    float bufferMagnitudeL, bufferMagnitudeR;
 
 private:
+    float previousGain{ 0.0f };
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GainAudioProcessor)
 };

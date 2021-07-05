@@ -30,17 +30,15 @@ public:
         slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 70, 20);      // move text box to bottom, set not readonly, set size
         slider.setTextValueSuffix(" dB");                                       // add 'dB' to slider value
         slider.setColour(juce::Slider::textBoxOutlineColourId, findColour(juce::Slider::textBoxBackgroundColourId));    // set textbox outline to background color
-        // fill knob with gradient        
-        juce::ColourGradient knobGradient(juce::Colour(0xfff0f0f0), centerX, centerY, juce::Colour(0xffd0d0d0), xPosition + radius, yPosition, true);
-        knobGradient.addColour(0.6, juce::Colour(0xfff0f0f0));
-        g.setGradientFill(knobGradient);
+        // fill knob
+        g.setColour(juce::Colour(0xfff0f0f0));
         g.fillEllipse(xPosition, yPosition, diameter, diameter);
         // draw outline
         g.setColour(juce::Colours::black);
         g.drawEllipse(xPosition, yPosition, diameter, diameter, 1.0f);
         // create pointer rectangle
         juce::Path p;
-        auto pointerLength = radius * 0.5f;
+        auto pointerLength = radius * 0.7f;
         auto pointerThickness = 2.0f;
         p.addRectangle(-pointerThickness * 0.5f, -radius, pointerThickness, pointerLength);
         p.applyTransform(juce::AffineTransform::rotation(angle).translated(centerX, centerY));
@@ -55,25 +53,19 @@ public:
         button.setClickingTogglesState(true);
         // get dimensions
         auto buttonArea = button.getLocalBounds();
-        float center = buttonArea.getWidth() / 2.0f;
-        float edgeX = buttonArea.getX() + center;
         juce::Rectangle<float> buttonRectangle = buttonArea.toFloat();
-        // set background gradient based on toggle state
+        // set background color based on toggle state
         juce::ColourGradient buttonGradient;
-        if (button.getToggleState())
+        if (!button.getToggleState())
         {
-            // if phase is normal set background to dark grey
-            buttonGradient = juce::ColourGradient(juce::Colour(0xff242424), center, center, juce::Colour(0xff141414), edgeX, buttonRectangle.getY(), true);
-            buttonGradient.addColour(0.6, juce::Colour(0xff242424));
+            // normal phase
+            g.setColour(juce::Colour(0xffe9e9e9));
         }
         else
         {
-            // if phase is flipped set background to bright blue
-            buttonGradient = juce::ColourGradient(juce::Colour(0xff65c9f2), center, center, juce::Colour(0xff057992), edgeX, buttonRectangle.getY(), true);
-            buttonGradient.addColour(0.6, juce::Colour(0xff65c9f2));
+            // inverted phase
+            g.setGradientFill(juce::ColourGradient(juce::Colour(0xffe9e9e9), buttonRectangle.getCentreX(), buttonRectangle.getCentreY(), juce::Colour(0xffa0a0a0), buttonRectangle.getX(), buttonRectangle.getY(), true));
         }
-        // fill button with gradient
-        g.setGradientFill(buttonGradient);
         g.fillEllipse(buttonRectangle);
         // draw outline
         g.setColour(juce::Colours::black);
@@ -84,16 +76,7 @@ public:
     {
         auto font = getTextButtonFont(button, button.getHeight());
         g.setFont(font);
-        // set font color based on toggle state
-        if (button.getToggleState())
-        {
-            g.setColour(juce::Colours::white);
-        }
-        else
-        {
-            g.setColour(juce::Colours::black);
-        }
-
+        g.setColour(juce::Colours::black);
         // defaults from LookAndFeel_V2
         auto yIndent = juce::jmin(4, button.proportionOfHeight(0.3f));
         auto cornerSize = juce::jmin(button.getHeight(), button.getWidth()) / 2;
