@@ -31,6 +31,11 @@ A filter-based de-esser plugin.
 It includes attack and release controls, as well as typical threshold and frequency controls.
 There is a button to control whether the compression affects the entire frequency range or just the sidechain, a button to switch between linked stereo and dual mono modes, and a button to listen to the filtered sidechain do dial in the frequency.
 
+### Distortion
+A waveshaper-based distortion plugin.
+There are controls for switching between 4 different waveshaping functions, as well as an "Anger" control for modifying the severity of the function.
+There are also filters and a switchable tilt-eq/low-shelf before the distortion stage.
+
 ### Gain
 A simple plugin that includes a gain knob with a range of -30dB to +30dB, a phase inversion button, and a level meter.
 
@@ -73,7 +78,7 @@ These are the plugins I think are necessary (though I'm not sure how many will b
 * <s>Limiter</s>
 * Expander/Gate
 * <s>Clipper</s>
-* Distortion
+* <s>Distortion</s>
 * Delay
 * Reverb
 
