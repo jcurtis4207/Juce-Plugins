@@ -134,20 +134,15 @@ ParameterValues getParameterValues(juce::AudioProcessorValueTreeState& apvts)
 // update parametric bands coefficients from settings struct
 void EeqAudioProcessor::updateEqBands(const ParameterValues& inputValues)
 {
-    // create peak coefficients for all bands
-    auto band1Coefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), inputValues.band1Freq, inputValues.band1Q, juce::Decibels::decibelsToGain(inputValues.band1Gain));
+    // create peak/shelf coefficients for all bands
+    auto band1Coefficients = (inputValues.band1Bell)?
+        juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), inputValues.band1Freq, inputValues.band1Q, juce::Decibels::decibelsToGain(inputValues.band1Gain)):
+        juce::dsp::IIR::Coefficients<float>::makeLowShelf(getSampleRate(), inputValues.band1Freq, inputValues.band1Q, juce::Decibels::decibelsToGain(inputValues.band1Gain));
     auto band2Coefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), inputValues.band2Freq, inputValues.band2Q, juce::Decibels::decibelsToGain(inputValues.band2Gain));
     auto band3Coefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), inputValues.band3Freq, inputValues.band3Q, juce::Decibels::decibelsToGain(inputValues.band3Gain));
-    auto band4Coefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), inputValues.band4Freq, inputValues.band4Q, juce::Decibels::decibelsToGain(inputValues.band4Gain));
-    // create shelf coefficients if needed
-    if (!inputValues.band1Bell)
-    {
-        band1Coefficients = juce::dsp::IIR::Coefficients<float>::makeLowShelf(getSampleRate(), inputValues.band1Freq, inputValues.band1Q, juce::Decibels::decibelsToGain(inputValues.band1Gain));
-    }
-    if (!inputValues.band4Bell)
-    {
-        band4Coefficients = juce::dsp::IIR::Coefficients<float>::makeHighShelf(getSampleRate(), inputValues.band4Freq, inputValues.band4Q, juce::Decibels::decibelsToGain(inputValues.band4Gain));
-    }
+    auto band4Coefficients = (inputValues.band4Bell)?
+        juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), inputValues.band4Freq, inputValues.band4Q, juce::Decibels::decibelsToGain(inputValues.band4Gain)):
+        juce::dsp::IIR::Coefficients<float>::makeHighShelf(getSampleRate(), inputValues.band4Freq, inputValues.band4Q, juce::Decibels::decibelsToGain(inputValues.band4Gain));
     // apply coefficients to process chain
     *processChain.get<ChainIndex::Band1>().state = *band1Coefficients;
     *processChain.get<ChainIndex::Band2>().state = *band2Coefficients;
