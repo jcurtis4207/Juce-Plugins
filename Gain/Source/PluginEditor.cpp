@@ -28,7 +28,7 @@ GainAudioProcessorEditor::GainAudioProcessorEditor(GainAudioProcessor& p)
     addAndMakeVisible(phaseLabel);
     //  meter
     addAndMakeVisible(meter);
-    setSize(200, 300);
+    setSize(210, 300);
 }
 
 GainAudioProcessorEditor::~GainAudioProcessorEditor()
@@ -40,8 +40,8 @@ void GainAudioProcessorEditor::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colour(0xff242424));
     // create powerlines
-    powerLine.drawPowerLine(g, 75.0f, 10.0f, 105.0f, 25.0f, 8, 0, "Jacob Curtis");
-    powerLine.drawPowerLine(g, 10.0f, 10.0f, 60.0f, 25.0f, 4, 0, "GAIN");
+    powerLine.drawPowerLine(g, 77.0f, 10.0f, 110.0f, 30.0f, 8, 0, "Jacob Curtis");
+    powerLine.drawPowerLine(g, 10.0f, 10.0f, 60.0f, 30.0f, 4, 0, "Gain");
 }
 
 void GainAudioProcessorEditor::resized()

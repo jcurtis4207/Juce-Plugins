@@ -44,16 +44,17 @@ public:
         juce::DropShadow dropShadow = juce::DropShadow(juce::Colours::black, 10, juce::Point<int>(-2, 2));
         dropShadow.drawForPath(g, p);
         // create powerline shape
-        g.setColour(themeColors[shapeColor]);
+        g.setGradientFill(juce::ColourGradient(themeColors[shapeColor], x, y, themeColors[shapeColor].darker(), x, y + height, false));
         g.fillPath(p);
-        // set font
-        g.setFont(juce::Font("Constantia", height - 12.0f, 0));
-        // draw text shadow
-        g.setColour(themeColors[shapeColor].brighter());
-        auto textArea = juce::Rectangle<float>(x + offset, y, width - offset, height).toNearestInt();
-        g.drawText(text, textArea, juce::Justification::centred, false);
+        // create powerline edge
+        auto asdf = juce::ColourGradient(juce::Colour(0xffe0e0e0), x, y, juce::Colour(0xff707070), x, y + height, false);
+        asdf.addColour(0.49f, juce::Colour(0xffe0e0e0));
+        asdf.addColour(0.51f, juce::Colour(0xff707070));
+        g.setGradientFill(asdf);
+        g.strokePath(p, { 1.0f, juce::PathStrokeType::mitered, juce::PathStrokeType::square });
         // draw text
+        g.setFont(juce::Font("Constantia", height - 12.0f, 0));
         g.setColour(themeColors[textColor]);
-        g.drawText(text, textArea, juce::Justification::centred, false);
+        g.drawText(text, int(x + offset), (int)y, int(width - offset), (int)height, juce::Justification::centred, false);
     }
 };

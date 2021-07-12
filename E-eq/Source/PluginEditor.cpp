@@ -86,7 +86,7 @@ void EeqAudioProcessorEditor::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colour(0xff242424));
     // draw powerlines
-    powerLine.drawPowerLine(g, 85.0f, 10.0f, 110.0f, 30.0f, 8, 0, "Jacob Curtis");
+    powerLine.drawPowerLine(g, 87.0f, 10.0f, 110.0f, 30.0f, 8, 0, "Jacob Curtis");
     powerLine.drawPowerLine(g, 10.0f, 10.0f, 70.0f, 30.0f, 4, 0, "E-EQ");
     // draw knob diagrams
     drawKnobDiagram(g, "Gain", "Freq", 310, 45);

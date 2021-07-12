@@ -52,7 +52,7 @@ void TilteqAudioProcessorEditor::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colour(0xff242424));
     // draw powerlines
-    powerLine.drawPowerLine(g, 95.0f, 10.0f, 110.0f, 30.0f, 8, 0, "Jacob Curtis");
+    powerLine.drawPowerLine(g, 97.0f, 10.0f, 110.0f, 30.0f, 8, 0, "Jacob Curtis");
     powerLine.drawPowerLine(g, 10.0f, 10.0f, 80.0f, 30.0f, 4, 0, "Tilt-EQ");
     // draw tilt diagrams around gain label
     float yPosition = float(gainLabel.getY() + gainLabel.getHeight() / 2.0f);
