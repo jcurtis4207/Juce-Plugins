@@ -10,29 +10,28 @@
 #pragma once
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
-#include "GUI/DeesserLookAndFeel.h"
-#include "GUI/Meter.h"
-#include "GUI/PowerLine.h"
+#include "../../Modules/GUI-Components.h"
+#include "../../Modules/Meters.h"
 
 class DeesserAudioProcessorEditor : public juce::AudioProcessorEditor
 {
 public:
     DeesserAudioProcessorEditor(DeesserAudioProcessor&);
     ~DeesserAudioProcessorEditor() override;
-    void paint(juce::Graphics&) override;
+    void paint(juce::Graphics&) override {}
     void resized() override;
 
 private:
     DeesserAudioProcessor& audioProcessor;
-    DeesserLookAndFeel deesserLookAndFeel;
-    Meter meter;
-    PowerLine powerLine;
-    // gui components
-    juce::Slider thresholdSlider, crossoverSlider, attackSlider, releaseSlider;
+
+    BgImage bgImage;
+    PowerLine powerLine{ "De-esser", "Jacob Curtis", 30 };
+    GainReductionMeter grMeter;
+    SmallKnob thresholdKnob{ "Threshold", "dB" }, crossoverKnob{ "Frequency", "Hz" }, 
+        attackKnob{ "Attack", "ms" }, releaseKnob{ "Release", "ms" };
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> thresholdAttach, crossoverAttach, attackAttach, releaseAttach;
-    juce::TextButton stereoButton{ "Stereo" }, wideButton{ "Wide" }, listenButton{ "Listen" };
+    SmallButton stereoButton{ "Stereo" }, wideButton{ "Wide" }, listenButton{ "Listen" };
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> stereoAttach, wideAttach, listenAttach;
-    juce::Label thresholdLabel, crossoverLabel, attackLabel, releaseLabel, grLabel;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DeesserAudioProcessorEditor)
 };

@@ -44,7 +44,6 @@ private:
     // create processor chain objects with 2 stereo filters
     using StereoFilter = juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>>;
     juce::dsp::ProcessorChain<StereoFilter, StereoFilter> processChain;
-    // update filter coefficients
     void updateFilters();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TilteqAudioProcessor)

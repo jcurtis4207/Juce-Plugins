@@ -10,52 +10,37 @@
 #pragma once
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
-#include "GUI/EqLookAndFeel.h"
-#include "GUI/PowerLine.h"
+#include "../../Modules/GUI-Components.h"
 
 class EeqAudioProcessorEditor : public juce::AudioProcessorEditor
 {
 public:
     EeqAudioProcessorEditor(EeqAudioProcessor&);
     ~EeqAudioProcessorEditor() override;
-    void paint(juce::Graphics&) override;
+    void paint(juce::Graphics&) override {}
     void resized() override;
 
 private:
     EeqAudioProcessor& audioProcessor;
-    // filter sliders
-    juce::Slider filterKnobs[4];
-    juce::String filterParamIDs[4]{ "hpfFreq", "hpfSlope", "lpfFreq", "lpfSlope" };
+
+    BgImage bgImage;
+    PowerLine powerLine{ "E - eq", "Jacob Curtis", 30 };
+    MultiLabel multiLabel{ "Q" };
+    // filters
+    OuterKnob slopeKnobs[2];
+    SmallKnob filterKnobs[2];
+    juce::String filterParamIDs[4]{ "hpfFreq", "lpfFreq", "hpfSlope", "lpfSlope" };
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> filterKnobsAttach[4];
-    // parametric band sliders
-    juce::Slider bandKnobs[12];
-    juce::String bandSuffixes[3]{ " Hz", " dB", " Q" };
-    juce::String bandParamIDSuffixes[3]{ "Freq", "Gain", "Q"};
+    // parametric bands
+    OuterKnob freqKnobs[4];
+    SmallKnob gainKnobs[4];
+    SmallKnob qKnobs[4];
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> bandKnobsAttach[12];
-    juce::Colour bandColors[6]{ 
-        juce::Colour(0xff242424),   // black 
-        juce::Colour(0xff35669e),   // blue
-        juce::Colour(0xff346844),   // green
-        juce::Colour(0xffa84130),   // red
-        juce::Colour(0xffe9e9e9),   // white
-        juce::Colour(0xffc9c9c9)    // dark white
-    };
-    // filter bypass buttons
-    juce::TextButton hpfBypassButton{ "Bypass" };
-    juce::TextButton lpfBypassButton{ "Bypass" };
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> hpfBypassAttach;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> lpfBypassAttach;
-    // shelf/bell buttons
-    juce::TextButton band1BellButton{ "Bell" };
-    juce::TextButton band4BellButton{ "Bell" };
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> band1BellAttach;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> band4BellAttach;
-    // create look and feel object
-    EqLookAndFeel eqLookAndFeel;
-    // create powerline object
-    PowerLine powerLine;
-    // function to draw knob diagrams
-    void drawKnobDiagram(juce::Graphics& g, juce::String textLeft, juce::String textRight, int xPosition, int yPosition);
+    // buttons
+    SmallButton hpfBypassButton{ "Bypass" }, lpfBypassButton{ "Bypass" };
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> hpfBypassAttach, lpfBypassAttach;
+    SmallButton band1BellButton{ "Bell" }, band4BellButton{ "Bell" };
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> band1BellAttach, band4BellAttach;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EeqAudioProcessorEditor)
 };

@@ -40,12 +40,11 @@ public:
 
     // object for parameters
     juce::AudioProcessorValueTreeState parameters;
-    // value for gain reduction meter
+    // values for gain reduction meter
     float gainReductionLeft{ 0.0f };
     float gainReductionRight{ 0.0f };
 
 private:
-    // create compressor
     Compressor compressor;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CompressorAudioProcessor)

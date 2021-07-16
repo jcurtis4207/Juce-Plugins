@@ -149,12 +149,12 @@ public:
 
     const float getGainReductionLeft()
     {
-        return outputGainReductionLeft;
+        return (outputGainReductionLeft * -1.0f);
     }
 
     const float getGainReductionRight()
     {
-        return outputGainReductionRight;
+        return (outputGainReductionRight * -1.0f);
     }
 
 private:

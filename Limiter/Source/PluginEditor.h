@@ -10,20 +10,36 @@
 #pragma once
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
-#include "GUI/LimiterLookAndFeel.h"
-#include "GUI/Meter.h"
-#include "GUI/PowerLine.h"
+#include "../../Modules/GUI-Components.h"
+#include "../../Modules/Meters.h"
 
-class LimiterAudioProcessorEditor : public juce::AudioProcessorEditor, public juce::Slider::Listener
+class LimiterAudioProcessorEditor : public juce::AudioProcessorEditor
 {
 public:
     LimiterAudioProcessorEditor(LimiterAudioProcessor&);
     ~LimiterAudioProcessorEditor() override;
-    void paint(juce::Graphics&) override;
+    void paint(juce::Graphics&) override {}
     void resized() override;
 
 private:
     LimiterAudioProcessor& audioProcessor;
+
+    BgImage bgImage;
+    PowerLine powerLine{ "Limiter", "Jacob Curtis", 30 };
+    GainReductionMeter grMeter;
+    VerticalSlider thresholdSlider, ceilingSlider, releaseSlider;
+    GreyLabel thresholdLabel{ "Threshold" }, ceilingLabel{ "Ceiling" }, releaseLabel{ "Release" };
+    LinkKnob linkKnob;
+    SmallButton stereoButton{ "Stereo" };
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> thresholdAttach, ceilingAttach, releaseAttach;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> stereoAttach;
+    // link operation
+    float thresholdValue{ 0.0f };
+    float ceilingValue{ 0.0f };
+    bool linkFlag{ false };
+    void linkValueChanged();
+
+    /*
     // gui components
     juce::Slider thresholdSlider, ceilingSlider, releaseSlider, linkKnob;
     juce::TextButton stereoButton{ "Stereo" };
@@ -43,7 +59,7 @@ private:
     // create powerline object
     PowerLine powerLine;
     // function for trim knob to modify parameters
-    void sliderValueChanged(juce::Slider* slider);
+    void sliderValueChanged(juce::Slider* slider);*/
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LimiterAudioProcessorEditor)
 };

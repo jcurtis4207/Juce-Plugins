@@ -10,27 +10,30 @@
 #pragma once
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
-#include "GUI/DistortionLookAndFeel.h"
-#include "GUI/PowerLine.h"
+#include "../../Modules/GUI-Components.h"
 
 class DistortionAudioProcessorEditor : public juce::AudioProcessorEditor
 {
 public:
     DistortionAudioProcessorEditor(DistortionAudioProcessor&);
     ~DistortionAudioProcessorEditor() override;
-    void paint(juce::Graphics&) override;
+    void paint(juce::Graphics&) override {}
     void resized() override;
 
 private:
     DistortionAudioProcessor& audioProcessor;
-    DistortionLookAndFeel distortionLookAndFeel;
-    PowerLine powerLine;
-    // gui components
-    juce::Slider driveKnob, volumeKnob, mixKnob, angerKnob, hpfKnob, lpfKnob, shapeKnob;
+
+    BgImage bgImage;
+    PowerLine powerLine{ "Distortion", "Jacob Curtis", 30 };
+    BigKnob driveKnob{ "Drive" };
+    SmallKnob volumeKnob{ "Volume", "dB" }, mixKnob{ "Mix", "%" }, angerKnob{ "Anger" }, 
+        hpfKnob{ "HPF", "Hz" }, lpfKnob{ "LPF", "Hz" }, shapeKnob{ "Shape", "dB" };
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> driveAttach, volumeAttach, mixAttach, angerAttach, hpfAttach, lpfAttach, shapeAttach;
-    juce::TextButton shapeButton;
+    SmallButton shapeButton{ "Tilt" };
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> shapeButtonAttach;
-    juce::TextButton typeButtons[4];
+    BigButton typeButtons[4];
+    MultiLabel multiLabel{ "Drive Type" };
+
     void buttonClicked(int index);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DistortionAudioProcessorEditor)

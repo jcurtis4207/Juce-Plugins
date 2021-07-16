@@ -40,10 +40,10 @@ public:
 
     // object to hold plugin parameters
     juce::AudioProcessorValueTreeState parameters;
-    juce::StringArray distortionTypes{ "Inv Abs", "aTan", "Erf", "Inv Squ" };
 
 private:
     Distortion distortion;
+    juce::StringArray distortionTypes{ "Inv Abs", "aTan", "Erf", "Inv Squ" };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DistortionAudioProcessor)
 };

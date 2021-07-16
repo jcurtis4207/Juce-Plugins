@@ -40,9 +40,6 @@ public:
 
     // object for parameters
     juce::AudioProcessorValueTreeState parameters;
-    // variables for in/out meters
-    float bufferMagnitudeIn{ 0.0f };
-    float bufferMagnitudeOut{ 0.0f };
     // variables for gain reduction meter
     float gainReductionLeft{ 0.0f };
     float gainReductionRight{ 0.0f };

@@ -40,8 +40,8 @@ public:
 
     // object to hold plugin parameters
     juce::AudioProcessorValueTreeState parameters;
-    float gainReductionLeft;
-    float gainReductionRight;
+    float gainReductionLeft{ 0.0f };
+    float gainReductionRight{ 0.0f };
 
 private:
     Deesser deesser;

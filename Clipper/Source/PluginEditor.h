@@ -10,37 +10,33 @@
 #pragma once
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
-#include "GUI/ClipperLookAndFeel.h"
-#include "GUI/Meter.h"
-#include "GUI/PowerLine.h"
+#include "../../Modules/GUI-Components.h"
+#include "../../Modules/Meters.h"
 
-class ClipperAudioProcessorEditor : public juce::AudioProcessorEditor, public juce::Slider::Listener
+class ClipperAudioProcessorEditor : public juce::AudioProcessorEditor
 {
 public:
     ClipperAudioProcessorEditor(ClipperAudioProcessor&);
     ~ClipperAudioProcessorEditor() override;
-    void paint(juce::Graphics&) override;
+    void paint(juce::Graphics&) override {}
     void resized() override;
 
 private:
     ClipperAudioProcessor& audioProcessor;
-    // gui components
-    juce::Slider thresholdSlider, ceilingSlider, linkKnob;
-    juce::Label thresholdLabel, ceilingLabel, linkLabel, grLabel;
+
+    BgImage bgImage;
+    PowerLine powerLine{ "Clipper", "Jacob Curtis", 30 };
+    VerticalSlider thresholdSlider{ "dB" }, ceilingSlider{ "dB" };
+    GreyLabel thresholdLabel{ "Threshold" }, ceilingLabel{ "Ceiling" };
+    LinkKnob linkKnob;
+    GainReductionMeter grMeter;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> thresholdAttach, ceilingAttach;
-    // linked parameter values
+
+    // link operation
     float thresholdValue{ 0.0f };
     float ceilingValue{ 0.0f };
-    // flag for modifying parameters
     bool linkFlag{ false };
-    // create look and feel
-    ClipperLookAndFeel clipperLookAndFeel;
-    // create meter objects
-    Meter grMeter;
-    // create powerline object
-    PowerLine powerLine;
-    // function for trim knob to modify parameters
-    void sliderValueChanged(juce::Slider* slider);
+    void linkValueChanged();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ClipperAudioProcessorEditor)
 };

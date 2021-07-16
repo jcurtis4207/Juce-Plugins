@@ -33,7 +33,7 @@ public:
 
     void process(const juce::dsp::ProcessContextReplacing<float>& context)
     {
-        auto outputBuffer = context.getOutputBlock();
+        const auto& outputBuffer = context.getOutputBlock();
         const int bufferSize = static_cast<int>(outputBuffer.getNumSamples());
         // clip output buffer
         clipBuffer(outputBuffer.getChannelPointer(0), outputBuffer.getChannelPointer(1), bufferSize);
@@ -107,5 +107,5 @@ private:
     float threshold{ 0.0f };
     float ceiling{ 0.0f };
     // gain reduction values
-    float outputGainReductionLeft, outputGainReductionRight;
+    float outputGainReductionLeft{ 0.0f }, outputGainReductionRight{ 0.0f };
 };
