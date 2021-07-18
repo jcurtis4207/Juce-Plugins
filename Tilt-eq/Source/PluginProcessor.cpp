@@ -30,15 +30,8 @@ TilteqAudioProcessor::TilteqAudioProcessor()
 
 void TilteqAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    // initialize dsp
-    juce::dsp::ProcessSpec spec;
-    spec.sampleRate = sampleRate;
-    spec.maximumBlockSize = samplesPerBlock;
-    spec.numChannels = getTotalNumOutputChannels();
-    // prepare the process chain
-    processChain.prepare(spec);
-    // set coefficients from parameters
-    updateFilters();
+    tiltEQ.prepare(sampleRate, 2, samplesPerBlock);
+    tiltEQ.setParameters(parameters);
 }
 
 void TilteqAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
@@ -50,12 +43,11 @@ void TilteqAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    // set coefficients from parameters
-    updateFilters();
-    // initialize dsp audio block and process filters
+    // apply tilt
     juce::dsp::AudioBlock<float> block(buffer);
     juce::dsp::ProcessContextReplacing<float> context(block);
-    processChain.process(context);
+    tiltEQ.setParameters(parameters);
+    tiltEQ.process(context);
 }
 
 void TilteqAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
@@ -80,18 +72,6 @@ void TilteqAudioProcessor::setStateInformation(const void* data, int sizeInBytes
             parameters.state = juce::ValueTree::fromXml(*inputXml);
         }
     }
-}
-
-void TilteqAudioProcessor::updateFilters()
-{
-    float freq = parameters.getRawParameterValue("freq")->load();
-    float gain = parameters.getRawParameterValue("gain")->load();
-    // create shelves with fixed 0.4Q
-    auto lowShelfCoefficients = juce::dsp::IIR::Coefficients<float>::makeLowShelf(getSampleRate(), freq, 0.4f, juce::Decibels::decibelsToGain(gain * -1.0f));
-    auto highShelfCoefficients = juce::dsp::IIR::Coefficients<float>::makeHighShelf(getSampleRate(), freq, 0.4f, juce::Decibels::decibelsToGain(gain));
-    // apply coefficients to filters
-    *processChain.get<0>().state = *lowShelfCoefficients;
-    *processChain.get<1>().state = *highShelfCoefficients;
 }
 
 //==============================================================================
