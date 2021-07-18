@@ -9,7 +9,7 @@
 
 #pragma once
 #include <JuceHeader.h>
-#include "Data/Clipper.h"
+#include "Clipper.h"
 
 class ClipperAudioProcessor : public juce::AudioProcessor
 {
@@ -38,9 +38,7 @@ public:
     void releaseResources() override {}
     bool hasEditor() const override { return true; }
 
-    // object to hold plugin parameters
     juce::AudioProcessorValueTreeState parameters;
-    // gain reduction values for meter
     float gainReductionLeft{ 0.0f };
     float gainReductionRight{ 0.0f };
 

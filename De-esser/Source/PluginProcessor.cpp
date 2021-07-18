@@ -37,9 +37,7 @@ DeesserAudioProcessor::DeesserAudioProcessor()
 
 void DeesserAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    // setup de-esser
     deesser.prepare(sampleRate, 2, samplesPerBlock);
-    // apply de-esser values from parameters
     deesser.setDeesserParameters(parameters);
 }
 
@@ -52,9 +50,8 @@ void DeesserAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    // set de-esser values from parameters
+    // apply de-esser
     deesser.setDeesserParameters(parameters);
-    // apply dsp
     juce::dsp::AudioBlock<float> block(buffer);
     juce::dsp::ProcessContextReplacing<float> context(block);
     deesser.process(context);

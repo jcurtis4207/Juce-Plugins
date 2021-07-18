@@ -9,7 +9,7 @@
 
 #pragma once
 #include <JuceHeader.h>
-#include "Data/Compressor.h"
+#include "Compressor.h"
 
 class CompressorAudioProcessor : public juce::AudioProcessor
 {
@@ -38,9 +38,7 @@ public:
     void changeProgramName(int, const juce::String&) override {}
     bool hasEditor() const override { return true; }
 
-    // object for parameters
     juce::AudioProcessorValueTreeState parameters;
-    // values for gain reduction meter
     float gainReductionLeft{ 0.0f };
     float gainReductionRight{ 0.0f };
 

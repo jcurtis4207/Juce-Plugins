@@ -37,10 +37,8 @@ public:
     void releaseResources() override {}
     bool hasEditor() const override { return true; }
 
-    // object to hold plugin parameters
     juce::AudioProcessorValueTreeState parameters;
-    // values for meter
-    float bufferMagnitudeL, bufferMagnitudeR;
+    float bufferMagnitudeL{ -100.0f }, bufferMagnitudeR{ -100.0f };
 
 private:
     float previousGain{ 0.0f };

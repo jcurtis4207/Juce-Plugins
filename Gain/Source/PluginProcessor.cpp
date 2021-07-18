@@ -25,13 +25,11 @@ GainAudioProcessor::GainAudioProcessor()
 {
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("gain", "Gain", juce::NormalisableRange<float>(-30.0f, 30.0f, 0.5f), 0.0f, "dB"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("phase", "Phase Invert", false));
-    // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
 }
 
 void GainAudioProcessor::prepareToPlay(double, int)
 {
-    // get gain from parameters
     previousGain = parameters.getRawParameterValue("gain")->load();
 }
 

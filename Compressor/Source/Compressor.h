@@ -3,6 +3,7 @@
 *       by Jacob Curtis
 *
 *   Originally inspired by Daniel Rudrich's "Simple Compressor"
+*   https://github.com/DanielRudrich/SimpleCompressor
 * 
 *   Envelope implementaiton from:
 *   https://christianfloisand.wordpress.com/2014/06/09/dynamics-processing-compressorlimiter-part-1/
@@ -202,7 +203,6 @@ public:
 
 private:
     double sampleRate{ 0.0f };
-    // input parameters
     float threshold{ -10.0f };
     float attackTime{ 10.0f };
     float releaseTime{ 50.0f };
@@ -212,11 +212,8 @@ private:
     bool scBypass{ true };
     bool stereo{ true };
     float mix{ 100.0f };
-    // compression values
     float compressionLevelLeft, compressionLevelRight;
     float outputGainReductionLeft, outputGainReductionRight;
-    // auxiliary buffers
     juce::AudioBuffer<float> dryBuffer, sideChainBuffer, envelopeBuffer;
-    // sidechain filters
     juce::IIRFilter leftFilter, rightFilter;
 };

@@ -3,6 +3,7 @@
 *       by Jacob Curtis
 *
 *   Originally inspired by Daniel Rudrich's "Simple Compressor"
+*   https://github.com/DanielRudrich/SimpleCompressor
 *
 *   Envelope implementaiton from:
 *   https://christianfloisand.wordpress.com/2014/06/09/dynamics-processing-compressorlimiter-part-1/
@@ -42,7 +43,6 @@ public:
     void prepare(const double inputSampleRate, const int numChannels, const int maxBlockSize)
     {
         sampleRate = inputSampleRate;
-        // initialize buffers
         sideChainBuffer.setSize(numChannels, maxBlockSize);
         envelopeBuffer.setSize(numChannels, maxBlockSize);
     }
@@ -159,14 +159,11 @@ public:
 
 private:
     double sampleRate{ 0.0f };
-    // input parameters
     float threshold{ 0.0f };
     float ceiling{ 0.0f };
     float releaseTime{ 1.0f };
     bool stereo{ true };
-    // compression values
     float compressionLevelLeft, compressionLevelRight;
     float outputGainReductionLeft, outputGainReductionRight;
-    // auxiliary buffers
     juce::AudioBuffer<float> sideChainBuffer, envelopeBuffer;
 };

@@ -9,7 +9,7 @@
 
 #pragma once
 #include <JuceHeader.h>
-#include "Data/De-esser.h"
+#include "De-esser.h"
 
 class DeesserAudioProcessor : public juce::AudioProcessor
 {
@@ -38,7 +38,6 @@ public:
     void releaseResources() override {}
     bool hasEditor() const override { return true; }
 
-    // object to hold plugin parameters
     juce::AudioProcessorValueTreeState parameters;
     float gainReductionLeft{ 0.0f };
     float gainReductionRight{ 0.0f };

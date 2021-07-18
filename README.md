@@ -57,12 +57,6 @@ It uses a high and low shelf with a fixed Q and inverse gain.
 As the tilt knob turns clockwise, the high shelf increases and the low shelf decreases, and visa versa for the other direction.
 There is also a frequency control to adjust where the tilt occurs.
 
-### Modules
-Various modular components that can be easily added to a plugin. Includes:
-* DualFilter - a dsp module with highpass and lowpass filters
-* Meter - A simple stereo level meter
-* PowerLine - a graphics object for creating Linux-style powerline shapes with text
-
 #
 
 My ultimate goal for this is to be able to mix an entire song using only plugins I created.
@@ -74,7 +68,8 @@ These are the plugins I think are necessary (though I'm not sure how many will b
 * <s>Filter (highpass and lowpass)</s>
 * <s>Parametric Equalizer</s>
 * <s>Compressor</s> (with Sidechain)
-* <s>De-esser</s> and/or Parametric sidechain compressor
+* <s>De-esser</s> 
+* Multiband Compressor
 * <s>Limiter</s>
 * Expander/Gate
 * <s>Clipper</s>

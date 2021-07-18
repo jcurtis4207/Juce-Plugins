@@ -44,9 +44,7 @@ void CompressorAudioProcessor::releaseResources()
 
 void CompressorAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    // setup compressor
     compressor.prepare(sampleRate, 2, samplesPerBlock);
-    // apply compressor values from parameters
     compressor.updateCompressorValues(parameters);
 }
 
@@ -59,9 +57,8 @@ void CompressorAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    // set compressor values from parameters
+    // apply compression
     compressor.updateCompressorValues(parameters);
-    // apply dsp
     juce::dsp::AudioBlock<float> block(buffer);
     juce::dsp::ProcessContextReplacing<float> context(block);
     compressor.process(context, getSampleRate());

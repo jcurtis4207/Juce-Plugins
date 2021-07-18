@@ -37,7 +37,6 @@ public:
     void releaseResources() override {}
     bool hasEditor() const override { return true; }
 
-    // object for parameters
     juce::AudioProcessorValueTreeState parameters;
 
 private:

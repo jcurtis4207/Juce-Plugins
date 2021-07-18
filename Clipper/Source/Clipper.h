@@ -2,10 +2,9 @@
 *   Clipper Module
 *       by Jacob Curtis
 *
-*   Adapted from SimpleClipper by Daniel Rudrich
+*   Adapted from SimpleCompressor by Daniel Rudrich
 *   Licensed under the GPL Version 3
-*   https://github.com/DanielRudrich/SimpleClipper
-*
+*   https://github.com/DanielRudrich/SimpleCompressor
 *
 */
 
@@ -21,7 +20,6 @@ public:
 
     void updateClipperValues(juce::AudioProcessorValueTreeState& apvts)
     {
-        // get parameter values
         threshold = apvts.getRawParameterValue("threshold")->load();
         ceiling = apvts.getRawParameterValue("ceiling")->load();
     }
@@ -35,7 +33,6 @@ public:
     {
         const auto& outputBuffer = context.getOutputBlock();
         const int bufferSize = static_cast<int>(outputBuffer.getNumSamples());
-        // clip output buffer
         clipBuffer(outputBuffer.getChannelPointer(0), outputBuffer.getChannelPointer(1), bufferSize);
     }
 
@@ -103,9 +100,7 @@ public:
 
 private:
     double sampleRate{ 0.0f };
-    // parameters
     float threshold{ 0.0f };
     float ceiling{ 0.0f };
-    // gain reduction values
     float outputGainReductionLeft{ 0.0f }, outputGainReductionRight{ 0.0f };
 };

@@ -9,7 +9,7 @@
 
 #pragma once
 #include <JuceHeader.h>
-#include "Data/Distortion.h"
+#include "Distortion.h"
 
 class DistortionAudioProcessor : public juce::AudioProcessor
 {
@@ -38,12 +38,11 @@ public:
     void releaseResources() override {}
     bool hasEditor() const override { return true; }
 
-    // object to hold plugin parameters
     juce::AudioProcessorValueTreeState parameters;
 
 private:
     Distortion distortion;
-    juce::StringArray distortionTypes{ "Inv Abs", "aTan", "Erf", "Inv Squ" };
+    juce::StringArray distortionTypes{ "Inverse Absolute Value", "ArcTan", "Erf", "Inverse Square" };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DistortionAudioProcessor)
 };

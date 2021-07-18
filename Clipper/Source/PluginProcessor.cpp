@@ -31,9 +31,7 @@ ClipperAudioProcessor::ClipperAudioProcessor()
 
 void ClipperAudioProcessor::prepareToPlay(double sampleRate, int)
 {
-    // setup clipper
     clipper.prepare(sampleRate);
-	// set clipper values from parameters
     clipper.updateClipperValues(parameters);
 }
 
@@ -45,10 +43,9 @@ void ClipperAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
-
-    // set clipper values from parameters
+    
+    // apply clipper
     clipper.updateClipperValues(parameters);
-    // apply dsp
     juce::dsp::AudioBlock<float> block(buffer);
     juce::dsp::ProcessContextReplacing<float> context(block);
     clipper.process(context);
