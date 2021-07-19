@@ -37,11 +37,6 @@ CompressorAudioProcessor::CompressorAudioProcessor()
     parameters.state = juce::ValueTree("savedParams");
 }
 
-void CompressorAudioProcessor::releaseResources()
-{
-    compressor.reset();
-}
-
 void CompressorAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     compressor.prepare(sampleRate, 2, samplesPerBlock);

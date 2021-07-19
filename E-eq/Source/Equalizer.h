@@ -61,7 +61,7 @@ public:
     void prepare(const double newSampleRate, const int numChannels, const int maxBlockSize)
     {
         sampleRate = newSampleRate;
-        eqBuffer.setSize(numChannels, maxBlockSize);
+        bufferSize = maxBlockSize;
         // initialize dsp
         juce::dsp::ProcessSpec spec;
         spec.sampleRate = newSampleRate;
@@ -74,17 +74,10 @@ public:
     void process(const juce::dsp::ProcessContextReplacing<float>& context)
     {
         const auto& outputBuffer = context.getOutputBlock();
-        const int bufferSize = static_cast<int>(outputBuffer.getNumSamples());
-        // copy input to eq buffer
-        juce::FloatVectorOperations::copy(eqBuffer.getWritePointer(0), outputBuffer.getChannelPointer(0), bufferSize);
-        juce::FloatVectorOperations::copy(eqBuffer.getWritePointer(1), outputBuffer.getChannelPointer(1), bufferSize);
         // apply filter processing to buffer
-        juce::dsp::AudioBlock<float> filterBlock(eqBuffer);
+        juce::dsp::AudioBlock<float> filterBlock(outputBuffer);
         juce::dsp::ProcessContextReplacing<float> filterContext(filterBlock);
         processChain.process(filterContext);
-        // copy eq buffer to output
-        juce::FloatVectorOperations::copy(outputBuffer.getChannelPointer(0), eqBuffer.getReadPointer(0), bufferSize);
-        juce::FloatVectorOperations::copy(outputBuffer.getChannelPointer(1), eqBuffer.getReadPointer(1), bufferSize);
     }
 
     // get parameter values and setup filter coefficients
@@ -146,8 +139,8 @@ public:
     }
 
 private:
-    double sampleRate;
-    juce::AudioBuffer<float> eqBuffer;
+    double sampleRate{ 0.0 };
+    int bufferSize{ 0 };
     using StereoFilter = juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>>;
     juce::dsp::ProcessorChain<StereoFilter, StereoFilter, StereoFilter, StereoFilter, StereoFilter, StereoFilter> processChain;
     enum ChainIndex

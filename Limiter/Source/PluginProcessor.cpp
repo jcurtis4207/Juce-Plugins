@@ -32,11 +32,6 @@ LimiterAudioProcessor::LimiterAudioProcessor()
     parameters.state = juce::ValueTree("savedParams");
 }
 
-void LimiterAudioProcessor::releaseResources()
-{
-    limiter.reset();
-}
-
 void LimiterAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     limiter.prepare(sampleRate, 2, samplesPerBlock);

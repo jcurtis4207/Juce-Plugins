@@ -29,9 +29,9 @@ ClipperAudioProcessor::ClipperAudioProcessor()
     parameters.state = juce::ValueTree("savedParams");
 }
 
-void ClipperAudioProcessor::prepareToPlay(double sampleRate, int)
+void ClipperAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    clipper.prepare(sampleRate);
+    clipper.prepare(sampleRate, samplesPerBlock);
     clipper.updateClipperValues(parameters);
 }
 

@@ -26,9 +26,9 @@ public:
     bool isMidiEffect() const override;
     void getStateInformation(juce::MemoryBlock& destData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
-    void releaseResources() override;
 
     ~LimiterAudioProcessor() override {}
+    void releaseResources() override {}
     const juce::String getName() const override { return JucePlugin_Name; }
     double getTailLengthSeconds() const override { return 0.0; }
     int getNumPrograms() override { return 1; }

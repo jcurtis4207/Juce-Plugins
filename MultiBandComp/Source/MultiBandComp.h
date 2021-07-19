@@ -16,20 +16,9 @@
 class MultiBandComp
 {
 public:
-    MultiBandComp()
-    {
-        reset();
-    }
+    MultiBandComp(){}
 
     ~MultiBandComp(){}
-
-    void reset()
-    {
-        for (int i = 0; i < 8; i++)
-        {
-            compressionLevel[i] = 0.0f;
-        }
-    }
 
     void setParameters(juce::AudioProcessorValueTreeState& apvts)
     {
@@ -96,6 +85,7 @@ public:
     void prepare(const double newSampleRate, const int numChannels, const int maxBlockSize)
     {
         sampleRate = newSampleRate;
+        bufferSize = maxBlockSize;
         // initialize buffers
         stage1LowBuffer.setSize(numChannels, maxBlockSize);
         stage1HighBuffer.setSize(numChannels, maxBlockSize);
@@ -121,7 +111,6 @@ public:
     void process(const juce::dsp::ProcessContextReplacing<float>& context)
     {
         const auto& outputBuffer = context.getOutputBlock();
-        const int bufferSize = static_cast<int>(outputBuffer.getNumSamples());
         // copy input into stage 1
         for (int channel = 0; channel < 2; channel++)
         {
@@ -142,8 +131,8 @@ public:
         // apply stage 2 filters
         applyStage2Filters();
         // apply compression to filtered buffers
-        createEnvelopes(bufferSize);
-        applyGainReduction(bufferSize);
+        createEnvelopes();
+        applyGainReduction();
         for (int channel = 0; channel < 2; channel++)
         {
             // sum bands 1 & 2 to stage1Low
@@ -203,7 +192,8 @@ public:
         bandChains[3].process(context3);
     }
 
-    void createEnvelopes(const int bufferSize)
+    // create compression envelopes for each band
+    void createEnvelopes()
     {
         for (int sample = 0; sample < bufferSize; sample++)
         {
@@ -212,10 +202,8 @@ public:
                 // stereo mode - max channel value used and output stored in both channels
                 if (stereo)
                 {
-                    // find max of input samples
-                    const float sampleLeft = bandBuffers[band].getSample(0, sample);
-                    const float sampleRight = bandBuffers[band].getSample(1, sample);
-                    const float maxSample = juce::jmax(std::abs(sampleLeft), std::abs(sampleRight));
+                    const float maxSample = juce::jmax(
+                        std::abs(bandBuffers[band].getSample(0, sample)),std::abs(bandBuffers[band].getSample(1, sample)));
                     // apply attack
                     if (compressionLevel[band] < maxSample)
                     {
@@ -233,38 +221,30 @@ public:
                 // dual mono mode - channels used individually and output stored separately
                 else
                 {
-                    // get absolute value of each sample
-                    const float sampleLeft = std::abs(bandBuffers[band].getSample(0, sample));
-                    const float sampleRight = std::abs(bandBuffers[band].getSample(1, sample));
-                    // apply attack to left
-                    if (compressionLevel[band] < sampleLeft)
+                    for (int channel = 0; channel < 2; channel++)
                     {
-                        compressionLevel[band] = sampleLeft + attackTime[band] * (compressionLevel[band] - sampleLeft);
+                        // get absolute value of sample
+                        const float inputSample = std::abs(bandBuffers[band].getSample(channel, sample));
+                        // apply attack
+                        if (compressionLevel[band * 2 + channel] < inputSample)
+                        {
+                            compressionLevel[band * 2 + channel] = inputSample + attackTime[band] * (compressionLevel[band * 2 + channel] - inputSample);
+                        }
+                        // apply release
+                        else
+                        {
+                            compressionLevel[band * 2 + channel] = inputSample + releaseTime[band] * (compressionLevel[band * 2 + channel] - inputSample);
+                        }
+                        // write envelope
+                        envelopeBuffers[band].setSample(channel, sample, compressionLevel[band * 2 + channel]);
                     }
-                    // apply release to left
-                    else
-                    {
-                        compressionLevel[band] = sampleLeft + releaseTime[band] * (compressionLevel[band] - sampleLeft);
-                    }
-                    // apply attack to right
-                    if (compressionLevel[band + 4] < sampleRight)
-                    {
-                        compressionLevel[band + 4] = sampleRight + attackTime[band] * (compressionLevel[band + 4] - sampleRight);
-                    }
-                    // apply release to right
-                    else
-                    {
-                        compressionLevel[band + 4] = sampleRight + releaseTime[band] * (compressionLevel[band + 4] - sampleRight);
-                    }
-                    // write envelope
-                    envelopeBuffers[band].setSample(0, sample, compressionLevel[band]);
-                    envelopeBuffers[band].setSample(1, sample, compressionLevel[band + 4]);
                 }
             }
         }
     }
 
-    void applyGainReduction(const int bufferSize)
+    // apply compression from envelope to band buffers
+    void applyGainReduction()
     {
         for (int i = 0; i < 8; i++)
         {
@@ -274,29 +254,22 @@ public:
         {
             for (int band = 0; band < 4; band++)
             {
-                // apply threshold and ratio to envelope
-                float gainReductionLeft = slope[band] * (threshold[band] - juce::Decibels::gainToDecibels(envelopeBuffers[band].getSample(0, sample)));
-                float gainReductionRight = slope[band] * (threshold[band] - juce::Decibels::gainToDecibels(envelopeBuffers[band].getSample(1, sample)));
-                // remove "negative" gain reduction
-                gainReductionLeft = juce::jmin(0.0f, gainReductionLeft);
-                gainReductionRight = juce::jmin(0.0f, gainReductionRight);
-                // set gr meter values
-                if (gainReductionLeft < outputGainReduction[band])
+                for (int channel = 0; channel < 2; channel++)
                 {
-                    outputGainReduction[band] = gainReductionLeft;
+                    // apply threshold and ratio to envelope
+                    float currentGainReduction = slope[band] * (threshold[band] - juce::Decibels::gainToDecibels(envelopeBuffers[band].getSample(channel, sample)));
+                    // remove positive gain reduction
+                    currentGainReduction = juce::jmin(0.0f, currentGainReduction);
+                    // set gr meter values
+                    if (currentGainReduction < outputGainReduction[band * 2 + channel])
+                    {
+                        outputGainReduction[band * 2 + channel] = currentGainReduction;
+                    }
+                    // convert decibels to gain and add makeup gain
+                    currentGainReduction = std::pow(10.0f, 0.05f * (currentGainReduction + makeUpGain[band]));
+                    // apply compression to buffer
+                    bandBuffers[band].setSample(channel, sample, bandBuffers[band].getSample(channel, sample) * currentGainReduction);
                 }
-                if (gainReductionRight < outputGainReduction[band + (int16_t)4])
-                {
-                    outputGainReduction[band + (int16_t)4] = gainReductionRight;
-                }
-                // add makeup gain and convert decibels to gain values
-                gainReductionLeft = std::pow(10.0f, 0.05f * (gainReductionLeft + makeUpGain[band]));
-                gainReductionRight = std::pow(10.0f, 0.05f * (gainReductionRight + makeUpGain[band]));
-                // apply compression to buffer
-                float dryLeft = bandBuffers[band].getSample(0, sample);
-                float dryRight = bandBuffers[band].getSample(1, sample);
-                bandBuffers[band].setSample(0, sample, dryLeft * gainReductionLeft);
-                bandBuffers[band].setSample(1, sample, dryRight * gainReductionRight);
             }
         }
     }
@@ -312,7 +285,8 @@ public:
     }
 
 private:
-    double sampleRate;
+    double sampleRate{ 0.0 };
+    int bufferSize{ 0 };
     juce::NormalisableRange<float> freqRange{ 20.0f, 15000.0f, 1.0f, 0.25f };
     float crossoverFreqA, crossoverFreqB, crossoverFreqC;
     juce::AudioBuffer<float> stage1LowBuffer, stage1HighBuffer;

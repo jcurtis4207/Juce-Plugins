@@ -42,7 +42,7 @@ public:
 
 private:
     Distortion distortion;
-    juce::StringArray distortionTypes{ "Inverse Absolute Value", "ArcTan", "Erf", "Inverse Square" };
+    juce::StringArray distortionTypes{ "Mode 1", "Mode 2", "Mode 3", "Mode 4"};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DistortionAudioProcessor)
 };

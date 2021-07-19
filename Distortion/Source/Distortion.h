@@ -33,6 +33,7 @@ public:
     void prepare(const double newSampleRate, const int numChannels, const int maxBlockSize)
     {
         sampleRate = static_cast<float>(newSampleRate);
+        bufferSize = maxBlockSize;
         distortionBuffer.setSize(numChannels, maxBlockSize);
         dryBuffer.setSize(numChannels, maxBlockSize);
         // initialize dsp
@@ -47,16 +48,16 @@ public:
     void process(const juce::dsp::ProcessContextReplacing<float>& context)
     {
         const auto& outputBuffer = context.getOutputBlock();
-        const int bufferSize = static_cast<int>(outputBuffer.getNumSamples());
         // copy input to distortion and dry buffers
-        juce::FloatVectorOperations::copy(distortionBuffer.getWritePointer(0), outputBuffer.getChannelPointer(0), bufferSize);
-        juce::FloatVectorOperations::copy(distortionBuffer.getWritePointer(1), outputBuffer.getChannelPointer(1), bufferSize);
-        juce::FloatVectorOperations::copy(dryBuffer.getWritePointer(0), outputBuffer.getChannelPointer(0), bufferSize);
-        juce::FloatVectorOperations::copy(dryBuffer.getWritePointer(1), outputBuffer.getChannelPointer(1), bufferSize);
+        for (int channel = 0; channel < 2; channel++)
+        {
+            juce::FloatVectorOperations::copy(distortionBuffer.getWritePointer(channel), outputBuffer.getChannelPointer(channel), bufferSize);
+            juce::FloatVectorOperations::copy(dryBuffer.getWritePointer(channel), outputBuffer.getChannelPointer(channel), bufferSize);
+        }
         // apply filters, distortion, and mix
         applyFilters();  
-        distortBuffer(distortionBuffer.getWritePointer(0), distortionBuffer.getWritePointer(1), bufferSize);
-        applyMix(distortionBuffer.getWritePointer(0), distortionBuffer.getWritePointer(1), dryBuffer.getReadPointer(0), dryBuffer.getReadPointer(1), bufferSize);
+        distortBuffer();
+        applyMix();
         // copy distortion buffer to output
         juce::FloatVectorOperations::copy(outputBuffer.getChannelPointer(0), distortionBuffer.getReadPointer(0), bufferSize);
         juce::FloatVectorOperations::copy(outputBuffer.getChannelPointer(1), distortionBuffer.getReadPointer(1), bufferSize);
@@ -82,13 +83,13 @@ public:
         filterChain.process(filterContext);
     }
 
-    void distortBuffer(float* bufferLeft, float* bufferRight, int bufferSize)
+    void distortBuffer()
     {
         float outputGain = juce::Decibels::decibelsToGain(volume);
         float autoGain = juce::Decibels::decibelsToGain(drive / -5.0f) * (-0.7f * anger + 1.0f);
         for (int sample = 0; sample < bufferSize; sample++)
         {
-            float wetSample[2] = { bufferLeft[sample], bufferRight[sample] };
+            float wetSample[2] = { distortionBuffer.getSample(0, sample), distortionBuffer.getSample(1, sample) };
             for (int channel = 0; channel < 2; channel++)
             {
                 wetSample[channel] *= (drive / 10.0f) + 1.0f;       // apply drive
@@ -97,9 +98,8 @@ public:
                 wetSample[channel] *= autoGain;                     // apply autogain
                 wetSample[channel] *= outputGain;                   // apply volume
             }
-            // set wet to output
-            bufferLeft[sample] = wetSample[0];
-            bufferRight[sample] = wetSample[1];
+            distortionBuffer.setSample(0, sample, wetSample[0]);
+            distortionBuffer.setSample(1, sample, wetSample[1]);
         }
     }
 
@@ -127,25 +127,26 @@ public:
         }
     }
 
-    void applyMix(float* wetLeft, float* wetRight, const float* dryLeft, const float* dryRight, int bufferSize)
+    void applyMix()
     {
         float dryMix = static_cast<float> (std::pow(std::sin(0.5 * juce::MathConstants<double>::pi * (1.0 - (mix / 100.0f))), 2.0));
         float wetMix = static_cast<float> (std::pow(std::sin(0.5 * juce::MathConstants<double>::pi * (mix / 100.0f)), 2.0));
         for (int sample = 0; sample < bufferSize; sample++)
         {
             // calculate mix
-            float wetSampleLeft = wetLeft[sample] * wetMix;
-            float wetSampleRight = wetRight[sample] * wetMix;
-            float drySampleLeft = dryLeft[sample] * dryMix;
-            float drySampleRight = dryRight[sample] * dryMix;
-            // output mix to wet
-            wetLeft[sample] = wetSampleLeft + drySampleLeft;
-            wetRight[sample] = wetSampleRight + drySampleRight;
+            float wetSampleLeft = distortionBuffer.getSample(0, sample) * wetMix;
+            float wetSampleRight = distortionBuffer.getSample(1, sample) * wetMix;
+            float drySampleLeft = dryBuffer.getSample(0, sample) * dryMix;
+            float drySampleRight = dryBuffer.getSample(1, sample) * dryMix;
+            // output mixed signal
+            distortionBuffer.setSample(0, sample, wetSampleLeft + drySampleLeft);
+            distortionBuffer.setSample(1, sample, wetSampleRight + drySampleRight);
         }
     }
 
 private:
     float sampleRate{ 0.0f };
+    int bufferSize{ 0 };
     float drive{ 0.0f };
     float volume{ 0.0f };
     float mix{ 0.0f };

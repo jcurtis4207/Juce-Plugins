@@ -25,7 +25,6 @@ public:
     void prepare(const double newSampleRate, const int numChannels, const int maxBlockSize)
     {
         sampleRate = newSampleRate;
-        tiltBuffer.setSize(numChannels, maxBlockSize);
         // initialize dsp
         juce::dsp::ProcessSpec spec;
         spec.sampleRate = newSampleRate;
@@ -38,36 +37,22 @@ public:
     void process(const juce::dsp::ProcessContextReplacing<float>& context)
     {
         const auto& outputBuffer = context.getOutputBlock();
-        const int bufferSize = static_cast<int>(outputBuffer.getNumSamples());
-        // copy input to tilt buffer
-        juce::FloatVectorOperations::copy(tiltBuffer.getWritePointer(0), outputBuffer.getChannelPointer(0), bufferSize);
-        juce::FloatVectorOperations::copy(tiltBuffer.getWritePointer(1), outputBuffer.getChannelPointer(1), bufferSize);
-        // apply tilt to tilt buffer
-        applyTilt();
-        // copy tilt buffer to output
-        juce::FloatVectorOperations::copy(outputBuffer.getChannelPointer(0), tiltBuffer.getReadPointer(0), bufferSize);
-        juce::FloatVectorOperations::copy(outputBuffer.getChannelPointer(1), tiltBuffer.getReadPointer(1), bufferSize);
-    }
-
-    void applyTilt()
-    {
         // create shelves with fixed 0.4Q
         auto lowShelfCoefficients = juce::dsp::IIR::Coefficients<float>::makeLowShelf(sampleRate, freq, 0.4f, juce::Decibels::decibelsToGain(gain * -1.0f));
         auto highShelfCoefficients = juce::dsp::IIR::Coefficients<float>::makeHighShelf(sampleRate, freq, 0.4f, juce::Decibels::decibelsToGain(gain));
         // apply coefficients to filters
         *filterChain.get<0>().state = *lowShelfCoefficients;
         *filterChain.get<1>().state = *highShelfCoefficients;
-        // apply processing to buffer
-        juce::dsp::AudioBlock<float> filterBlock(tiltBuffer);
+        // apply processing to output buffer
+        juce::dsp::AudioBlock<float> filterBlock(outputBuffer);
         juce::dsp::ProcessContextReplacing<float> filterContext(filterBlock);
         filterChain.process(filterContext);
     }
 
 private:
-    double sampleRate;
+    double sampleRate{ 0.0 };
 	float freq{ 1000.0f };
 	float gain{ 0.0f };
-    juce::AudioBuffer<float> tiltBuffer;
     using StereoFilter = juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>>;
     juce::dsp::ProcessorChain<StereoFilter, StereoFilter> filterChain;
 };
