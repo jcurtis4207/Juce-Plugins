@@ -28,13 +28,13 @@ private:
     MultiLabel multiLabel{ "Q" };
     // filters
     OuterKnob slopeKnobs[2];
-    SmallKnob filterKnobs[2];
+    SmallKnob filterKnobs[2]{ SmallKnob("", "Hz"), SmallKnob("", "Hz") };
     juce::String filterParamIDs[4]{ "hpfFreq", "lpfFreq", "hpfSlope", "lpfSlope" };
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> filterKnobsAttach[4];
     // parametric bands
-    OuterKnob freqKnobs[4];
-    SmallKnob gainKnobs[4];
-    SmallKnob qKnobs[4];
+    OuterKnob freqKnobs[4]{ "Hz", "Hz", "Hz", "Hz" };
+    SmallKnob gainKnobs[4]{ SmallKnob("", "dB"), SmallKnob("", "dB"), SmallKnob("", "dB"), SmallKnob("", "dB") };
+    SmallKnob qKnobs[4]{ SmallKnob("", "Q"), SmallKnob("", "Q"), SmallKnob("", "Q"), SmallKnob("", "Q") };
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> bandKnobsAttach[12];
     // buttons
     SmallButton hpfBypassButton{ "Bypass" }, lpfBypassButton{ "Bypass" };

@@ -24,16 +24,12 @@ EeqAudioProcessorEditor::EeqAudioProcessorEditor(EeqAudioProcessor& p)
         slopeKnobs[i].setMouseDragSensitivity(50);
         addAndMakeVisible(slopeKnobs[i]);
         filterKnobsAttach[i] = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, filterParamIDs[i + 2], slopeKnobs[i]);
-        filterKnobs[i].setTextValueSuffix(" Hz");
         addAndMakeVisible(filterKnobs[i]);
         filterKnobsAttach[i] = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, filterParamIDs[i], filterKnobs[i]);
     }
     // setup parametric bands
     for (int i = 0; i < 4; i++)
     {
-        freqKnobs[i].setTextValueSuffix(" Hz");
-        gainKnobs[i].setTextValueSuffix(" dB");
-        qKnobs[i].setTextValueSuffix(" Q");
         addAndMakeVisible(freqKnobs[i]);
         addAndMakeVisible(gainKnobs[i]);
         addAndMakeVisible(qKnobs[i]);

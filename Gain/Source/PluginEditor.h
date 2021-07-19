@@ -26,7 +26,7 @@ private:
 
     BgImage bgImage;
     PowerLine powerLine{ "Gain", "Jacob Curtis", 30 };
-    SmallKnob gainKnob{ "Gain" };
+    SmallKnob gainKnob{ "Gain", "dB"};
     SmallButton phaseButton{ "Phase" };
     Meter meter;
 
