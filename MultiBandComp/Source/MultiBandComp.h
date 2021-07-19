@@ -33,9 +33,51 @@ public:
 
     void setParameters(juce::AudioProcessorValueTreeState& apvts)
     {
-        crossoverFreqA = apvts.getRawParameterValue("crossoverFreqA")->load();
-        crossoverFreqB = apvts.getRawParameterValue("crossoverFreqB")->load();
-        crossoverFreqC = apvts.getRawParameterValue("crossoverFreqC")->load();
+        // ensure crossovers don't overlap: B -> A -> C
+        float tempA = apvts.getRawParameterValue("crossoverFreqA")->load();
+        float tempB = apvts.getRawParameterValue("crossoverFreqB")->load();
+        float tempC = apvts.getRawParameterValue("crossoverFreqC")->load();
+        if (tempA < (tempB * 1.25f))
+        {
+            float sendValue = freqRange.convertTo0to1(tempB * 1.25f);
+            apvts.getParameter("crossoverFreqA")->setValueNotifyingHost(sendValue);
+            crossoverFreqA = tempB * 1.25f;
+        }
+        else
+        {
+            crossoverFreqA = tempA;
+        }
+        if (tempB > (tempA * 0.8f))
+        {
+            float sendValue = freqRange.convertTo0to1(tempA * 0.8f);
+            apvts.getParameter("crossoverFreqB")->setValueNotifyingHost(sendValue);
+            crossoverFreqB = tempA * 0.8f;
+        }
+        else
+        {
+            crossoverFreqB = tempB;
+        }
+        if (tempA > (tempC * 0.8f))
+        {
+            float sendValue = freqRange.convertTo0to1(tempC * 0.8f);
+            apvts.getParameter("crossoverFreqA")->setValueNotifyingHost(sendValue);
+            crossoverFreqA = tempC * 0.8f;
+        }
+        else
+        {
+            crossoverFreqA = tempA;
+        }
+        if (tempC < (tempA * 1.25f))
+        {
+            float sendValue = freqRange.convertTo0to1(tempA * 1.25f);
+            apvts.getParameter("crossoverFreqC")->setValueNotifyingHost(sendValue);
+            crossoverFreqC = tempA * 1.25f;
+        }
+        else
+        {
+            crossoverFreqC = tempC;
+        }
+        // get other parameter values
         stereo = apvts.getRawParameterValue("stereo")->load();
         for (int band = 0; band < 4; band++)
         {
@@ -271,6 +313,7 @@ public:
 
 private:
     double sampleRate;
+    juce::NormalisableRange<float> freqRange{ 20.0f, 15000.0f, 1.0f, 0.25f };
     float crossoverFreqA, crossoverFreqB, crossoverFreqC;
     juce::AudioBuffer<float> stage1LowBuffer, stage1HighBuffer;
     juce::dsp::ProcessorChain<juce::dsp::LinkwitzRileyFilter<float>, juce::dsp::LinkwitzRileyFilter<float>> stage1LowChain, stage1HighChain;

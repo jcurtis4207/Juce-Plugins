@@ -24,9 +24,9 @@ MultiBandCompAudioProcessor::MultiBandCompAudioProcessor()
 #endif
 {
     // filter parameters
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("crossoverFreqA", "Crossover Frequency 1", juce::NormalisableRange<float>(600.0f, 3000.0f, 1.0f, 0.25f), 1000.0f, "Hz"));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("crossoverFreqB", "Crossover Frequency 2", juce::NormalisableRange<float>(20.0f, 500.0f, 1.0f, 0.25f), 200.0f, "Hz"));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("crossoverFreqC", "Crossover Frequency 3", juce::NormalisableRange<float>(4000.0f, 20000.0f, 1.0f, 0.25f), 5000.0f, "Hz"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("crossoverFreqB", "Crossover Frequency 1", juce::NormalisableRange<float>(20.0f, 15000.0f, 1.0f, 0.25f), 200.0f, "Hz"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("crossoverFreqA", "Crossover Frequency 2", juce::NormalisableRange<float>(20.0f, 15000.0f, 1.0f, 0.25f), 1000.0f, "Hz"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("crossoverFreqC", "Crossover Frequency 3", juce::NormalisableRange<float>(20.0f, 15000.0f, 1.0f, 0.25f), 5000.0f, "Hz"));
     // compression parameters
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("stereo", "Stereo Mode", true));
     for (int i = 1; i <= 4; i++)

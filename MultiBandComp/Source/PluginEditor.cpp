@@ -50,6 +50,7 @@ MultiBandCompAudioProcessorEditor::MultiBandCompAudioProcessorEditor(MultiBandCo
 	setSize(730, 430);
 }
 
+
 MultiBandCompAudioProcessorEditor::~MultiBandCompAudioProcessorEditor()
 {
 	setLookAndFeel(nullptr);
