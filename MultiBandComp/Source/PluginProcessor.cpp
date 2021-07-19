@@ -45,7 +45,7 @@ MultiBandCompAudioProcessor::MultiBandCompAudioProcessor()
 void MultiBandCompAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     multibandComp.prepare(sampleRate, 2, samplesPerBlock);
-    multibandComp.setParameters(parameters);
+    multibandComp.setParameters(parameters, listen);
 }
 
 void MultiBandCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
@@ -58,7 +58,7 @@ void MultiBandCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
         buffer.clear(i, 0, buffer.getNumSamples());
 
     // apply multiband compression
-    multibandComp.setParameters(parameters);
+    multibandComp.setParameters(parameters, listen);
     juce::dsp::AudioBlock<float> block(buffer);
     juce::dsp::ProcessContextReplacing<float> context(block);
     multibandComp.process(context);

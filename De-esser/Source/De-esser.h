@@ -16,15 +16,11 @@
 class Deesser
 {
 public:
-    Deesser()
-    {
-        compressionLevel[0] = 0.0f;
-        compressionLevel[1] = 0.0f;
-    }
+    Deesser() {}
 
     ~Deesser() {}
 
-    void setDeesserParameters(juce::AudioProcessorValueTreeState& apvts)
+    void setDeesserParameters(juce::AudioProcessorValueTreeState& apvts, bool isListen)
     {
         crossoverFreq = apvts.getRawParameterValue("crossoverFreq")->load();
         threshold = apvts.getRawParameterValue("threshold")->load();
@@ -32,14 +28,14 @@ public:
         float releaseInput = apvts.getRawParameterValue("release")->load();
         stereo = apvts.getRawParameterValue("stereo")->load();
         wide = apvts.getRawParameterValue("wide")->load();
-        listen = apvts.getRawParameterValue("listen")->load();
         attackTime = std::exp(-1.0f / ((attackInput / 1000.0f) * (float)sampleRate));
         releaseTime = std::exp(-1.0f / ((releaseInput / 1000.0f) * (float)sampleRate));
+        listen = isListen;
     }
 
     void prepare(const double newSampleRate, const int numChannels, const int maxBlockSize)
     {
-        sampleRate = static_cast<float>(newSampleRate);
+        sampleRate = newSampleRate;
         bufferSize = maxBlockSize;
         // initialize buffers
         lowBuffer.setSize(numChannels, maxBlockSize);
@@ -190,7 +186,7 @@ public:
     }
 
 private:
-    float sampleRate{ 0.0f };
+    double sampleRate{ 0.0 };
     int bufferSize{ 0 };
     float crossoverFreq{ 1000.0f };
     float threshold{ 0.0f };

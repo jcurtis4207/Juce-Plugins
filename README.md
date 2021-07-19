@@ -53,8 +53,8 @@ The backend is the same implementation as the Compressor plugin.
 
 ### Multiband Comp
 A 4 band compressor, using the same backend as the Compressor plugin.
-There are controls for attack, release, ratio, threshold, and makeup gain on each band.
-Also there are controls for the crossover frequencies, as well as a button to switch between linked stereo and dual mono modes.
+There are standard controls for attack, release, ratio, threshold, and makeup gain on each band.
+Also there are controls for the crossover frequencies and listen on each band, as well as a button to switch between linked stereo and dual mono modes.
 
 ### Tilt-eq
 A tilting equalizer, similar to the Tonelux Tilt.

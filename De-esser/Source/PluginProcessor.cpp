@@ -30,7 +30,6 @@ DeesserAudioProcessor::DeesserAudioProcessor()
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("release", "Release", juce::NormalisableRange<float>(5.0f, 100.0f, 0.1f, 0.35f), 10.0f, "ms"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("stereo", "Stereo", true));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("wide", "Wide Band", false));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("listen", "SC Listen", false));
     // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
 }
@@ -38,7 +37,7 @@ DeesserAudioProcessor::DeesserAudioProcessor()
 void DeesserAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     deesser.prepare(sampleRate, 2, samplesPerBlock);
-    deesser.setDeesserParameters(parameters);
+    deesser.setDeesserParameters(parameters, listen);
 }
 
 void DeesserAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
@@ -51,7 +50,7 @@ void DeesserAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
         buffer.clear(i, 0, buffer.getNumSamples());
 
     // apply de-esser
-    deesser.setDeesserParameters(parameters);
+    deesser.setDeesserParameters(parameters, listen);
     juce::dsp::AudioBlock<float> block(buffer);
     juce::dsp::ProcessContextReplacing<float> context(block);
     deesser.process(context);

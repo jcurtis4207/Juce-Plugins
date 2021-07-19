@@ -41,6 +41,7 @@ public:
     juce::AudioProcessorValueTreeState parameters;
     float gainReductionLeft{ 0.0f };
     float gainReductionRight{ 0.0f };
+    bool listen{ false };
 
 private:
     Deesser deesser;

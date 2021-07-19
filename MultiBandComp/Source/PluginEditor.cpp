@@ -20,6 +20,7 @@ MultiBandCompAudioProcessorEditor::MultiBandCompAudioProcessorEditor(MultiBandCo
 {
 	addAndMakeVisible(bgImage);
 	addAndMakeVisible(powerLine);
+	addAndMakeVisible(listenLabel);
 	// frequency controls
 	for (int i = 0; i < 3; i++)
 	{
@@ -39,6 +40,7 @@ MultiBandCompAudioProcessorEditor::MultiBandCompAudioProcessorEditor(MultiBandCo
 		addAndMakeVisible(attackKnobs[band]);
 		addAndMakeVisible(releaseKnobs[band]);
 		addAndMakeVisible(makeUpKnobs[band]);
+		addAndMakeVisible(listenButtons[band]);
 		thresholdAttach[band] = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "threshold" + bandNum, thresholdKnobs[band]);
 		ratioAttach[band] = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "ratio" + bandNum, ratioKnobs[band]);
 		attackAttach[band] = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "attack" + bandNum, attackKnobs[band]);
@@ -47,9 +49,12 @@ MultiBandCompAudioProcessorEditor::MultiBandCompAudioProcessorEditor(MultiBandCo
 	}
 	addAndMakeVisible(stereoButton);
 	stereoAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.parameters, "stereo", stereoButton);
-	setSize(730, 430);
+	listenButtons[0].onClick = [&]() { audioProcessor.listen[0] = listenButtons[0].getToggleState(); };
+	listenButtons[1].onClick = [&]() { audioProcessor.listen[1] = listenButtons[1].getToggleState(); };
+	listenButtons[2].onClick = [&]() { audioProcessor.listen[2] = listenButtons[2].getToggleState(); };
+	listenButtons[3].onClick = [&]() { audioProcessor.listen[3] = listenButtons[3].getToggleState(); };
+	setSize(730, 480);
 }
-
 
 MultiBandCompAudioProcessorEditor::~MultiBandCompAudioProcessorEditor()
 {
@@ -69,10 +74,14 @@ void MultiBandCompAudioProcessorEditor::resized()
 		makeUpKnobs[band].setBounds(attackKnobs[band].getX() + 30, attackKnobs[band].getBottom(), 40, 70);
 		grMeters[band].setBounds(ratioKnobs[band].getRight() + 10, ratioKnobs[band].getY() - 10, grMeters[band].getMeterWidth(), grMeters[band].getMeterHeight());
 		bandLabels[band].setBounds(ratioKnobs[band].getX() - 10, ratioKnobs[band].getY() - 30, 160, 15);
+		listenButtons[band].setBounds(makeUpKnobs[band].getX() - 5, makeUpKnobs[band].getBottom() + 30, 50, 50);
 	}
 	for (int i = 0; i < 3; i++)
 	{
 		freqKnobs[i].setBounds(ratioKnobs[i + 1].getX() - 40, 60, 50, 80);
 	}
 	stereoButton.setBounds(freqKnobs[2].getRight() + 50, freqKnobs[2].getY() + 15, 50, 60);
+	int xPos = listenButtons[0].getX() + (listenButtons[0].getWidth() / 2) - 1;
+	int width = listenButtons[3].getX() + (listenButtons[3].getWidth() / 2) - xPos + 1;
+	listenLabel.setBounds(xPos, listenButtons[0].getY() - 20, width, 13);
 }

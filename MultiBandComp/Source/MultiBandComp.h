@@ -20,7 +20,7 @@ public:
 
     ~MultiBandComp(){}
 
-    void setParameters(juce::AudioProcessorValueTreeState& apvts)
+    void setParameters(juce::AudioProcessorValueTreeState& apvts, bool* listenPtr)
     {
         // ensure crossovers don't overlap: B -> A -> C
         float tempA = apvts.getRawParameterValue("crossoverFreqA")->load();
@@ -79,6 +79,7 @@ public:
             attackTime[band] = std::exp(-1.0f / ((attackInput / 1000.0f) * (float)sampleRate));
             releaseTime[band] = std::exp(-1.0f / ((releaseInput / 1000.0f) * (float)sampleRate));
             slope[band] = 1.0f - (1.0f / ratio);
+            listen[band] = listenPtr[band];
         }
     }
 
@@ -133,14 +134,30 @@ public:
         // apply compression to filtered buffers
         createEnvelopes();
         applyGainReduction();
+        // use stage 1 buffers to build output
+        stage1LowBuffer.clear();
+        stage1HighBuffer.clear();
         for (int channel = 0; channel < 2; channel++)
         {
-            // sum bands 1 & 2 to stage1Low
-            juce::FloatVectorOperations::add(stage1LowBuffer.getWritePointer(channel), bandBuffers[0].getReadPointer(channel), bandBuffers[1].getReadPointer(channel), bufferSize);
-            // sum bands 3 & 4 to stage1High
-            juce::FloatVectorOperations::add(stage1HighBuffer.getWritePointer(channel), bandBuffers[2].getReadPointer(channel), bandBuffers[3].getReadPointer(channel), bufferSize);
-            // sum stage 1 to output
-            juce::FloatVectorOperations::add(outputBuffer.getChannelPointer(channel), stage1LowBuffer.getReadPointer(channel), stage1HighBuffer.getReadPointer(channel), bufferSize);
+            for (int band = 0; band < 4; band++)
+            {
+                // build buffer of bands set to listen
+                if (listen[band])
+                {
+                    juce::FloatVectorOperations::add(stage1LowBuffer.getWritePointer(channel), bandBuffers[band].getReadPointer(channel), bufferSize);
+                }
+                // build buffer of all bands
+                juce::FloatVectorOperations::add(stage1HighBuffer.getWritePointer(channel), bandBuffers[band].getReadPointer(channel), bufferSize);
+            }
+            // set output based on listen status
+            if (listen[0] || listen[1] || listen[2] || listen[3])
+            {
+                juce::FloatVectorOperations::copy(outputBuffer.getChannelPointer(channel), stage1LowBuffer.getReadPointer(channel), bufferSize);
+            }
+            else
+            {
+                juce::FloatVectorOperations::copy(outputBuffer.getChannelPointer(channel), stage1HighBuffer.getReadPointer(channel), bufferSize);
+            }
         }
     }
 
@@ -298,6 +315,7 @@ private:
     float slope[4];
     float makeUpGain[4];
     bool stereo{ true };
+    bool listen[4]{ false, false, false, false };
     float compressionLevel[8];
     float outputGainReduction[8];
     juce::AudioBuffer<float> bandBuffers[4];
@@ -306,10 +324,10 @@ private:
 
 /*  Signal Flow Diagram:
 *                                                           |--- crossoverFreqC HPF -> band4 ---|
-*          |--- crossoverFreqA HPF -> crossoverFreqB APF ---|                                   |--- stage1High ---|
-*          |                                                |--- crossoverFreqC LPF -> band3 ---|                  |
-* input ---|                                                                                                       |--- output
-*          |                                                |--- crossoverFreqB HPF -> band2 ---|                  |
-*          |--- crossoverFreqA LPF -> crossoverFreqC APF ---|                                   |--- stage1Low ----|
+*          |--- crossoverFreqA HPF -> crossoverFreqB APF ---|                                   |
+*          |                                                |--- crossoverFreqC LPF -> band3 ---|
+* input ---|                                                                                    |--- output
+*          |                                                |--- crossoverFreqB HPF -> band2 ---|
+*          |--- crossoverFreqA LPF -> crossoverFreqC APF ---|                                   |
 *                                                           |--- crossoverFreqB LPF -> band1 ---|
 */

@@ -40,6 +40,7 @@ public:
 
     juce::AudioProcessorValueTreeState parameters;
     float gainReduction[8];
+    bool listen[4]{ false, false, false, false };
 
 private:
     MultiBandComp multibandComp;

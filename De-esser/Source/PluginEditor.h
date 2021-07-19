@@ -31,7 +31,7 @@ private:
         attackKnob{ "Attack", "ms" }, releaseKnob{ "Release", "ms" };
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> thresholdAttach, crossoverAttach, attackAttach, releaseAttach;
     SmallButton stereoButton{ "Stereo" }, wideButton{ "Wide" }, listenButton{ "Listen" };
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> stereoAttach, wideAttach, listenAttach;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> stereoAttach, wideAttach;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DeesserAudioProcessorEditor)
 };

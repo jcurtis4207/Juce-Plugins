@@ -29,7 +29,7 @@ DeesserAudioProcessorEditor::DeesserAudioProcessorEditor(DeesserAudioProcessor& 
     releaseAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "release", releaseKnob);
     stereoAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.parameters, "stereo", stereoButton);
     wideAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.parameters, "wide", wideButton);
-    listenAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.parameters, "listen", listenButton);
+    listenButton.onClick = [&]() { audioProcessor.listen = listenButton.getToggleState(); };
     setSize(260, 420);
 }
 

@@ -38,6 +38,8 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> thresholdAttach[4], ratioAttach[4], attackAttach[4], releaseAttach[4], makeUpAttach[4];
     SmallButton stereoButton{ "Stereo" };
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> stereoAttach;
+    MultiLabel listenLabel{ "Listen" };
+    SmallButton listenButtons[4];
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MultiBandCompAudioProcessorEditor)
 };
