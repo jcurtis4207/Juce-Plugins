@@ -56,7 +56,7 @@ void CompressorAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
     compressor.updateCompressorValues(parameters);
     juce::dsp::AudioBlock<float> block(buffer);
     juce::dsp::ProcessContextReplacing<float> context(block);
-    compressor.process(context, getSampleRate());
+    compressor.process(context);
     // get gain reduction for meter
     gainReductionLeft = compressor.getGainReductionLeft();
     gainReductionRight = compressor.getGainReductionRight();

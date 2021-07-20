@@ -49,7 +49,7 @@ public:
         envelopeBuffer.setSize(numChannels, maxBlockSize);
     }
 
-    void process(const juce::dsp::ProcessContextReplacing<float>& context, double inputSampleRate)
+    void process(const juce::dsp::ProcessContextReplacing<float>& context)
     {
         const auto& outputBuffer = context.getOutputBlock();
         // copy the buffer into the dry buffer and sidechain
@@ -61,7 +61,7 @@ public:
         // apply sidechain filter if not bypassed
         if (!scBypass)
         {
-            auto hpfCoefficients = juce::IIRCoefficients::makeHighPass(inputSampleRate, scFreq);
+            auto hpfCoefficients = juce::IIRCoefficients::makeHighPass(sampleRate, scFreq);
             for (int channel = 0; channel < 2; channel++)
             {
                 filters[channel].setCoefficients(hpfCoefficients);
