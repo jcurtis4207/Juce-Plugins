@@ -45,6 +45,10 @@ All of the bands have access to the entire frequency spectrum.
 ### Gain
 A simple plugin that includes a gain knob with a range of -30dB to +30dB, a phase inversion button, and a level meter.
 
+### Gate
+An expander/gate plugin with standard threshold, ratio, attack, release, and hold controls.
+It also has a filtered sidechain, with listen functionality.
+
 ### Limiter
 A ripoff of the L1 limiter. 
 I think the layout of the L1 is the best out there, so I haven't tried to reinvent the wheel (yet).
@@ -76,7 +80,7 @@ These are the plugins I think are necessary (though I'm not sure how many will b
 * <s>De-esser</s> 
 * <s>Multiband Compressor</s>
 * <s>Limiter</s>
-* Expander/Gate
+* <s>Expander/Gate</s>
 * <s>Clipper</s>
 * <s>Distortion</s>
 * Delay
