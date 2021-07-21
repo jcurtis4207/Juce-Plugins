@@ -78,7 +78,7 @@ void DistortionAudioProcessorEditor::resized()
     }
     int xPos = typeButtons[0].getX() + (typeButtons[0].getWidth() / 2) - 1;
     int width = typeButtons[3].getX() + (typeButtons[3].getWidth() / 2) - xPos + 1;
-    multiLabel.setBounds(xPos, typeButtons[0].getY() - 25, width, 18);
+    multiLabel.setBounds(xPos, typeButtons[0].getY() - 20, width, 13);
 }
 
 void DistortionAudioProcessorEditor::buttonClicked(int index)

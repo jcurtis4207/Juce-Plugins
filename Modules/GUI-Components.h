@@ -107,6 +107,7 @@ public:
 
     void setHitArea(juce::Point<float> p, float r)
     {
+        setBufferedToImage(true);
         center = p;
         knobRadius = r;
     }
@@ -203,6 +204,8 @@ public:
 
     void setHitArea(juce::Point<float> p, float r)
     {
+        setPaintingIsUnclipped(true);
+        setBufferedToImage(true);
         center = p;
         knobRadius = r;
     }
@@ -335,13 +338,14 @@ public:
         setName(name);
         knobRadius = 0.0f;
         center = juce::Point<float>(0.0f, 0.0f);
-        setPaintingIsUnclipped(true);
     }
 
     ~BigKnob() {}
 
     void setHitArea(juce::Point<float> p, float r)
     {
+        setPaintingIsUnclipped(true);
+        setBufferedToImage(true);
         center = p;
         knobRadius = r;
     }
@@ -418,6 +422,8 @@ public:
 
     void setHitArea(juce::Point<int> p)
     {
+        setPaintingIsUnclipped(true);
+        setBufferedToImage(true);
         center = p;
     }
 
@@ -725,6 +731,8 @@ public:
     {
         setText(name, juce::NotificationType::dontSendNotification);
         setLookAndFeel(&laf);
+        setPaintingIsUnclipped(true);
+        setBufferedToImage(true);
     }
     ~GreyLabel() {}
 
@@ -739,6 +747,8 @@ public:
     MultiLabel(const juce::String& t)
     {
         text = t;
+        setPaintingIsUnclipped(true);
+        setBufferedToImage(true);
     }
     ~MultiLabel() {}
     void paint(juce::Graphics& g)
