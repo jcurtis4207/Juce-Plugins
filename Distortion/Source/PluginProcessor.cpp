@@ -41,6 +41,7 @@ void DistortionAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
 {
     distortion.prepare(sampleRate, 2, samplesPerBlock);
     distortion.setParameters(parameters);
+    setLatencySamples(distortion.getOversamplerLatency());
 }
 
 void DistortionAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)

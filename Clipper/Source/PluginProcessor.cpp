@@ -33,6 +33,7 @@ void ClipperAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
 {
     clipper.prepare(sampleRate, samplesPerBlock);
     clipper.updateClipperValues(parameters);
+    setLatencySamples(clipper.getOversamplerLatency());
 }
 
 void ClipperAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)

@@ -17,7 +17,7 @@ Since I'm primarily a Pro Tools user, I will hopefully build them as AAX at some
 The collection currently includes:
 
 ### Clipper
-A simple hard clipper.
+A simple hard clipper with 4x oversampling.
 The GUI is yet another shameless ripoff of Waves L1 with only threshold and ceiling controls.
 
 ### Compressor
@@ -32,7 +32,7 @@ It includes attack and release controls, as well as typical threshold and freque
 There is a button to control whether the compression affects the entire frequency range or just the sidechain, a button to switch between linked stereo and dual mono modes, and a button to listen to the filtered sidechain do dial in the frequency.
 
 ### Distortion
-A waveshaper-based distortion plugin.
+A waveshaper-based distortion plugin with 4x oversampling.
 There are controls for switching between 4 different waveshaping functions, as well as an "Anger" control for modifying the severity of the function.
 There are also filters and a switchable tilt-eq/low-shelf before the distortion stage.
 
