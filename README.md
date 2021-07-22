@@ -31,6 +31,12 @@ A filter-based de-esser plugin.
 It includes attack and release controls, as well as typical threshold and frequency controls.
 There is a button to control whether the compression affects the entire frequency range or just the sidechain, a button to switch between linked stereo and dual mono modes, and a button to listen to the filtered sidechain do dial in the frequency.
 
+### Delay
+A stereo delay plugin.
+It features a maximum delay time of 2 seconds.
+It includes standard delay controls, as well as integrated modulation, distortion, and filters.
+It also has a width control to offset the left and right delay signals.
+
 ### Distortion
 A waveshaper-based distortion plugin with 4x oversampling.
 There are controls for switching between 4 different waveshaping functions, as well as an "Anger" control for modifying the severity of the function.
@@ -83,7 +89,7 @@ These are the plugins I think are necessary (though I'm not sure how many will b
 * <s>Expander/Gate</s>
 * <s>Clipper</s>
 * <s>Distortion</s>
-* Delay
+* <s>Delay</s>
 * Reverb
 
 #
