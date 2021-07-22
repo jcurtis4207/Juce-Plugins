@@ -26,7 +26,6 @@ DistortionAudioProcessor::DistortionAudioProcessor()
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("drive", "Drive", juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f), 0.0f));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("volume", "Volume", juce::NormalisableRange<float>(-20.0f, 20.0f, 0.5f), 0.0f, "dB"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("mix", "Mix", juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f), 100.0f, "%"));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("offset", "DC Offset", juce::NormalisableRange<float>(0.0f, 1.0f, 0.001f), 0.0f));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("anger", "Anger", juce::NormalisableRange<float>(0.0f, 1.0f, 0.1f), 0.5f));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("hpf", "HPF Frequency", juce::NormalisableRange<float>(20.0f, 10000.0f, 1.0f, 0.25f), 20.0f, "Hz"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("lpf", "LPF Frequency", juce::NormalisableRange<float>(200.0f, 20000.0f, 1.0f, 0.25f), 20000.0f, "Hz"));

@@ -21,7 +21,6 @@ public:
         drive = apvts.getRawParameterValue("drive")->load();
         volume = apvts.getRawParameterValue("volume")->load();
         mix = apvts.getRawParameterValue("mix")->load();
-        offset = apvts.getRawParameterValue("offset")->load();
         anger = apvts.getRawParameterValue("anger")->load();
         distortionType = static_cast<int>(apvts.getRawParameterValue("type")->load());
         hpfFreq = apvts.getRawParameterValue("hpf")->load();
@@ -90,7 +89,6 @@ public:
             for (int channel = 0; channel < 2; channel++)
             {
                 wetSample[channel] *= (drive / 10.0f) + 1.0f;       // apply drive
-                wetSample[channel] += offset;                       // apply dc offset
                 distortSample(wetSample[channel], distortionType);  // apply distortion
                 wetSample[channel] *= autoGain;                     // apply autogain
                 wetSample[channel] *= outputGain;                   // apply volume
@@ -152,7 +150,6 @@ private:
     float drive{ 0.0f };
     float volume{ 0.0f };
     float mix{ 0.0f };
-    float offset{ 0.0f };
     float anger{ 0.5f };
     int distortionType{ 0 };
     float hpfFreq{ 20.0f };
