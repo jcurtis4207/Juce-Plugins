@@ -32,6 +32,8 @@ DelayAudioProcessor::DelayAudioProcessor()
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("hpfFreq", "HPF Frequency", juce::NormalisableRange<float>(20.0f, 2000.0f, 1.0f, 0.35f), 20.0f, "Hz"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("lpfFreq", "LPF Frequency", juce::NormalisableRange<float>(500.0f, 20000.0f, 1.0f, 0.35f), 20000.0f, "Hz"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("drive", "Drive", juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f), 0.0f));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("bpmSync", "BPM Sync", false));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterChoice>("subdivisionIndex", "Subdivision", delaySubdivisions, 6));
     // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
 }
@@ -39,7 +41,7 @@ DelayAudioProcessor::DelayAudioProcessor()
 void DelayAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     delay.prepare(sampleRate, samplesPerBlock);
-    delay.setParameters(parameters);
+    delay.setParameters(parameters, 120.0);
 }
 
 void DelayAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
@@ -51,8 +53,16 @@ void DelayAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
+    // get host bpm
+    playHead = this->getPlayHead();
+    if (playHead != nullptr)
+    {
+        playHead->getCurrentPosition(cpi);
+    }
+    double bpm = cpi.bpm;
+
     // apply delay
-    delay.setParameters(parameters);
+    delay.setParameters(parameters, bpm);
     juce::dsp::AudioBlock<float> block(buffer);
     juce::dsp::ProcessContextReplacing<float> context(block);
     delay.process(context);

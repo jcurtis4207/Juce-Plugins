@@ -16,10 +16,12 @@ public:
     Delay(){}
     ~Delay(){}
 
-    void setParameters(juce::AudioProcessorValueTreeState& apvts)
+    void setParameters(juce::AudioProcessorValueTreeState& apvts, double inputBPM)
     {
+        bpm = inputBPM;
         float inputDelay = apvts.getRawParameterValue("delayTime")->load();
         float inputWidth = apvts.getRawParameterValue("width")->load();
+        width = static_cast<float>(inputWidth * sampleRate * 0.001f);
         feedback = apvts.getRawParameterValue("feedback")->load();
         mix = apvts.getRawParameterValue("mix")->load() * 0.01f;
         modDepth = apvts.getRawParameterValue("modDepth")->load() * 0.005f;
@@ -27,9 +29,24 @@ public:
         hpfFreq = apvts.getRawParameterValue("hpfFreq")->load();
         lpfFreq = apvts.getRawParameterValue("lpfFreq")->load();
         drive = apvts.getRawParameterValue("drive")->load();
-        // convert to samples
-        delayTime = static_cast<float>(inputDelay * sampleRate * 0.001f);
-        width = static_cast<float>(inputWidth * sampleRate * 0.001f);
+        bpmSync = apvts.getRawParameterValue("bpmSync")->load();
+        subdivisionIndex = static_cast<int>(apvts.getRawParameterValue("subdivisionIndex")->load());
+        // convert delay time to samples based on sync status
+        if (bpmSync)
+        {
+            delayTime = static_cast<float>(subdivisions[subdivisionIndex] * sampleRate * 60.0 / bpm);
+            // set delayTime parameter to millisecond value of subdivision
+            float delayInMilliseconds = static_cast<float>(subdivisions[subdivisionIndex] * 60000.0 / bpm);
+            apvts.getParameter("delayTime")->beginChangeGesture();
+            apvts.getParameter("delayTime")->setValueNotifyingHost(juce::NormalisableRange<float>(1.0f, 2000.0f, 1.0f).convertTo0to1(delayInMilliseconds));
+            apvts.getParameter("delayTime")->endChangeGesture();
+        }
+        else
+        {
+            delayTime = static_cast<float>(inputDelay * sampleRate * 0.001f);
+        }
+        // ensure delay time doesn't exceed delayBufferSize
+        delayTime = juce::jmin(delayTime, float(delayBufferSize - bufferSize));
     }
 
     void prepare(const double inputSampleRate, const int maxBlockSize)
@@ -206,6 +223,7 @@ private:
     int bufferSize{ 0 };
     int delayBufferSize{ 0 };
     int writePosition{ 0 };
+    double bpm{ 0.0f };
     float delayTime{ 0.0f };
     float feedback{ 0.0f };
     float width{ 0.0f };
@@ -215,6 +233,9 @@ private:
     float hpfFreq{ 0.0f };
     float lpfFreq{ 0.0f };
     float drive{ 0.0f };
+    bool bpmSync{ false };
+    int subdivisionIndex{ 0 };
+    float subdivisions[13]{ 0.25f, (0.5f/3.0f), 0.375f, 0.5f, (1.0f/3.0f), 0.75f, 1.0f, (2.0f/3.0f), 1.5f, 2.0f, (4.0f/3.0f),3.0f, 4.0f };
     juce::AudioBuffer<float> dryBuffer, wetBuffer, delayBuffer;
     juce::dsp::Chorus<float> modChain;
     using StereoFilter = juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>>;

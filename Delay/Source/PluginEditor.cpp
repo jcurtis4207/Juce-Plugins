@@ -18,6 +18,7 @@ DelayAudioProcessorEditor::DelayAudioProcessorEditor(DelayAudioProcessor& p)
 	addAndMakeVisible(modLabel);
 	addAndMakeVisible(filterLabel);
 	addAndMakeVisible(delayKnob);
+	addAndMakeVisible(subdivisionKnob);
 	addAndMakeVisible(feedbackKnob);
 	addAndMakeVisible(mixKnob);
 	addAndMakeVisible(widthKnob);
@@ -26,7 +27,9 @@ DelayAudioProcessorEditor::DelayAudioProcessorEditor(DelayAudioProcessor& p)
 	addAndMakeVisible(lpfKnob);
 	addAndMakeVisible(depthKnob);
 	addAndMakeVisible(rateKnob);
+	addAndMakeVisible(syncButton);
 	delayAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "delayTime", delayKnob);
+	subdivisionAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "subdivisionIndex", subdivisionKnob);
 	feedbackAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "feedback", feedbackKnob);
 	mixAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "mix", mixKnob);
 	widthAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "width", widthKnob);
@@ -35,7 +38,10 @@ DelayAudioProcessorEditor::DelayAudioProcessorEditor(DelayAudioProcessor& p)
 	lpfAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "lpfFreq", lpfKnob);
 	depthAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "modDepth", depthKnob);
 	rateAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "modRate", rateKnob);
-	setSize(450, 240);
+	syncAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.parameters, "bpmSync", syncButton);
+	syncButton.onClick = [&]() { switchKnob(syncButton.getToggleState()); };
+	switchKnob(syncButton.getToggleState());
+	setSize(490, 240);
 }
 
 DelayAudioProcessorEditor::~DelayAudioProcessorEditor()
@@ -48,7 +54,8 @@ void DelayAudioProcessorEditor::resized()
 	bgImage.setBounds(getLocalBounds());
 	powerLine.setBounds(0, 10, 250, 50);
 	int knobWidth = 40;
-	delayKnob.setBounds(90, 70, 120, 145);
+	delayKnob.setBounds(140, 70, 120, 145);
+	subdivisionKnob.setBounds(delayKnob.getBounds());
 	feedbackKnob.setBounds(delayKnob.getX() - 20 - knobWidth, delayKnob.getY() - 5, knobWidth, knobWidth + 25);
 	mixKnob.setBounds(feedbackKnob.getX(), delayKnob.getY() + delayKnob.getWidth() - knobWidth, knobWidth, knobWidth + 25);
 	widthKnob.setBounds(delayKnob.getRight() + 20, feedbackKnob.getY(), knobWidth, knobWidth + 25);
@@ -59,4 +66,20 @@ void DelayAudioProcessorEditor::resized()
 	depthKnob.setBounds(hpfKnob.getRight() + 30, hpfKnob.getY(), knobWidth, knobWidth + 25);
 	rateKnob.setBounds(depthKnob.getX(), lpfKnob.getY(), knobWidth, knobWidth + 25);
 	modLabel.setBounds(depthKnob.getX() - 10, depthKnob.getY() - 25, knobWidth + 20, 13);
+	syncButton.setBounds(20, delayKnob.getY() + 45, knobWidth, knobWidth + 10);
+}
+
+// show delay control based on sync status
+void DelayAudioProcessorEditor::switchKnob(bool isSync)
+{
+	if (isSync)
+	{
+		delayKnob.setVisible(false);
+		subdivisionKnob.setVisible(true);
+	}
+	else
+	{
+		delayKnob.setVisible(true);
+		subdivisionKnob.setVisible(false);
+	}
 }

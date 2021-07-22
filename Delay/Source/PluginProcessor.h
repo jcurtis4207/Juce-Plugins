@@ -42,6 +42,11 @@ public:
 
 private:
     Delay delay;
+    juce::StringArray delaySubdivisions{ "16th", "16th Triplet", "16th Dotted", 
+        "8th", "8th Triplet", "8th Dotted", "Quarter", "Quarter Triplet", "Quarter Dotted", 
+        "Half", "Half Triplet", "Half Dotted", "Whole"};
+    juce::AudioPlayHead* playHead;
+    juce::AudioPlayHead::CurrentPositionInfo cpi;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DelayAudioProcessor)
 };

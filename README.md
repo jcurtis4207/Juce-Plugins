@@ -32,7 +32,7 @@ It includes attack and release controls, as well as typical threshold and freque
 There is a button to control whether the compression affects the entire frequency range or just the sidechain, a button to switch between linked stereo and dual mono modes, and a button to listen to the filtered sidechain do dial in the frequency.
 
 ### Delay
-A stereo delay plugin.
+A stereo delay plugin with host tempo sync.
 It features a maximum delay time of 2 seconds.
 It includes standard delay controls, as well as integrated modulation, distortion, and filters.
 It also has a width control to offset the left and right delay signals.
