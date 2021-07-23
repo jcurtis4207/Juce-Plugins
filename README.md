@@ -94,7 +94,7 @@ These are the plugins I think are necessary (though I'm not sure how many will b
 * <s>Clipper</s>
 * <s>Distortion</s>
 * <s>Delay</s>
-* Reverb
+* <s>Reverb</s>
 
 #
 
