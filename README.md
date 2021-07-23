@@ -66,6 +66,10 @@ A 4 band compressor, using the same backend as the Compressor plugin.
 There are standard controls for attack, release, ratio, threshold, and makeup gain on each band.
 Also there are controls for the crossover frequencies and listen on each band, as well as a button to switch between linked stereo and dual mono modes.
 
+### Reverb
+A reverb plugin using the builtin Juce DSP Reverb module.
+It also has modulation, predelay, and filters.
+
 ### Tilt-eq
 A tilting equalizer, similar to the Tonelux Tilt.
 It uses a high and low shelf with a fixed Q and inverse gain.
