@@ -20,6 +20,7 @@ DistortionAudioProcessorEditor::DistortionAudioProcessorEditor(DistortionAudioPr
     addAndMakeVisible(volumeKnob);
     addAndMakeVisible(mixKnob);
     addAndMakeVisible(angerKnob);
+    addAndMakeVisible(offsetKnob);
     addAndMakeVisible(hpfKnob);
     addAndMakeVisible(lpfKnob);
     addAndMakeVisible(shapeKnob);
@@ -28,6 +29,7 @@ DistortionAudioProcessorEditor::DistortionAudioProcessorEditor(DistortionAudioPr
     volumeAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "volume", volumeKnob);
     mixAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "mix", mixKnob);
     angerAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "anger", angerKnob);
+    offsetAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "offset", offsetKnob);
     hpfAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "hpf", hpfKnob);
     lpfAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "lpf", lpfKnob);
     shapeAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "shape", shapeKnob);
@@ -46,7 +48,7 @@ DistortionAudioProcessorEditor::DistortionAudioProcessorEditor(DistortionAudioPr
     int index = static_cast<int>(audioProcessor.parameters.getRawParameterValue("type")->load());
     typeButtons[index].setToggleState(true, juce::NotificationType::dontSendNotification);
 
-    setSize(360, 360);
+    setSize(360, 420);
 }
 
 DistortionAudioProcessorEditor::~DistortionAudioProcessorEditor()
@@ -60,21 +62,21 @@ void DistortionAudioProcessorEditor::resized()
     powerLine.setBounds(0, 10, 260, 50);
     int knobWidth = 40;
     int buttonWidth = 50;
-    int bigKnobWidth = 120;
-    driveKnob.setBounds(120, 95, bigKnobWidth, bigKnobWidth + 25);
+    driveKnob.setBounds(120, 95, 120, 145);
     int leftPosition = driveKnob.getX() - 10 - knobWidth;
     volumeKnob.setBounds(leftPosition, 60, knobWidth, knobWidth + 25);
     mixKnob.setBounds(leftPosition - 40, 130, knobWidth, knobWidth + 25);
     angerKnob.setBounds(leftPosition, 200, knobWidth, knobWidth + 25);
+    offsetKnob.setBounds(leftPosition + 60, 250, knobWidth, knobWidth + 25);
     int rightPosition = driveKnob.getRight() + 10;
     hpfKnob.setBounds(rightPosition, 60, knobWidth, knobWidth + 25);
     lpfKnob.setBounds(rightPosition + 40, 130, knobWidth, knobWidth + 25);
     shapeKnob.setBounds(rightPosition, 200, knobWidth, knobWidth + 25);
-    shapeButton.setBounds(rightPosition + 60, 210, 30, 50);
+    shapeButton.setBounds(rightPosition - 60, 260, knobWidth, 50);
     for (int i = 0; i < 4; i++)
     {
         int xPos = (i == 2) ? i * (buttonWidth + 14) + 60 : i * (buttonWidth + 13) + 60;
-        typeButtons[i].setBounds(xPos, 300, buttonWidth, buttonWidth);
+        typeButtons[i].setBounds(xPos, 350, buttonWidth, buttonWidth);
     }
     int xPos = typeButtons[0].getX() + (typeButtons[0].getWidth() / 2) - 1;
     int width = typeButtons[3].getX() + (typeButtons[3].getWidth() / 2) - xPos + 1;
