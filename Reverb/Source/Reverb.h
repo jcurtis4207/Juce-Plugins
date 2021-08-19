@@ -60,6 +60,7 @@ public:
         setupModulation();
         setupReverb();
         // apply processing to wet buffer
+        wetBuffer.applyGain(0.5f);
         juce::dsp::AudioBlock<float> wetBlock(wetBuffer);
         juce::dsp::ProcessContextReplacing<float> wetContext(wetBlock);
         processChain.process(wetContext);

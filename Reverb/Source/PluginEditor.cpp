@@ -33,7 +33,7 @@ ReverbAudioProcessorEditor::ReverbAudioProcessorEditor(ReverbAudioProcessor& p)
 	lpfAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "lpfFreq", lpfKnob);
 	depthAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "modDepth", depthKnob);
 	rateAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "modRate", rateKnob);
-	setSize(390, 250);
+	setSize(470, 250);
 }
 
 ReverbAudioProcessorEditor::~ReverbAudioProcessorEditor()
@@ -47,8 +47,9 @@ void ReverbAudioProcessorEditor::resized()
 	powerLine.setBounds(0, 10, 250, 50);
 	int knobWidth = 50;
 	sizeKnob.setBounds(20, 80, 120, 150);
-	predelayKnob.setBounds(sizeKnob.getRight() + 10, sizeKnob.getY() - 10, knobWidth, knobWidth + 25);
-	mixKnob.setBounds(sizeKnob.getRight() + 10, sizeKnob.getY() + 80, knobWidth, knobWidth + 25);
+	dampingKnob.setBounds(sizeKnob.getRight() + 20, sizeKnob.getY() + 35, knobWidth, knobWidth + 25);
+	predelayKnob.setBounds(dampingKnob.getRight() + 20, sizeKnob.getY() - 10, knobWidth, knobWidth + 25);
+	mixKnob.setBounds(dampingKnob.getRight() + 20, sizeKnob.getY() + 80, knobWidth, knobWidth + 25);
 	hpfKnob.setBounds(predelayKnob.getRight() + 30, predelayKnob.getY(), knobWidth, knobWidth + 25);
 	lpfKnob.setBounds(hpfKnob.getX(), mixKnob.getY(), knobWidth, knobWidth + 25);
 	filterLabel.setBounds(hpfKnob.getX() - 10, hpfKnob.getY() - 25, knobWidth + 20, 13);
