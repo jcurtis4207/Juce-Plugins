@@ -26,20 +26,26 @@ private:
 
     BgImage bgImage;
     PowerLine powerLine{ "Multiband Comp", "Jacob Curtis", 30 };
-    MultiLabel bandLabels[4]{ "Band 1", "Band 2", "Band 3", "Band 4" };
-    GainReductionMeter grMeters[4];
-    SmallKnob freqKnobs[3]{ SmallKnob("Freq", "Hz"), SmallKnob("Freq", "Hz"), SmallKnob("Freq", "Hz") };
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> freqAttach[3];
-    OuterKnob ratioKnobs[4]{ ": 1", ": 1" , ": 1" , ": 1" };
-    SmallKnob thresholdKnobs[4]{ SmallKnob("", "dB"), SmallKnob("", "dB"), SmallKnob("", "dB"), SmallKnob("", "dB") };
-    SmallKnob attackKnobs[4]{ SmallKnob("Attack", "ms"), SmallKnob("Attack", "ms"), SmallKnob("Attack", "ms"), SmallKnob("Attack", "ms") };
-    SmallKnob releaseKnobs[4]{ SmallKnob("Release", "ms"), SmallKnob("Release", "ms"), SmallKnob("Release", "ms"), SmallKnob("Release", "ms") };
-    SmallKnob makeUpKnobs[4]{ SmallKnob("Gain", "dB"), SmallKnob("Gain", "dB"), SmallKnob("Gain", "dB"), SmallKnob("Gain", "dB") };
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> thresholdAttach[4], ratioAttach[4], attackAttach[4], releaseAttach[4], makeUpAttach[4];
+    std::array<MultiLabel, numBands> bandLabels{ "Band 1", "Band 2", "Band 3", "Band 4" };
+    std::array<GainReductionMeter, numBands> grMeters;
+    std::array<SmallKnob, numBands - 1> freqKnobs{ SmallKnob("Freq", "Hz"), 
+        SmallKnob("Freq", "Hz"), SmallKnob("Freq", "Hz") };
+    std::array<std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>, numBands - 1> freqAttach;
+    std::array<OuterKnob, numBands> ratioKnobs{ ": 1", ": 1" , ": 1" , ": 1" };
+    std::array<SmallKnob, numBands> thresholdKnobs{ SmallKnob("", "dB"), SmallKnob("", "dB"), 
+        SmallKnob("", "dB"), SmallKnob("", "dB") };
+    std::array<SmallKnob, numBands> attackKnobs{ SmallKnob("Attack", "ms"), SmallKnob("Attack", "ms"), 
+        SmallKnob("Attack", "ms"), SmallKnob("Attack", "ms") };
+    std::array<SmallKnob, numBands> releaseKnobs{ SmallKnob("Release", "ms"), SmallKnob("Release", "ms"), 
+        SmallKnob("Release", "ms"), SmallKnob("Release", "ms") };
+    std::array<SmallKnob, numBands> makeUpKnobs{ SmallKnob("Gain", "dB"), SmallKnob("Gain", "dB"), 
+        SmallKnob("Gain", "dB"), SmallKnob("Gain", "dB") };
+    std::array<std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>, numBands> thresholdAttach, 
+        ratioAttach, attackAttach, releaseAttach, makeUpAttach;
     SmallButton stereoButton{ "Stereo" };
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> stereoAttach;
     MultiLabel listenLabel{ "Listen" };
-    SmallButton listenButtons[4];
+    std::array<SmallButton, numBands> listenButtons;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MultiBandCompAudioProcessorEditor)
 };

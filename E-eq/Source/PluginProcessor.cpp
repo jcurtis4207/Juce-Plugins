@@ -24,23 +24,36 @@ EeqAudioProcessor::EeqAudioProcessor()
 #endif
 {
     // create parameters for the highpass filter
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("hpfFreq", "HPF Frequency", juce::NormalisableRange<float>(20.0f, 20000.0f, 1.0f, 0.25f), 20.0f, "Hz"));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterChoice>("hpfSlope", "HPF Slope", filterSlopes, 0));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("hpfBypass", "HPF Bypass", false));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("hpfFreq", 
+        "HPF Frequency", juce::NormalisableRange<float>(20.0f, 20000.0f, 1.0f, 0.25f), 20.0f, "Hz"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterChoice>("hpfSlope", 
+        "HPF Slope", filterSlopes, 0));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("hpfBypass", 
+        "HPF Bypass", false));
     // create parameters for the lowpass filter
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("lpfFreq", "LPF Frequency", juce::NormalisableRange<float>(20.0f, 20000.0f, 1.0f, 0.25f), 20000.0f, "Hz"));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterChoice>("lpfSlope", "LPF Slope", filterSlopes, 0));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("lpfBypass", "LPF Bypass", false));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("lpfFreq", 
+        "LPF Frequency", juce::NormalisableRange<float>(20.0f, 20000.0f, 1.0f, 0.25f), 20000.0f, "Hz"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterChoice>("lpfSlope", 
+        "LPF Slope", filterSlopes, 0));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("lpfBypass", 
+        "LPF Bypass", false));
     // create parameters for peak bands
-    for (int i = 1; i <= 4; i++)
+    for (int band = 1; band <= numBands; band++)
     {
-        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("band" + juce::String(i) + "Freq", "Band " + juce::String(i) + " Frequency", juce::NormalisableRange<float>(20.0f, 20000.0f, 1.0f, 0.25f), defaultFreq[i - 1], "Hz"));
-        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("band" + juce::String(i) + "Gain", "Band " + juce::String(i) + " Gain", juce::NormalisableRange<float>(-20.0f, 20.0f, 0.25f), 0.0f, "dB"));  
-        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("band" + juce::String(i) + "Q", "Band " + juce::String(i) + " Q", juce::NormalisableRange<float>(0.1f, 10.0f, 0.1f, 0.4f), 1.0f, "Q"));
+        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>(
+            "band" + juce::String(band) + "Freq", "Band " + juce::String(band) + " Frequency", 
+            juce::NormalisableRange<float>(20.0f, 20000.0f, 1.0f, 0.25f), defaultFreq[band - 1], "Hz"));
+        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>(
+            "band" + juce::String(band) + "Gain", "Band " + juce::String(band) + " Gain", 
+            juce::NormalisableRange<float>(-20.0f, 20.0f, 0.25f), 0.0f, "dB"));  
+        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>(
+            "band" + juce::String(band) + "Q", "Band " + juce::String(band) + " Q", 
+            juce::NormalisableRange<float>(0.1f, 10.0f, 0.1f, 0.4f), 1.0f, "Q"));
         // create shelf/bell switch for bands 1 and 4
-        if (i == 1 || i == 4)
+        if (band == 1 || band == 4)
         {
-            parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("band" + juce::String(i) + "Bell", "Band " + juce::String(i) + " Bell", false));
+            parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>(
+                "band" + juce::String(band) + "Bell", "Band " + juce::String(band) + " Bell", false));
         }
     }
     // set state to an empty value tree
@@ -49,8 +62,7 @@ EeqAudioProcessor::EeqAudioProcessor()
 
 void EeqAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    equalizer.prepare(sampleRate, 2, samplesPerBlock);
-    equalizer.setCoefficients(parameters);
+    equalizer.prepare(sampleRate, samplesPerBlock);
 }
 
 void EeqAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
@@ -62,11 +74,7 @@ void EeqAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mid
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    // apply equalization
-    juce::dsp::AudioBlock<float> block(buffer);
-    juce::dsp::ProcessContextReplacing<float> context(block);
-    equalizer.setCoefficients(parameters);
-    equalizer.process(context);
+    equalizer.process(buffer, parameters);
 }
 
 void EeqAudioProcessor::getStateInformation(juce::MemoryBlock& destData)

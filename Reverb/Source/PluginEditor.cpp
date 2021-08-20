@@ -25,14 +25,22 @@ ReverbAudioProcessorEditor::ReverbAudioProcessorEditor(ReverbAudioProcessor& p)
 	addAndMakeVisible(rateKnob);
 	addAndMakeVisible(hpfKnob);
 	addAndMakeVisible(lpfKnob);
-	sizeAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "roomSize", sizeKnob);
-	dampingAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "damping", dampingKnob);
-	mixAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "mix", mixKnob);
-	predelayAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "predelay", predelayKnob);
-	hpfAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "hpfFreq", hpfKnob);
-	lpfAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "lpfFreq", lpfKnob);
-	depthAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "modDepth", depthKnob);
-	rateAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "modRate", rateKnob);
+	sizeAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "roomSize", sizeKnob);
+	dampingAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "damping", dampingKnob);
+	mixAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "mix", mixKnob);
+	predelayAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "predelay", predelayKnob);
+	hpfAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "hpfFreq", hpfKnob);
+	lpfAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "lpfFreq", lpfKnob);
+	depthAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "modDepth", depthKnob);
+	rateAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "modRate", rateKnob);
 	setSize(470, 250);
 }
 
@@ -45,7 +53,7 @@ void ReverbAudioProcessorEditor::resized()
 {
 	bgImage.setBounds(getLocalBounds());
 	powerLine.setBounds(0, 10, 250, 50);
-	int knobWidth = 50;
+	const int knobWidth = 50;
 	sizeKnob.setBounds(20, 80, 120, 150);
 	dampingKnob.setBounds(sizeKnob.getRight() + 20, sizeKnob.getY() + 35, knobWidth, knobWidth + 25);
 	predelayKnob.setBounds(dampingKnob.getRight() + 20, sizeKnob.getY() - 10, knobWidth, knobWidth + 25);

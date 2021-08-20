@@ -11,7 +11,8 @@
 #include "PluginEditor.h"
 
 GateAudioProcessorEditor::GateAudioProcessorEditor(GateAudioProcessor& p)
-	: AudioProcessorEditor(&p), audioProcessor(p), grMeter(audioProcessor.gainReductionLeft, audioProcessor.gainReductionRight)
+	: AudioProcessorEditor(&p), audioProcessor(p), 
+	grMeter(audioProcessor.gainReductionLeft, audioProcessor.gainReductionRight)
 {
 	addAndMakeVisible(bgImage);
 	addAndMakeVisible(powerLine);
@@ -25,14 +26,22 @@ GateAudioProcessorEditor::GateAudioProcessorEditor(GateAudioProcessor& p)
 	addAndMakeVisible(scEnableButton);
 	addAndMakeVisible(listenButton);
 	addAndMakeVisible(grMeter);
-	thresholdAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "threshold", thresholdKnob);
-	ratioAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "ratio", ratioKnob);
-	attackAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "attack", attackKnob);
-	releaseAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "release", releaseKnob);
-	holdAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "hold", holdKnob);
-	hpfAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "hpfFreq", hpfKnob);
-	lpfAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "lpfFreq", lpfKnob);
-	scEnableAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.parameters, "filterEnable", scEnableButton);
+	thresholdAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "threshold", thresholdKnob);
+	ratioAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "ratio", ratioKnob);
+	attackAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "attack", attackKnob);
+	releaseAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "release", releaseKnob);
+	holdAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "hold", holdKnob);
+	hpfAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "hpfFreq", hpfKnob);
+	lpfAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "lpfFreq", lpfKnob);
+	scEnableAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+		audioProcessor.parameters, "filterEnable", scEnableButton);
 	listenButton.onClick = [&]() { audioProcessor.listen = listenButton.getToggleState(); };
 	setSize(300, 480);
 }

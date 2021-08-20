@@ -24,17 +24,21 @@ LimiterAudioProcessor::LimiterAudioProcessor()
 #endif
 {
     // create limiter parameters
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("threshold", "Threshold", juce::NormalisableRange<float>(-40.0f, 0.0f, 0.1f), 0.0f, "dB"));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("release", "Release", juce::NormalisableRange<float>(0.1f, 200.0f, 0.1f, 0.35f), 1.0f, "ms"));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("ceiling", "Ceiling", juce::NormalisableRange<float>(-40.0f, 0.0f, 0.1f), 0.0f, "dB"));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("stereo", "Stereo", true));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("threshold", 
+        "Threshold", juce::NormalisableRange<float>(-40.0f, 0.0f, 0.1f), 0.0f, "dB"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("release", 
+        "Release", juce::NormalisableRange<float>(0.1f, 200.0f, 0.1f, 0.35f), 1.0f, "ms"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("ceiling", 
+        "Ceiling", juce::NormalisableRange<float>(-40.0f, 0.0f, 0.1f), 0.0f, "dB"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("stereo", 
+        "Stereo", true));
     // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
 }
 
 void LimiterAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    limiter.prepare(sampleRate, 2, samplesPerBlock);
+    limiter.prepare(sampleRate, samplesPerBlock);
     limiter.updateLimiterValues(parameters);
 }
 
@@ -49,9 +53,7 @@ void LimiterAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
 
     // apply limiter
     limiter.updateLimiterValues(parameters);
-    juce::dsp::AudioBlock<float> block(buffer);
-    juce::dsp::ProcessContextReplacing<float> context(block);
-    limiter.process(context);
+    limiter.process(buffer);
     // get gain reduction for meter
     gainReductionLeft = limiter.getGainReductionLeft();
     gainReductionRight = limiter.getGainReductionRight();

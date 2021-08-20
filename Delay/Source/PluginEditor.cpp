@@ -28,17 +28,28 @@ DelayAudioProcessorEditor::DelayAudioProcessorEditor(DelayAudioProcessor& p)
 	addAndMakeVisible(depthKnob);
 	addAndMakeVisible(rateKnob);
 	addAndMakeVisible(syncButton);
-	delayAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "delayTime", delayKnob);
-	subdivisionAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "subdivisionIndex", subdivisionKnob);
-	feedbackAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "feedback", feedbackKnob);
-	mixAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "mix", mixKnob);
-	widthAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "width", widthKnob);
-	driveAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "drive", driveKnob);
-	hpfAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "hpfFreq", hpfKnob);
-	lpfAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "lpfFreq", lpfKnob);
-	depthAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "modDepth", depthKnob);
-	rateAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "modRate", rateKnob);
-	syncAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.parameters, "bpmSync", syncButton);
+	delayAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "delayTime", delayKnob);
+	subdivisionAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "subdivisionIndex", subdivisionKnob);
+	feedbackAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "feedback", feedbackKnob);
+	mixAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "mix", mixKnob);
+	widthAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "width", widthKnob);
+	driveAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "drive", driveKnob);
+	hpfAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "hpfFreq", hpfKnob);
+	lpfAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "lpfFreq", lpfKnob);
+	depthAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "modDepth", depthKnob);
+	rateAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+		audioProcessor.parameters, "modRate", rateKnob);
+	syncAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+		audioProcessor.parameters, "bpmSync", syncButton);
 	syncButton.onClick = [&]() { switchKnob(syncButton.getToggleState()); };
 	switchKnob(syncButton.getToggleState());
 	setSize(490, 240);
@@ -53,7 +64,7 @@ void DelayAudioProcessorEditor::resized()
 {
 	bgImage.setBounds(getLocalBounds());
 	powerLine.setBounds(0, 10, 250, 50);
-	int knobWidth = 40;
+	const int knobWidth = 40;
 	delayKnob.setBounds(140, 70, 120, 145);
 	subdivisionKnob.setBounds(delayKnob.getBounds());
 	feedbackKnob.setBounds(delayKnob.getX() - 20 - knobWidth, delayKnob.getY() - 5, knobWidth, knobWidth + 25);

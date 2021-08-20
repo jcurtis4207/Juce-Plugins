@@ -11,7 +11,8 @@
 #include "PluginEditor.h"
 
 ClipperAudioProcessorEditor::ClipperAudioProcessorEditor(ClipperAudioProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p), grMeter(audioProcessor.gainReductionLeft, audioProcessor.gainReductionRight)
+    : AudioProcessorEditor(&p), audioProcessor(p), 
+    grMeter(audioProcessor.gainReductionLeft, audioProcessor.gainReductionRight)
 {
     addAndMakeVisible(bgImage);
     addAndMakeVisible(powerLine);
@@ -21,8 +22,10 @@ ClipperAudioProcessorEditor::ClipperAudioProcessorEditor(ClipperAudioProcessor& 
     addAndMakeVisible(ceilingLabel);
     addAndMakeVisible(linkKnob);
     addAndMakeVisible(grMeter);
-    thresholdAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "threshold", thresholdSlider);
-    ceilingAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "ceiling", ceilingSlider);
+    thresholdAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "threshold", thresholdSlider);
+    ceilingAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "ceiling", ceilingSlider);
     // when dragging get parameter values before modifying
     linkKnob.onDragStart = [&]() {
         thresholdValue = audioProcessor.parameters.getRawParameterValue("threshold")->load();
@@ -54,9 +57,9 @@ void ClipperAudioProcessorEditor::resized()
 {
     bgImage.setBounds(getLocalBounds());
     powerLine.setBounds(0, 10, 240, 50);
-    int yPosition = 80;
-    int sliderWidth = 50;
-    int sliderHeight = 225;
+    const int yPosition = 80;
+    const int sliderWidth = 50;
+    const int sliderHeight = 225;
     thresholdSlider.setBounds(20, yPosition, sliderWidth, sliderHeight);
     thresholdLabel.setBounds(thresholdSlider.getX() - 10, thresholdSlider.getY() - 20, 70, 20);
     ceilingSlider.setBounds(110, yPosition, sliderWidth, sliderHeight);
@@ -70,10 +73,10 @@ void ClipperAudioProcessorEditor::linkValueChanged()
     if (linkFlag)
     {
         // get value from knob
-        float trim = (float)linkKnob.getValue();
+        const float trim = static_cast<float>(linkKnob.getValue());
         // add to parameter value and convert to normalized range -40 - 0
-        float newThreshold = (40.0f + thresholdValue + trim) / 40.0f;
-        float newCeiling = (40.f + ceilingValue + trim) / 40.0f;
+        const float newThreshold = (40.0f + thresholdValue + trim) / 40.0f;
+        const float newCeiling = (40.f + ceilingValue + trim) / 40.0f;
         // send new parameter values
         audioProcessor.parameters.getParameter("threshold")->setValueNotifyingHost(newThreshold);
         audioProcessor.parameters.getParameter("ceiling")->setValueNotifyingHost(newCeiling);

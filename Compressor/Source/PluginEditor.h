@@ -27,11 +27,13 @@ private:
     BgImage bgImage;
     PowerLine powerLine{ "Compressor", "Jacob Curtis", 30 };
     GainReductionMeter grMeter;
-    SmallKnob thresholdKnob{ "Threshold", "dB"}, attackKnob{ "Attack", "ms" }, releaseKnob{ "Release", "ms" },
-        ratioKnob{ "Ratio", ": 1" }, makeUpKnob{ "Make Up", "dB" }, scFreqKnob{ "SC Freq", "Hz" }, mixKnob{ "Mix", "%" };
+    SmallKnob thresholdKnob{ "Threshold", "dB"}, attackKnob{ "Attack", "ms" }, 
+        releaseKnob{ "Release", "ms" }, ratioKnob{ "Ratio", ": 1" }, makeUpKnob{ "Make Up", "dB" }, 
+        scFreqKnob{ "SC Freq", "Hz" }, mixKnob{ "Mix", "%" };
     SmallButton scBypassButton{ "SC Bypass" }, stereoButton{ "Stereo" };
 
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> thresholdAttach, attackAttach, releaseAttach, ratioAttach, makeUpAttach, scFreqAttach, mixAttach;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> thresholdAttach, attackAttach, 
+        releaseAttach, ratioAttach, makeUpAttach, scFreqAttach, mixAttach;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> scBypassAttach, stereoAttach;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CompressorAudioProcessorEditor)

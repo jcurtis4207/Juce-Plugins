@@ -25,15 +25,24 @@ CompressorAudioProcessorEditor::CompressorAudioProcessorEditor(CompressorAudioPr
     addAndMakeVisible(scBypassButton);
     addAndMakeVisible(stereoButton);
     addAndMakeVisible(grMeter);
-    thresholdAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "threshold", thresholdKnob);
-    attackAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "attack", attackKnob);
-    releaseAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "release", releaseKnob);
-    ratioAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "ratio", ratioKnob);
-    makeUpAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "makeUp", makeUpKnob);
-    scFreqAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "scFreq", scFreqKnob);
-    scBypassAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.parameters, "scBypass", scBypassButton);
-    stereoAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.parameters, "stereo", stereoButton);
-    mixAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "mix", mixKnob);
+    thresholdAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "threshold", thresholdKnob);
+    attackAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "attack", attackKnob);
+    releaseAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "release", releaseKnob);
+    ratioAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "ratio", ratioKnob);
+    makeUpAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "makeUp", makeUpKnob);
+    scFreqAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "scFreq", scFreqKnob);
+    scBypassAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        audioProcessor.parameters, "scBypass", scBypassButton);
+    stereoAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        audioProcessor.parameters, "stereo", stereoButton);
+    mixAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "mix", mixKnob);
     setSize(280, 420);
 }
 
@@ -46,10 +55,10 @@ void CompressorAudioProcessorEditor::resized()
 {
     bgImage.setBounds(getLocalBounds());
     powerLine.setBounds(0, 10, 280, 50);
-    int col1XPosition = 20;
-    int col2XPosition = 110;
-    int col3XPosition = 200;
-    int sliderWidth = 50;
+    const int col1XPosition = 20;
+    const int col2XPosition = 110;
+    const int col3XPosition = 200;
+    const int sliderWidth = 50;
     // col 1
     thresholdKnob.setBounds(col1XPosition, 60, sliderWidth, sliderWidth + 25);
     attackKnob.setBounds(col1XPosition, 160, sliderWidth, sliderWidth + 25);

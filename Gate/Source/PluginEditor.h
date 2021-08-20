@@ -34,8 +34,9 @@ private:
         holdKnob{ "Hold", "ms" },
         hpfKnob{ "HPF", "Hz" },
         lpfKnob{ "LPF", "Hz" };
-    SmallButton scEnableButton{ "SC Enable" }, listenButton{ "Listen" };
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> thresholdAttach, ratioAttach, attackAttach, releaseAttach, holdAttach, hpfAttach, lpfAttach;
+    SmallButton scEnableButton{ "SC On" }, listenButton{ "Listen" };
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> thresholdAttach, 
+        ratioAttach, attackAttach, releaseAttach, holdAttach, hpfAttach, lpfAttach;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> scEnableAttach;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GateAudioProcessorEditor)

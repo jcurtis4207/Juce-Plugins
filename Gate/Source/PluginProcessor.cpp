@@ -37,7 +37,7 @@ GateAudioProcessor::GateAudioProcessor()
 
 void GateAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    gate.prepare(sampleRate, 2, samplesPerBlock);
+    gate.prepare(sampleRate, samplesPerBlock);
     gate.setParameters(parameters, listen);
 }
 
@@ -52,9 +52,7 @@ void GateAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mi
 
     // apply gate
     gate.setParameters(parameters, listen);
-    juce::dsp::AudioBlock<float> block(buffer);
-    juce::dsp::ProcessContextReplacing<float> context(block);
-    gate.process(context);
+    gate.process(buffer);
     // get gain reduction for meter
     gainReductionLeft = gate.getGainReductionLeft();
     gainReductionRight = gate.getGainReductionRight();

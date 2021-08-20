@@ -10,17 +10,19 @@
 #pragma once
 #include <JuceHeader.h>
 
+#define numOutputs 2
+
 class Delay
 {
 public:
     Delay(){}
     ~Delay(){}
 
-    void setParameters(juce::AudioProcessorValueTreeState& apvts, double inputBPM)
+    void setParameters(const juce::AudioProcessorValueTreeState& apvts, double inputBPM)
     {
         bpm = inputBPM;
-        float inputDelay = apvts.getRawParameterValue("delayTime")->load();
-        float inputWidth = apvts.getRawParameterValue("width")->load();
+        const float inputDelay = apvts.getRawParameterValue("delayTime")->load();
+        const float inputWidth = apvts.getRawParameterValue("width")->load();
         width = static_cast<float>(inputWidth * sampleRate * 0.001f);
         feedback = apvts.getRawParameterValue("feedback")->load();
         mix = apvts.getRawParameterValue("mix")->load() * 0.01f;
@@ -35,10 +37,11 @@ public:
         if (bpmSync)
         {
             delayTime = static_cast<float>(subdivisions[subdivisionIndex] * sampleRate * 60.0 / bpm);
+            const float delayTimeInMilliseconds = static_cast<float>(delayTime / sampleRate * 1000.0);
             // set delayTime parameter to millisecond value of subdivision
-            float delayInMilliseconds = static_cast<float>(subdivisions[subdivisionIndex] * 60000.0 / bpm);
             apvts.getParameter("delayTime")->beginChangeGesture();
-            apvts.getParameter("delayTime")->setValueNotifyingHost(juce::NormalisableRange<float>(1.0f, 2000.0f, 1.0f).convertTo0to1(delayInMilliseconds));
+            apvts.getParameter("delayTime")->setValueNotifyingHost(juce::NormalisableRange<float>(
+                1.0f, 2000.0f, 1.0f).convertTo0to1(delayTimeInMilliseconds));
             apvts.getParameter("delayTime")->endChangeGesture();
         }
         else
@@ -46,36 +49,35 @@ public:
             delayTime = static_cast<float>(inputDelay * sampleRate * 0.001f);
         }
         // ensure delay time doesn't exceed delayBufferSize
-        delayTime = juce::jmin(delayTime, float(delayBufferSize - bufferSize));
+        delayTime = juce::jmin(delayTime, static_cast<float>(delayBufferSize - bufferSize));
     }
 
-    void prepare(const double inputSampleRate, const int maxBlockSize)
+    void prepare(double inputSampleRate, int maxBlockSize)
     {
         sampleRate = inputSampleRate;
         bufferSize = maxBlockSize;
         // initialize buffers
-        dryBuffer.setSize(2, maxBlockSize);
-        wetBuffer.setSize(2, maxBlockSize);
+        dryBuffer.setSize(numOutputs, maxBlockSize);
+        wetBuffer.setSize(numOutputs, maxBlockSize);
         wetBuffer.clear();
         delayBufferSize = static_cast<int>(2.0 * (bufferSize + sampleRate));
-        delayBuffer.setSize(2, delayBufferSize, false, false);
+        delayBuffer.setSize(numOutputs, delayBufferSize);
         delayBuffer.clear();
         // initialize dsp
         juce::dsp::ProcessSpec spec;
         spec.sampleRate = sampleRate;
         spec.maximumBlockSize = bufferSize;
-        spec.numChannels = 2;
+        spec.numChannels = numOutputs;
         modChain.prepare(spec);
         filterChain.prepare(spec);
     }
 
-    void process(const juce::dsp::ProcessContextReplacing<float>& context)
+    void process(juce::AudioBuffer<float>& inputBuffer)
     {
-        const auto& outputBuffer = context.getOutputBlock();
         // copy input to dry buffer
-        for (int channel = 0; channel < 2; channel++)
+        for (int channel = 0; channel < numOutputs; channel++)
         {
-            juce::FloatVectorOperations::copy(dryBuffer.getWritePointer(channel), outputBuffer.getChannelPointer(channel), bufferSize);
+            dryBuffer.copyFrom(channel, 0, inputBuffer.getReadPointer(channel), bufferSize);
         }
         // create delay in wet buffer
         fillDelayBuffer();
@@ -86,29 +88,28 @@ public:
         applyFeedback();
         // increment write position and wrap around delay buffer length
         writePosition = (writePosition + bufferSize) % delayBufferSize;
-        // mix wet and dry buffers to wet buffer
+        // mix wet and dry buffers to wet buffer and copy to output
         applyMix();
-        // copy wet buffer to output
-        for (int channel = 0; channel < 2; channel++)
+        for (int channel = 0; channel < numOutputs; channel++)
         {
-            juce::FloatVectorOperations::copy(outputBuffer.getChannelPointer(channel), wetBuffer.getReadPointer(channel), bufferSize);
+            inputBuffer.copyFrom(channel, 0, wetBuffer.getReadPointer(channel), bufferSize);
         }
     }
 
     // write dry buffer into delay buffer
     void fillDelayBuffer()
     {
-        for (int channel = 0; channel < 2; channel++)
+        for (int channel = 0; channel < numOutputs; channel++)
         {
             if (bufferSize + writePosition <= delayBufferSize)
             {
-                delayBuffer.copyFromWithRamp(channel, writePosition, dryBuffer.getReadPointer(channel), bufferSize, 1.0f, 1.0f);
+                delayBuffer.copyFrom(channel, writePosition, dryBuffer.getReadPointer(channel), bufferSize);
             }
             else
             {
                 const int bufferRemaining = delayBufferSize - writePosition;
-                delayBuffer.copyFromWithRamp(channel, writePosition, dryBuffer.getReadPointer(channel), bufferRemaining, 1.0f, 1.0f);
-                delayBuffer.copyFromWithRamp(channel, 0, dryBuffer.getReadPointer(channel, bufferRemaining), bufferSize - bufferRemaining, 1.0f, 1.0f);
+                delayBuffer.copyFrom(channel, writePosition, dryBuffer.getReadPointer(channel), bufferRemaining);
+                delayBuffer.copyFrom(channel, 0, dryBuffer.getReadPointer(channel, bufferRemaining), bufferSize - bufferRemaining);
             }
         }
     }
@@ -116,11 +117,11 @@ public:
     // write delay buffer with delay into wet buffer
     void readDelayBuffer()
     {
-        int readPosition[2] = {
+        std::array<int, numOutputs> readPosition = {
             static_cast<int>(delayBufferSize + writePosition - delayTime - width) % delayBufferSize,
             static_cast<int>(delayBufferSize + writePosition - delayTime + width) % delayBufferSize
         };
-        for (int channel = 0; channel < 2; channel++)
+        for (int channel = 0; channel < numOutputs; channel++)
         {
             if (bufferSize + readPosition[channel] <= delayBufferSize)
             {
@@ -138,18 +139,21 @@ public:
     // add feedback from wet buffer to delay buffer
     void applyFeedback()
     {
-        float gain = feedback * 0.01f;
-        for (int channel = 0; channel < 2; channel++)
+        const float feedbackGain = feedback * 0.01f;
+        for (int channel = 0; channel < numOutputs; channel++)
         {
             if (delayBufferSize > bufferSize + writePosition)
             {
-                delayBuffer.addFromWithRamp(channel, writePosition, wetBuffer.getWritePointer(channel), bufferSize, gain, gain);
+                delayBuffer.addFromWithRamp(channel, writePosition, 
+                    wetBuffer.getWritePointer(channel), bufferSize, feedbackGain, feedbackGain);
             }
             else
             {
                 const int bufferRemaining = delayBufferSize - writePosition;
-                delayBuffer.addFromWithRamp(channel, bufferRemaining, wetBuffer.getWritePointer(channel), bufferRemaining, gain, gain);
-                delayBuffer.addFromWithRamp(channel, 0, wetBuffer.getWritePointer(channel), bufferSize - bufferRemaining, gain, gain);
+                delayBuffer.addFromWithRamp(channel, bufferRemaining, 
+                    wetBuffer.getWritePointer(channel), bufferRemaining, feedbackGain, feedbackGain);
+                delayBuffer.addFromWithRamp(channel, 0, wetBuffer.getWritePointer(channel), 
+                    bufferSize - bufferRemaining, feedbackGain, feedbackGain);
             }
         }
     } 
@@ -157,13 +161,10 @@ public:
     // apply filters to wet buffer
     void applyFilters()
     {
-        // set coefficients from parameters
-        auto hpfCoefficients = juce::dsp::FilterDesign<float>::designIIRHighpassHighOrderButterworthMethod(hpfFreq, sampleRate, 2);
-        auto lpfCoefficients = juce::dsp::FilterDesign<float>::designIIRLowpassHighOrderButterworthMethod(lpfFreq, sampleRate, 2);
-        // apply coefficients to filters
-        *filterChain.get<0>().state = *hpfCoefficients[0];
-        *filterChain.get<1>().state = *lpfCoefficients[0];
-        // apply processing
+        *filterChain.get<0>().state = *juce::dsp::FilterDesign<float>::
+            designIIRHighpassHighOrderButterworthMethod(hpfFreq, sampleRate, 2)[0];
+        *filterChain.get<1>().state = *juce::dsp::FilterDesign<float>::
+            designIIRLowpassHighOrderButterworthMethod(lpfFreq, sampleRate, 2)[0];
         juce::dsp::AudioBlock<float> filterBlock(wetBuffer);
         juce::dsp::ProcessContextReplacing<float> filterContext(filterBlock);
         filterChain.process(filterContext);
@@ -172,16 +173,15 @@ public:
     // apply atan waveshaping to wet buffer
     void applyDistortion()
     {
-        float autoGain = juce::Decibels::decibelsToGain(drive / -12.0f);
         for (int sample = 0; sample < bufferSize; sample++)
         {
-            for (int channel = 0; channel < 2; channel++)
+            for (int channel = 0; channel < numOutputs; channel++)
             {
                 float wetSample = wetBuffer.getSample(channel, sample);
                 // apply gain, distortion, and autogain
                 wetSample *= (drive / 30.0f) + 1.0f;
                 wetSample = (2.0f / juce::float_Pi) * atan((juce::float_Pi / 2.0f) * wetSample);    
-                wetSample *= autoGain;
+                wetSample *= juce::Decibels::decibelsToGain(drive / -12.0f);
                 wetBuffer.setSample(channel, sample, wetSample);
             }
         }
@@ -195,7 +195,6 @@ public:
         modChain.setMix(1.0f);
         modChain.setDepth(modDepth);
         modChain.setRate(modRate);
-        // process chorus
         juce::dsp::AudioBlock<float> modBlock(wetBuffer);
         juce::dsp::ProcessContextReplacing<float> modContext(modBlock);
         modChain.process(modContext);
@@ -205,14 +204,14 @@ public:
     void applyMix()
     {
         // sin3dB
-        float dryMix = static_cast<float> (std::sin(0.5 * juce::MathConstants<double>::pi * (1.0 - mix)));
-        float wetMix = static_cast<float> (std::sin(0.5 * juce::MathConstants<double>::pi * mix));
+        const float dryMix = std::sin(0.5f * juce::float_Pi * (1.0f - mix));
+        const float wetMix = std::sin(0.5f * juce::float_Pi * mix);
         for (int sample = 0; sample < bufferSize; sample++)
         {
-            for (int channel = 0; channel < 2; channel++)
+            for (int channel = 0; channel < numOutputs; channel++)
             {
-                float drySample = dryBuffer.getSample(channel, sample) * dryMix;
-                float wetSample = wetBuffer.getSample(channel, sample) * wetMix;
+                const float drySample = dryBuffer.getSample(channel, sample) * dryMix;
+                const float wetSample = wetBuffer.getSample(channel, sample) * wetMix;
                 wetBuffer.setSample(channel, sample, wetSample + drySample);
             }
         }
@@ -223,7 +222,7 @@ private:
     int bufferSize{ 0 };
     int delayBufferSize{ 0 };
     int writePosition{ 0 };
-    double bpm{ 0.0f };
+    double bpm{ 0.0 };
     float delayTime{ 0.0f };
     float feedback{ 0.0f };
     float width{ 0.0f };
@@ -235,9 +234,11 @@ private:
     float drive{ 0.0f };
     bool bpmSync{ false };
     int subdivisionIndex{ 0 };
-    float subdivisions[13]{ 0.25f, (0.5f/3.0f), 0.375f, 0.5f, (1.0f/3.0f), 0.75f, 1.0f, (2.0f/3.0f), 1.5f, 2.0f, (4.0f/3.0f),3.0f, 4.0f };
+    const std::array<float, 13> subdivisions{ 0.25f, (0.5f/3.0f), 0.375f, 0.5f, (1.0f/3.0f), 0.75f, 1.0f, 
+        (2.0f/3.0f), 1.5f, 2.0f, (4.0f/3.0f),3.0f, 4.0f };
     juce::AudioBuffer<float> dryBuffer, wetBuffer, delayBuffer;
     juce::dsp::Chorus<float> modChain;
-    using StereoFilter = juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, juce::dsp::IIR::Coefficients<float>>;
+    using StereoFilter = juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, 
+        juce::dsp::IIR::Coefficients<float>>;
     juce::dsp::ProcessorChain<StereoFilter, StereoFilter> filterChain;
 };

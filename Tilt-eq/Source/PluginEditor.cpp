@@ -17,8 +17,10 @@ TilteqAudioProcessorEditor::TilteqAudioProcessorEditor(TilteqAudioProcessor& p)
     addAndMakeVisible(powerLine);
     addAndMakeVisible(freqKnob);
     addAndMakeVisible(tiltKnob);
-    freqAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "freq", freqKnob);
-    gainAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "gain", tiltKnob);
+    freqAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "freq", freqKnob);
+    gainAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "gain", tiltKnob);
     setSize(235, 150);
 }
 

@@ -23,14 +23,16 @@ TilteqAudioProcessor::TilteqAudioProcessor()
     parameters(*this, nullptr)
 #endif
 {
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("freq", "Frequency", juce::NormalisableRange<float>(500.0f, 2000.0f, 1.0f, 0.63f), 1000.0f, "Hz"));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("gain", "Gain", juce::NormalisableRange<float>(-6.0f, 6.0f, 0.25f), 0.0f, "dB"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("freq", 
+        "Frequency", juce::NormalisableRange<float>(500.0f, 2000.0f, 1.0f, 0.63f), 1000.0f, "Hz"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("gain", 
+        "Gain", juce::NormalisableRange<float>(-6.0f, 6.0f, 0.25f), 0.0f, "dB"));
     parameters.state = juce::ValueTree("savedParams");
 }
 
 void TilteqAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    tiltEQ.prepare(sampleRate, 2, samplesPerBlock);
+    tiltEQ.prepare(sampleRate, samplesPerBlock);
     tiltEQ.setParameters(parameters);
 }
 
@@ -44,10 +46,8 @@ void TilteqAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
         buffer.clear(i, 0, buffer.getNumSamples());
 
     // apply tilt
-    juce::dsp::AudioBlock<float> block(buffer);
-    juce::dsp::ProcessContextReplacing<float> context(block);
     tiltEQ.setParameters(parameters);
-    tiltEQ.process(context);
+    tiltEQ.process(buffer);
 }
 
 void TilteqAudioProcessor::getStateInformation(juce::MemoryBlock& destData)

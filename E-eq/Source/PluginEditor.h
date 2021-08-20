@@ -27,14 +27,14 @@ private:
     PowerLine powerLine{ "E - eq", "Jacob Curtis", 30 };
     MultiLabel multiLabel{ "Q" };
     // filters
-    OuterKnob slopeKnobs[2];
-    SmallKnob filterKnobs[2]{ SmallKnob("", "Hz"), SmallKnob("", "Hz") };
-    juce::String filterParamIDs[4]{ "hpfFreq", "lpfFreq", "hpfSlope", "lpfSlope" };
+    std::array<OuterKnob, numFilters> slopeKnobs;
+    std::array<SmallKnob, numFilters> filterKnobs{ SmallKnob("", "Hz"), SmallKnob("", "Hz") };
+    std::array<juce::String, numBands> filterParamIDs{ "hpfFreq", "lpfFreq", "hpfSlope", "lpfSlope" };
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> filterKnobsAttach[4];
     // parametric bands
-    OuterKnob freqKnobs[4]{ "Hz", "Hz", "Hz", "Hz" };
-    SmallKnob gainKnobs[4]{ SmallKnob("", "dB"), SmallKnob("", "dB"), SmallKnob("", "dB"), SmallKnob("", "dB") };
-    SmallKnob qKnobs[4]{ SmallKnob("", "Q"), SmallKnob("", "Q"), SmallKnob("", "Q"), SmallKnob("", "Q") };
+    std::array<OuterKnob, numBands> freqKnobs{ "Hz", "Hz", "Hz", "Hz" };
+    std::array<SmallKnob, numBands> gainKnobs{ SmallKnob("", "dB"), SmallKnob("", "dB"), SmallKnob("", "dB"), SmallKnob("", "dB") };
+    std::array<SmallKnob, numBands> qKnobs{ SmallKnob("", "Q"), SmallKnob("", "Q"), SmallKnob("", "Q"), SmallKnob("", "Q") };
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> bandKnobsAttach[12];
     // buttons
     SmallButton hpfBypassButton{ "Bypass" }, lpfBypassButton{ "Bypass" };

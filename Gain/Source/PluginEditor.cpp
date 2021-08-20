@@ -11,16 +11,18 @@
 #include "PluginEditor.h"
 
 GainAudioProcessorEditor::GainAudioProcessorEditor(GainAudioProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p), meter(audioProcessor.bufferMagnitudeL, audioProcessor.bufferMagnitudeR)
+    : AudioProcessorEditor(&p), audioProcessor(p), 
+    meter(audioProcessor.bufferMagnitudeL, audioProcessor.bufferMagnitudeR)
 {
-    //  phaseButton.setButtonText(juce::CharPointer_UTF8("\xc3\x98"));  // unicode U+00D8 -> ascii -> hex = \xc3\x98  
     addAndMakeVisible(bgImage);
     addAndMakeVisible(powerLine);
     addAndMakeVisible(gainKnob);
     addAndMakeVisible(phaseButton);
     addAndMakeVisible(meter);
-    gainAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "gain", gainKnob);
-    phaseAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.parameters, "phase", phaseButton);
+    gainAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "gain", gainKnob);
+    phaseAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        audioProcessor.parameters, "phase", phaseButton);
     setSize(225, 300);
 }
 

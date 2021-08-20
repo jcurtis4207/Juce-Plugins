@@ -23,8 +23,10 @@ GainAudioProcessor::GainAudioProcessor()
     parameters(*this, nullptr)
 #endif
 {
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("gain", "Gain", juce::NormalisableRange<float>(-30.0f, 30.0f, 0.5f), 0.0f, "dB"));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("phase", "Phase Invert", false));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("gain", 
+        "Gain", juce::NormalisableRange<float>(-30.0f, 30.0f, 0.5f), 0.0f, "dB"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("phase", 
+        "Phase Invert", false));
     parameters.state = juce::ValueTree("savedParams");
 }
 
@@ -42,11 +44,10 @@ void GainAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mi
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    // fetch gain and phase from parameters
-    float currentGain = parameters.getRawParameterValue("gain")->load();
-    float phase = parameters.getRawParameterValue("phase")->load();
+    const float currentGain = parameters.getRawParameterValue("gain")->load();
+    const float phase = parameters.getRawParameterValue("phase")->load();
     // if phase is flipped (true) need to multiply gain by -1
-    int phaseCoefficient = (phase) ? -1 : 1;
+    const int phaseCoefficient = (phase) ? -1 : 1;
     // apply gain, or ramp gain if changed, and phase
     if (currentGain == previousGain)
     {
@@ -54,7 +55,8 @@ void GainAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mi
     }
     else
     {
-        buffer.applyGainRamp(0, buffer.getNumSamples(), juce::Decibels::decibelsToGain(previousGain), juce::Decibels::decibelsToGain(currentGain) * phaseCoefficient);
+        buffer.applyGainRamp(0, buffer.getNumSamples(), juce::Decibels::decibelsToGain(previousGain), 
+            juce::Decibels::decibelsToGain(currentGain) * phaseCoefficient);
         previousGain = currentGain;
     }
     // get buffer magnitude for meter

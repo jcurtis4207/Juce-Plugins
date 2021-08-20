@@ -23,8 +23,10 @@ ClipperAudioProcessor::ClipperAudioProcessor()
     parameters(*this, nullptr)
 #endif
 {
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("threshold", "Threshold", juce::NormalisableRange<float>(-40.0f, 0.0f, 0.1f), 0.0f, "dB"));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("ceiling", "Ceiling", juce::NormalisableRange<float>(-40.0f, 0.0f, 0.1f), 0.0f, "dB"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("threshold", 
+        "Threshold", juce::NormalisableRange<float>(-40.0f, 0.0f, 0.1f), 0.0f, "dB"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("ceiling", 
+        "Ceiling", juce::NormalisableRange<float>(-40.0f, 0.0f, 0.1f), 0.0f, "dB"));
     // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
 }

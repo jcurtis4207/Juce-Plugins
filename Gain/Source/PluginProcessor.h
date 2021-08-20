@@ -38,7 +38,8 @@ public:
     bool hasEditor() const override { return true; }
 
     juce::AudioProcessorValueTreeState parameters;
-    float bufferMagnitudeL{ -100.0f }, bufferMagnitudeR{ -100.0f };
+    float bufferMagnitudeL{ -100.0f };
+    float bufferMagnitudeR{ -100.0f };
 
 private:
     float previousGain{ 0.0f };

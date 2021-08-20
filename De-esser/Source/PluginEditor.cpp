@@ -11,7 +11,8 @@
 #include "PluginEditor.h"
 
 DeesserAudioProcessorEditor::DeesserAudioProcessorEditor(DeesserAudioProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p), grMeter(audioProcessor.gainReductionLeft, audioProcessor.gainReductionRight)
+    : AudioProcessorEditor(&p), audioProcessor(p), 
+    grMeter(audioProcessor.gainReductionLeft, audioProcessor.gainReductionRight)
 {
     addAndMakeVisible(bgImage);
     addAndMakeVisible(powerLine);
@@ -23,12 +24,18 @@ DeesserAudioProcessorEditor::DeesserAudioProcessorEditor(DeesserAudioProcessor& 
     addAndMakeVisible(wideButton);
     addAndMakeVisible(listenButton);
     addAndMakeVisible(grMeter);
-    thresholdAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "threshold", thresholdKnob);
-    crossoverAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "crossoverFreq", crossoverKnob);
-    attackAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "attack", attackKnob);
-    releaseAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "release", releaseKnob);
-    stereoAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.parameters, "stereo", stereoButton);
-    wideAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.parameters, "wide", wideButton);
+    thresholdAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "threshold", thresholdKnob);
+    crossoverAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "crossoverFreq", crossoverKnob);
+    attackAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "attack", attackKnob);
+    releaseAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "release", releaseKnob);
+    stereoAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        audioProcessor.parameters, "stereo", stereoButton);
+    wideAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        audioProcessor.parameters, "wide", wideButton);
     listenButton.onClick = [&]() { audioProcessor.listen = listenButton.getToggleState(); };
     setSize(260, 420);
 }
@@ -42,10 +49,10 @@ void DeesserAudioProcessorEditor::resized()
 {
     bgImage.setBounds(getLocalBounds());
     powerLine.setBounds(0, 10, 260, 50);
-    int col1XPosition = 40;
-    int col2XPosition = 115;
-    int col3XPosition = 175;
-    int knobWidth = 50;
+    const int col1XPosition = 40;
+    const int col2XPosition = 115;
+    const int col3XPosition = 175;
+    const int knobWidth = 50;
     thresholdKnob.setBounds(col1XPosition, 60, knobWidth, knobWidth + 25);
     crossoverKnob.setBounds(col1XPosition, 150, knobWidth, knobWidth + 25);
     attackKnob.setBounds(col1XPosition, 240, knobWidth, knobWidth + 25);

@@ -24,19 +24,27 @@ MultiBandCompAudioProcessor::MultiBandCompAudioProcessor()
 #endif
 {
     // filter parameters
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("crossoverFreqB", "Crossover Frequency 1", juce::NormalisableRange<float>(20.0f, 15000.0f, 1.0f, 0.25f), 200.0f, "Hz"));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("crossoverFreqA", "Crossover Frequency 2", juce::NormalisableRange<float>(20.0f, 15000.0f, 1.0f, 0.25f), 1000.0f, "Hz"));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("crossoverFreqC", "Crossover Frequency 3", juce::NormalisableRange<float>(20.0f, 15000.0f, 1.0f, 0.25f), 5000.0f, "Hz"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("crossoverFreqB", 
+        "Crossover Frequency 1", juce::NormalisableRange<float>(20.0f, 15000.0f, 1.0f, 0.25f), 200.0f, "Hz"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("crossoverFreqA", 
+        "Crossover Frequency 2", juce::NormalisableRange<float>(20.0f, 15000.0f, 1.0f, 0.25f), 1000.0f, "Hz"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("crossoverFreqC", 
+        "Crossover Frequency 3", juce::NormalisableRange<float>(20.0f, 15000.0f, 1.0f, 0.25f), 5000.0f, "Hz"));
     // compression parameters
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("stereo", "Stereo Mode", true));
-    for (int i = 1; i <= 4; i++)
+    for (int band = 1; band <= numBands; band++)
     {
-        auto bandNum = juce::String(i);
-        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("threshold" + bandNum, "Band " + bandNum + " Threshold", juce::NormalisableRange<float>(-40.0f, 0.0f, 0.1f), 0.0f, "dB"));
-        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("attack" + bandNum, "Band " + bandNum + " Attack", juce::NormalisableRange<float>(0.5f, 100.0f, 0.5f), 10.0f, "ms"));
-        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("release" + bandNum, "Band " + bandNum + " Release", juce::NormalisableRange<float>(1.0f, 1100.0f, 1.0f), 50.0f, "ms"));
-        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("ratio" + bandNum, "Band " + bandNum + " Ratio", juce::NormalisableRange<float>(1.0f, 16.0f, 1.0f), 4.0f, " : 1"));
-        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("makeUp" + bandNum, "Band " + bandNum + " Make Up", juce::NormalisableRange<float>(-10.0f, 20.0f, 0.1f), 0.0f, "dB"));
+        const auto bandNum = juce::String(band);
+        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("threshold" + bandNum, 
+            "Band " + bandNum + " Threshold", juce::NormalisableRange<float>(-40.0f, 0.0f, 0.1f), 0.0f, "dB"));
+        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("attack" + bandNum, 
+            "Band " + bandNum + " Attack", juce::NormalisableRange<float>(0.5f, 100.0f, 0.5f), 10.0f, "ms"));
+        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("release" + bandNum, 
+            "Band " + bandNum + " Release", juce::NormalisableRange<float>(1.0f, 1100.0f, 1.0f), 50.0f, "ms"));
+        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("ratio" + bandNum, 
+            "Band " + bandNum + " Ratio", juce::NormalisableRange<float>(1.0f, 16.0f, 1.0f), 4.0f, " : 1"));
+        parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("makeUp" + bandNum, 
+            "Band " + bandNum + " Make Up", juce::NormalisableRange<float>(-10.0f, 20.0f, 0.1f), 0.0f, "dB"));
     }
     // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
@@ -44,7 +52,7 @@ MultiBandCompAudioProcessor::MultiBandCompAudioProcessor()
 
 void MultiBandCompAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    multibandComp.prepare(sampleRate, 2, samplesPerBlock);
+    multibandComp.prepare(sampleRate, samplesPerBlock);
     multibandComp.setParameters(parameters, listen);
 }
 
@@ -59,16 +67,9 @@ void MultiBandCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
 
     // apply multiband compression
     multibandComp.setParameters(parameters, listen);
-    juce::dsp::AudioBlock<float> block(buffer);
-    juce::dsp::ProcessContextReplacing<float> context(block);
-    multibandComp.process(context);
-    // get gain reduction pointer for meters
-    float* grPtr = multibandComp.getGainReduction();
-    for (int i = 0; i < 8; i++)
-    {
-        gainReduction[i] = grPtr[i];
-    }
-    grPtr = nullptr;
+    multibandComp.process(buffer);
+    // get gain reduction for meters
+    gainReduction = multibandComp.getGainReduction();
 }
 
 void MultiBandCompAudioProcessor::getStateInformation(juce::MemoryBlock& destData)

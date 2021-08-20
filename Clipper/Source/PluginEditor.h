@@ -31,7 +31,6 @@ private:
     LinkKnob linkKnob;
     GainReductionMeter grMeter;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> thresholdAttach, ceilingAttach;
-
     // link operation
     float thresholdValue{ 0.0f };
     float ceilingValue{ 0.0f };

@@ -11,6 +11,9 @@
 #include <JuceHeader.h>
 #include "Equalizer.h"
 
+#define numFilters 2
+#define numBands 4
+
 class EeqAudioProcessor : public juce::AudioProcessor
 {
 public:
@@ -39,11 +42,11 @@ public:
     bool hasEditor() const override { return true; }
 
     juce::AudioProcessorValueTreeState parameters;
-    juce::StringArray filterSlopes{ "12 dB/Oct", "24 dB/Oct", "36 dB/Oct" };
+    const juce::StringArray filterSlopes{ "12 dB/Oct", "24 dB/Oct", "36 dB/Oct" };
 
 private:
     Equalizer equalizer;
-    const float defaultFreq[4] { 60.0f, 400.0f, 2000.0f, 8000.0f };
+    const std::array<float, numBands> defaultFreq { 60.0f, 400.0f, 2000.0f, 8000.0f };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EeqAudioProcessor)
 };

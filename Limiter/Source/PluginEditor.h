@@ -31,7 +31,8 @@ private:
     GreyLabel thresholdLabel{ "Threshold" }, ceilingLabel{ "Ceiling" }, releaseLabel{ "Release" };
     LinkKnob linkKnob;
     SmallButton stereoButton{ "Stereo" };
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> thresholdAttach, ceilingAttach, releaseAttach;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> thresholdAttach, 
+        ceilingAttach, releaseAttach;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> stereoAttach;
     // link operation
     float thresholdValue{ 0.0f };

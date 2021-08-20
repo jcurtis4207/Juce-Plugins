@@ -29,7 +29,8 @@ private:
     GainReductionMeter grMeter;
     SmallKnob thresholdKnob{ "Threshold", "dB" }, crossoverKnob{ "Frequency", "Hz" }, 
         attackKnob{ "Attack", "ms" }, releaseKnob{ "Release", "ms" };
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> thresholdAttach, crossoverAttach, attackAttach, releaseAttach;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> thresholdAttach, 
+        crossoverAttach, attackAttach, releaseAttach;
     SmallButton stereoButton{ "Stereo" }, wideButton{ "Wide" }, listenButton{ "Listen" };
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> stereoAttach, wideAttach;
 

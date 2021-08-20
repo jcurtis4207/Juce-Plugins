@@ -28,11 +28,11 @@ private:
     BigKnob driveKnob{ "Drive" };
     SmallKnob volumeKnob{ "Volume", "dB" }, mixKnob{ "Mix", "%" }, angerKnob{ "Anger" }, 
         offsetKnob{ "Offset" }, hpfKnob{"HPF", "Hz"}, lpfKnob{"LPF", "Hz"}, shapeKnob{"Shape", "dB"};
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> driveAttach, volumeAttach, mixAttach, angerAttach, 
-        offsetAttach, hpfAttach, lpfAttach, shapeAttach;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> driveAttach, 
+        volumeAttach, mixAttach, angerAttach, offsetAttach, hpfAttach, lpfAttach, shapeAttach;
     SmallButton shapeButton{ "Tilt" };
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> shapeButtonAttach;
-    BigButton typeButtons[4];
+    std::array<BigButton, 4> typeButtons;
     MultiLabel multiLabel{ "Drive Type" };
 
     void buttonClicked(int index);

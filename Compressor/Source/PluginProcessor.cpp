@@ -24,22 +24,31 @@ CompressorAudioProcessor::CompressorAudioProcessor()
 #endif
 {
     // create compressor parameters
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("threshold", "Threshold", juce::NormalisableRange<float>(-50.0f, 0.0f, 0.1f), 0.0f, "dB"));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("attack", "Attack Time", juce::NormalisableRange<float>(0.5f, 100.0f, 0.5f), 10.0f, "ms"));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("release", "Release Time", juce::NormalisableRange<float>(1.0f, 1100.0f, 1.0f), 50.0f, "ms"));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("ratio", "Ratio", juce::NormalisableRange<float>(1.0f, 16.0f, 1.0f), 4.0f, " : 1"));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("makeUp", "MakeUp Gain", juce::NormalisableRange<float>(-10.0f, 20.0f, 0.1f), 0.0f, "dB"));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("scFreq", "Side Chain Frequency", juce::NormalisableRange<float>(20.0f, 2000.0f, 1.0f), 20.0f, "Hz"));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("scBypass", "Side Chain Bypass", true));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("stereo", "Stereo Mode", true));
-    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("mix", "Mix", juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f), 100.0f, "%"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("threshold", 
+        "Threshold", juce::NormalisableRange<float>(-50.0f, 0.0f, 0.1f), 0.0f, "dB"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("attack", 
+        "Attack Time", juce::NormalisableRange<float>(0.5f, 100.0f, 0.5f), 10.0f, "ms"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("release", 
+        "Release Time", juce::NormalisableRange<float>(1.0f, 1100.0f, 1.0f), 50.0f, "ms"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("ratio", 
+        "Ratio", juce::NormalisableRange<float>(1.0f, 16.0f, 1.0f), 4.0f, " : 1"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("makeUp", 
+        "MakeUp Gain", juce::NormalisableRange<float>(-10.0f, 20.0f, 0.1f), 0.0f, "dB"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("scFreq", 
+        "Side Chain Frequency", juce::NormalisableRange<float>(20.0f, 2000.0f, 1.0f), 20.0f, "Hz"));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("scBypass", 
+        "Side Chain Bypass", true));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("stereo", 
+        "Stereo Mode", true));
+    parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("mix", 
+        "Mix", juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f), 100.0f, "%"));
     // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
 }
 
 void CompressorAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    compressor.prepare(sampleRate, 2, samplesPerBlock);
+    compressor.prepare(sampleRate, samplesPerBlock);
     compressor.updateCompressorValues(parameters);
 }
 
@@ -54,9 +63,7 @@ void CompressorAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
 
     // apply compression
     compressor.updateCompressorValues(parameters);
-    juce::dsp::AudioBlock<float> block(buffer);
-    juce::dsp::ProcessContextReplacing<float> context(block);
-    compressor.process(context);
+    compressor.process(buffer);
     // get gain reduction for meter
     gainReductionLeft = compressor.getGainReductionLeft();
     gainReductionRight = compressor.getGainReductionRight();

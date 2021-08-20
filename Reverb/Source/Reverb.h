@@ -9,6 +9,8 @@
 #pragma once
 #include <JuceHeader.h>
 
+#define numOutputs 2
+
 class Reverb
 {
 public:
@@ -19,7 +21,7 @@ public:
     }
     ~Reverb() {}
 
-    void setParameters(juce::AudioProcessorValueTreeState& apvts)
+    void setParameters(const juce::AudioProcessorValueTreeState& apvts)
     {
         roomSize = apvts.getRawParameterValue("roomSize")->load() * 0.01f;
         damping = apvts.getRawParameterValue("damping")->load() * 0.01f;
@@ -31,28 +33,27 @@ public:
         lpfFreq = apvts.getRawParameterValue("lpfFreq")->load();
     }
 
-    void prepare(const double inputSampleRate, const int maxBlockSize)
+    void prepare(double inputSampleRate, int maxBlockSize)
     {
         sampleRate = inputSampleRate;
         bufferSize = maxBlockSize;
-        dryBuffer.setSize(2, bufferSize);
-        wetBuffer.setSize(2, bufferSize);
+        dryBuffer.setSize(numOutputs, bufferSize);
+        wetBuffer.setSize(numOutputs, bufferSize);
         // initialize dsp
         juce::dsp::ProcessSpec spec;
         spec.sampleRate = sampleRate;
         spec.maximumBlockSize = bufferSize;
-        spec.numChannels = 2;
+        spec.numChannels = numOutputs;
         processChain.prepare(spec);
     }
 
-    void process(const juce::dsp::ProcessContextReplacing<float>& context)
+    void process(juce::AudioBuffer<float>& inputBuffer)
     {
-        const auto& outputBuffer = context.getOutputBlock();
         // copy input into buffers
-        for (int channel = 0; channel < 2; channel++)
+        for (int channel = 0; channel < numOutputs; channel++)
         {
-            juce::FloatVectorOperations::copy(dryBuffer.getWritePointer(channel), outputBuffer.getChannelPointer(channel), bufferSize);
-            juce::FloatVectorOperations::copy(wetBuffer.getWritePointer(channel), outputBuffer.getChannelPointer(channel), bufferSize);
+            dryBuffer.copyFrom(channel, 0, inputBuffer.getReadPointer(channel), bufferSize);
+            wetBuffer.copyFrom(channel, 0, inputBuffer.getReadPointer(channel), bufferSize);
         }
         // setup process chain
         setupDelay();
@@ -66,24 +67,23 @@ public:
         processChain.process(wetContext);
         applyMix();
         // copy mixed wet buffer to output
-        for (int channel = 0; channel < 2; channel++)
+        for (int channel = 0; channel < numOutputs; channel++)
         {
-            juce::FloatVectorOperations::copy(outputBuffer.getChannelPointer(channel), wetBuffer.getReadPointer(channel), bufferSize);
+            inputBuffer.copyFrom(channel, 0, wetBuffer.getReadPointer(channel), bufferSize);
         }
     }
 
     void setupDelay()
     {
-        float delayInSamples = static_cast<float>(predelay * sampleRate * 0.001f);
-        processChain.get<ChainIndex::Delay>().setDelay(delayInSamples);
+        processChain.get<ChainIndex::Delay>().setDelay(static_cast<float>(predelay * sampleRate * 0.001f));
     }
 
     void setupFilters()
     {
-        auto hpfCoefficients = juce::dsp::FilterDesign<float>::designIIRHighpassHighOrderButterworthMethod(hpfFreq, sampleRate, 2);
-        auto lpfCoefficients = juce::dsp::FilterDesign<float>::designIIRLowpassHighOrderButterworthMethod(lpfFreq, sampleRate, 2);
-        *processChain.get<ChainIndex::HPF>().state = *hpfCoefficients[0];
-        *processChain.get<ChainIndex::LPF>().state = *lpfCoefficients[0];
+        *processChain.get<ChainIndex::HPF>().state = *juce::dsp::FilterDesign<float>::
+            designIIRHighpassHighOrderButterworthMethod(hpfFreq, sampleRate, 2)[0];
+        *processChain.get<ChainIndex::LPF>().state = *juce::dsp::FilterDesign<float>::
+            designIIRLowpassHighOrderButterworthMethod(lpfFreq, sampleRate, 2)[0];
     }
 
     void setupModulation()
@@ -111,14 +111,14 @@ public:
     void applyMix()
     {
         // sin6dB
-        float dryMix = std::pow(std::sin(0.5f * juce::float_Pi * (1.0f - mix)), 2.0f);
-        float wetMix = std::pow(std::sin(0.5f * juce::float_Pi * mix), 2.0f);
+        const float dryMix = std::pow(std::sin(0.5f * juce::float_Pi * (1.0f - mix)), 2.0f);
+        const float wetMix = std::pow(std::sin(0.5f * juce::float_Pi * mix), 2.0f);
         for (int sample = 0; sample < bufferSize; sample++)
         {
-            for (int channel = 0; channel < 2; channel++)
+            for (int channel = 0; channel < numOutputs; channel++)
             {
-                float drySample = dryBuffer.getSample(channel, sample) * dryMix;
-                float wetSample = wetBuffer.getSample(channel, sample) * wetMix;
+                const float drySample = dryBuffer.getSample(channel, sample) * dryMix;
+                const float wetSample = wetBuffer.getSample(channel, sample) * wetMix;
                 wetBuffer.setSample(channel, sample, wetSample + drySample);
             }
         }

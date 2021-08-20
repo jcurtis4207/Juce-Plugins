@@ -11,6 +11,8 @@
 #include <JuceHeader.h>
 #include "MultiBandComp.h"
 
+#define numBands 4
+
 class MultiBandCompAudioProcessor : public juce::AudioProcessor
 {
 public:
@@ -39,8 +41,8 @@ public:
     bool hasEditor() const override { return true; }
 
     juce::AudioProcessorValueTreeState parameters;
-    float gainReduction[8];
-    bool listen[4]{ false, false, false, false };
+    std::array<float, numBands * 2> gainReduction;
+    std::array<bool, numBands> listen{ false, false, false, false };
 
 private:
     MultiBandComp multibandComp;

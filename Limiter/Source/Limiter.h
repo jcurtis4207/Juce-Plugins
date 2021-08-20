@@ -13,6 +13,8 @@
 #pragma once
 #include <JuceHeader.h>
 
+#define numOutputs 2
+
 class Limiter
 {
 public:
@@ -20,37 +22,38 @@ public:
 
     ~Limiter() {}
 
-    void updateLimiterValues(juce::AudioProcessorValueTreeState& apvts)
+    void updateLimiterValues(const juce::AudioProcessorValueTreeState& apvts)
     {
-        // get parameter values
         threshold = apvts.getRawParameterValue("threshold")->load();
         ceiling = apvts.getRawParameterValue("ceiling")->load();
-        float releaseInput = apvts.getRawParameterValue("release")->load();
+        const float releaseInput = apvts.getRawParameterValue("release")->load();
+        releaseTime = static_cast<float>(std::exp(-1.0f / (releaseInput * sampleRate / 1000.0)));
         stereo = apvts.getRawParameterValue("stereo")->load();
-        // calculate release time
-        releaseTime = std::exp(-1.0f / ((releaseInput / 1000.0f) * (float)sampleRate));
     }
 
-    void prepare(const double inputSampleRate, const int numChannels, const int maxBlockSize)
+    void prepare(double inputSampleRate, int maxBlockSize)
     {
         sampleRate = inputSampleRate;
         bufferSize = maxBlockSize;
-        sideChainBuffer.setSize(numChannels, maxBlockSize);
-        envelopeBuffer.setSize(numChannels, maxBlockSize);
+        sideChainBuffer.setSize(numOutputs, maxBlockSize);
+        envelopeBuffer.setSize(numOutputs, maxBlockSize);
     }
 
-    void process(const juce::dsp::ProcessContextReplacing<float>& context)
+    void process(juce::AudioBuffer<float>& inputBuffer)
     {
-        const auto& outputBuffer = context.getOutputBlock();
         // copy the buffer into the sidechain
-        juce::FloatVectorOperations::copy(sideChainBuffer.getWritePointer(0), outputBuffer.getChannelPointer(0), bufferSize);
-        juce::FloatVectorOperations::copy(sideChainBuffer.getWritePointer(1), outputBuffer.getChannelPointer(1), bufferSize);
-        // create envelope and calculate compression multiplier
+        for (int channel = 0; channel < numOutputs; channel++)
+        {
+            sideChainBuffer.copyFrom(channel, 0, inputBuffer.getReadPointer(channel), bufferSize);
+        }
         createEnvelope();
         calculateGainReduction();
         // apply gain reduction to output
-        juce::FloatVectorOperations::multiply(outputBuffer.getChannelPointer(0), sideChainBuffer.getReadPointer(0), bufferSize);
-        juce::FloatVectorOperations::multiply(outputBuffer.getChannelPointer(1), sideChainBuffer.getReadPointer(1), bufferSize);
+        for (int channel = 0; channel < numOutputs; channel++)
+        {
+            juce::FloatVectorOperations::multiply(inputBuffer.getWritePointer(channel), 
+                sideChainBuffer.getReadPointer(channel), bufferSize);
+        }
     }
 
     // use sidechain to create compression envelope
@@ -61,8 +64,8 @@ public:
             // stereo mode - max channel value used and output stored in both channels
             if (stereo)
             {
-                // find max of input samples
-                const float maxSample = juce::jmax(std::abs(sideChainBuffer.getSample(0, sample)), std::abs(sideChainBuffer.getSample(1, sample)));
+                const float maxSample = juce::jmax(std::abs(sideChainBuffer.getSample(0, sample)), 
+                    std::abs(sideChainBuffer.getSample(1, sample)));
                 // apply instant attack
                 if (compressionLevel[0] < maxSample)
                 {
@@ -80,9 +83,8 @@ public:
             // dual mono mode - channels used individually and output stored separately
             else
             {
-                for (int channel = 0; channel < 2; channel++)
+                for (int channel = 0; channel < numOutputs; channel++)
                 {
-                    // get absolute value of sample
                     const float inputSample = std::abs(sideChainBuffer.getSample(channel, sample));
                     // apply instant attack
                     if (compressionLevel[channel] < inputSample)
@@ -92,7 +94,8 @@ public:
                     // apply release
                     else
                     {
-                        compressionLevel[channel] = inputSample + releaseTime * (compressionLevel[channel] - inputSample);
+                        compressionLevel[channel] = inputSample + releaseTime * 
+                            (compressionLevel[channel] - inputSample);
                     }
                     // write envelope
                     envelopeBuffer.setSample(channel, sample, compressionLevel[channel]);
@@ -104,14 +107,14 @@ public:
     // calculate compression multiplier from envelope to sidechain
     void calculateGainReduction()
     {
-        outputGainReduction[0] = 0.0f;
-        outputGainReduction[1] = 0.0f;
+        outputGainReduction = { 0.0f, 0.0f };
         for (int sample = 0; sample < bufferSize; sample++)
         {
-            for (int channel = 0; channel < 2; channel++)
+            for (int channel = 0; channel < numOutputs; channel++)
             {
                 // apply threshold to envelope
-                float currentGainReduction = threshold - juce::Decibels::gainToDecibels(envelopeBuffer.getSample(channel, sample));
+                float currentGainReduction = threshold - juce::Decibels::gainToDecibels(
+                    envelopeBuffer.getSample(channel, sample));
                 // remove positive gain reduction
                 currentGainReduction = juce::jmin(0.0f, currentGainReduction);
                 // set gr meter values
@@ -127,12 +130,12 @@ public:
         }
     }
 
-    const float getGainReductionLeft()
+    float getGainReductionLeft()
     {
         return (outputGainReduction[0] * -1.0f);
     }
 
-    const float getGainReductionRight()
+    float getGainReductionRight()
     {
         return (outputGainReduction[1] * -1.0f);
     }
@@ -144,7 +147,7 @@ private:
     float ceiling{ 0.0f };
     float releaseTime{ 1.0f };
     bool stereo{ true };
-    float compressionLevel[2]{ 0.0f, 0.0f };
-    float outputGainReduction[2]{ 0.0f, 0.0f };
+    std::array<float, numOutputs> compressionLevel{ 0.0f, 0.0f };
+    std::array<float, numOutputs> outputGainReduction{ 0.0f, 0.0f };
     juce::AudioBuffer<float> sideChainBuffer, envelopeBuffer;
 };

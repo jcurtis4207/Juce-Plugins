@@ -13,6 +13,8 @@
 #pragma once
 #include <JuceHeader.h>
 
+#define numOutputs 2
+
 class Deesser
 {
 public:
@@ -20,46 +22,42 @@ public:
 
     ~Deesser() {}
 
-    void setDeesserParameters(juce::AudioProcessorValueTreeState& apvts, bool isListen)
+    void setDeesserParameters(const juce::AudioProcessorValueTreeState& apvts, bool isListen)
     {
         crossoverFreq = apvts.getRawParameterValue("crossoverFreq")->load();
         threshold = apvts.getRawParameterValue("threshold")->load();
-        float attackInput = apvts.getRawParameterValue("attack")->load();
-        float releaseInput = apvts.getRawParameterValue("release")->load();
+        const float attackInput = apvts.getRawParameterValue("attack")->load();
+        attackTime = std::exp(-1.0f / ((attackInput / 1000.0f) * static_cast<float>(sampleRate)));
+        const float releaseInput = apvts.getRawParameterValue("release")->load();
+        releaseTime = std::exp(-1.0f / ((releaseInput / 1000.0f) * static_cast<float>(sampleRate)));
         stereo = apvts.getRawParameterValue("stereo")->load();
         wide = apvts.getRawParameterValue("wide")->load();
-        attackTime = std::exp(-1.0f / ((attackInput / 1000.0f) * (float)sampleRate));
-        releaseTime = std::exp(-1.0f / ((releaseInput / 1000.0f) * (float)sampleRate));
         listen = isListen;
     }
 
-    void prepare(const double newSampleRate, const int numChannels, const int maxBlockSize)
+    void prepare(double newSampleRate, int maxBlockSize)
     {
         sampleRate = newSampleRate;
         bufferSize = maxBlockSize;
-        // initialize buffers
-        lowBuffer.setSize(numChannels, maxBlockSize);
-        highBuffer.setSize(numChannels, maxBlockSize);
-        compressionBuffer.setSize(numChannels, maxBlockSize);
-        envelopeBuffer.setSize(numChannels, maxBlockSize);
-        // initialize dsp
+        lowBuffer.setSize(numOutputs, maxBlockSize);
+        highBuffer.setSize(numOutputs, maxBlockSize);
+        compressionBuffer.setSize(numOutputs, maxBlockSize);
+        envelopeBuffer.setSize(numOutputs, maxBlockSize);
         juce::dsp::ProcessSpec spec;
         spec.sampleRate = sampleRate;
         spec.maximumBlockSize = maxBlockSize;
-        spec.numChannels = 2;
-        // prepare processor chains
+        spec.numChannels = numOutputs;
         lowChain.prepare(spec);
         highChain.prepare(spec);
     }
 
-    void process(const juce::dsp::ProcessContextReplacing<float>& context)
+    void process(juce::AudioBuffer<float>& inputBuffer)
     {
-        const auto& outputBuffer = context.getOutputBlock();
         // copy the buffer into the filtering buffers
-        for (int channel = 0; channel < 2; channel++)
+        for (int channel = 0; channel < numOutputs; channel++)
         {
-            juce::FloatVectorOperations::copy(lowBuffer.getWritePointer(channel), outputBuffer.getChannelPointer(channel), bufferSize);
-            juce::FloatVectorOperations::copy(highBuffer.getWritePointer(channel), outputBuffer.getChannelPointer(channel), bufferSize);
+            lowBuffer.copyFrom(channel, 0, inputBuffer.getReadPointer(channel), bufferSize);
+            highBuffer.copyFrom(channel, 0, inputBuffer.getReadPointer(channel), bufferSize);
         }
         // setup filters
         lowChain.get<0>().setType(juce::dsp::LinkwitzRileyFilterType::lowpass);
@@ -77,24 +75,22 @@ public:
         // create compression envelope and calculate gain reduction
         createEnvelope();
         calculateGainReduction();
-        for (int channel = 0; channel < 2; channel++)
+        for (int channel = 0; channel < numOutputs; channel++)
         {
             // apply compression to high buffer
-            juce::FloatVectorOperations::multiply(highBuffer.getWritePointer(channel), compressionBuffer.getReadPointer(channel), bufferSize);
+            juce::FloatVectorOperations::multiply(highBuffer.getWritePointer(channel), 
+                compressionBuffer.getReadPointer(channel), bufferSize);
             // if wide set, apply compression to low buffer
             if (wide)
             {
-                juce::FloatVectorOperations::multiply(lowBuffer.getWritePointer(channel), compressionBuffer.getReadPointer(channel), bufferSize);
+                juce::FloatVectorOperations::multiply(lowBuffer.getWritePointer(channel), 
+                    compressionBuffer.getReadPointer(channel), bufferSize);
             }
-            // if listen set, output only high buffer to output
-            if (listen)
+            // if listen set, output high only, else sum low and high
+            inputBuffer.copyFrom(channel, 0, highBuffer.getReadPointer(channel), bufferSize);
+            if (!listen)
             {
-                juce::FloatVectorOperations::copy(outputBuffer.getChannelPointer(channel), highBuffer.getReadPointer(0), bufferSize);
-            }
-            else
-            {
-                // sum low and high buffers to output
-                juce::FloatVectorOperations::add(outputBuffer.getChannelPointer(channel), lowBuffer.getReadPointer(channel), highBuffer.getReadPointer(channel), bufferSize);
+                inputBuffer.addFrom(channel, 0, lowBuffer.getReadPointer(channel), bufferSize);
             }
         }
     }
@@ -107,8 +103,8 @@ public:
             // stereo mode - max channel value used and output stored in both channels
             if (stereo)
             {
-                // find max of input samples
-                const float maxSample = juce::jmax(std::abs(highBuffer.getSample(0, sample)), std::abs(highBuffer.getSample(1, sample)));
+                const float maxSample = juce::jmax(std::abs(highBuffer.getSample(0, sample)), 
+                    std::abs(highBuffer.getSample(1, sample)));
                 // apply attack
                 if (compressionLevel[0] < maxSample)
                 {
@@ -120,7 +116,7 @@ public:
                     compressionLevel[0] = maxSample + releaseTime * (compressionLevel[0] - maxSample);
                 }
                 // write envelope
-                for (int channel = 0; channel < 2; channel++)
+                for (int channel = 0; channel < numOutputs; channel++)
                 {
                     envelopeBuffer.setSample(channel, sample, compressionLevel[0]);
                 }
@@ -128,9 +124,8 @@ public:
             // dual mono mode - channels used individually and output stored separately
             else
             {
-                for (int channel = 0; channel < 2; channel++)
+                for (int channel = 0; channel < numOutputs; channel++)
                 {
-                    // get absolute value of sample
                     const float inputSample = std::abs(highBuffer.getSample(channel, sample));
                     // apply attack
                     if (compressionLevel[channel] < inputSample)
@@ -156,10 +151,11 @@ public:
         outputGainReduction[1] = 0.0f;
         for (int sample = 0; sample < bufferSize; sample++)
         {
-            for (int channel = 0; channel < 2; channel++)
+            for (int channel = 0; channel < numOutputs; channel++)
             {
                 // apply threshold and ratio to envelope
-                float currentGainReduction = slope * (threshold - juce::Decibels::gainToDecibels(envelopeBuffer.getSample(channel, sample)));
+                float currentGainReduction = slope * (threshold - juce::Decibels::gainToDecibels(
+                    envelopeBuffer.getSample(channel, sample)));
                 // remove positive gain reduction
                 currentGainReduction = juce::jmin(0.0f, currentGainReduction);
                 // set gr meter values
@@ -167,7 +163,6 @@ public:
                 {
                     outputGainReduction[channel] = currentGainReduction;
                 }
-                // convert decibels to gain
                 currentGainReduction = std::pow(10.0f, 0.05f * currentGainReduction);
                 // output compression multiplier to compression buffer
                 compressionBuffer.setSample(channel, sample, currentGainReduction);
@@ -175,12 +170,12 @@ public:
         }
     }
 
-    const float getGainReductionLeft()
+    float getGainReductionLeft()
     {
         return (outputGainReduction[0] * -1.0f);
     }
 
-    const float getGainReductionRight()
+    float getGainReductionRight()
     {
         return (outputGainReduction[1] * -1.0f);
     }
@@ -196,9 +191,8 @@ private:
     bool stereo{ true };
     bool wide{ false };
     bool listen{ false };
-    float compressionLevel[2]{ 0.0f, 0.0f };
-    float outputGainReduction[2]{ 0.0f, 0.0f };
-    juce::AudioBuffer<float> lowBuffer, highBuffer;
-    juce::AudioBuffer<float> compressionBuffer, envelopeBuffer;
+    std::array<float, numOutputs> compressionLevel{ 0.0f, 0.0f };
+    std::array<float, numOutputs> outputGainReduction{ 0.0f, 0.0f };
+    juce::AudioBuffer<float> lowBuffer, highBuffer, compressionBuffer, envelopeBuffer;
     juce::dsp::ProcessorChain<juce::dsp::LinkwitzRileyFilter<float>> lowChain, highChain;
 };

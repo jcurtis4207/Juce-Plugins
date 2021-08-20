@@ -42,7 +42,7 @@ public:
 
 private:
     Delay delay;
-    juce::StringArray delaySubdivisions{ "16th", "16th Triplet", "16th Dotted", 
+    const juce::StringArray delaySubdivisions{ "16th", "16th Triplet", "16th Dotted", 
         "8th", "8th Triplet", "8th Dotted", "Quarter", "Quarter Triplet", "Quarter Dotted", 
         "Half", "Half Triplet", "Half Dotted", "Whole"};
     juce::AudioPlayHead* playHead;

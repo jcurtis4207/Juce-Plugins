@@ -11,7 +11,8 @@
 #include "PluginEditor.h"
 
 LimiterAudioProcessorEditor::LimiterAudioProcessorEditor(LimiterAudioProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p), grMeter(audioProcessor.gainReductionLeft, audioProcessor.gainReductionRight)
+    : AudioProcessorEditor(&p), audioProcessor(p), 
+    grMeter(audioProcessor.gainReductionLeft, audioProcessor.gainReductionRight)
 {
     addAndMakeVisible(bgImage);
     addAndMakeVisible(powerLine);
@@ -24,10 +25,14 @@ LimiterAudioProcessorEditor::LimiterAudioProcessorEditor(LimiterAudioProcessor& 
     addAndMakeVisible(releaseLabel);
     addAndMakeVisible(linkKnob);
     addAndMakeVisible(stereoButton);
-    thresholdAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "threshold", thresholdSlider);
-    ceilingAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "ceiling", ceilingSlider);
-    releaseAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.parameters, "release", releaseSlider);
-    stereoAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.parameters, "stereo", stereoButton);
+    thresholdAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "threshold", thresholdSlider);
+    ceilingAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "ceiling", ceilingSlider);
+    releaseAttach = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.parameters, "release", releaseSlider);
+    stereoAttach = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        audioProcessor.parameters, "stereo", stereoButton);
     // when dragging get parameter values before modifying
     linkKnob.onDragStart = [&]() {
         thresholdValue = audioProcessor.parameters.getRawParameterValue("threshold")->load();
@@ -59,9 +64,9 @@ void LimiterAudioProcessorEditor::resized()
 {
     bgImage.setBounds(getLocalBounds());
     powerLine.setBounds(0, 10, 250, 50);
-    int yPosition = 80;
-    int sliderWidth = 50;
-    int sliderHeight = 225;
+    const int yPosition = 80;
+    const int sliderWidth = 50;
+    const int sliderHeight = 225;
     thresholdSlider.setBounds(20, yPosition, sliderWidth, sliderHeight);
     thresholdLabel.setBounds(thresholdSlider.getX() - 10, thresholdSlider.getY() - 20, 70, 20);
     ceilingSlider.setBounds(thresholdSlider.getX() + 90, yPosition, sliderWidth, sliderHeight);
@@ -70,18 +75,18 @@ void LimiterAudioProcessorEditor::resized()
     releaseLabel.setBounds(releaseSlider.getX() - 10, releaseSlider.getY() - 20, 70, 20);
     linkKnob.setBounds(thresholdSlider.getX() + 58, 130, 24, 40);
     stereoButton.setBounds(releaseSlider.getX(), releaseSlider.getBottom() + 9, 50, 50);
-    grMeter.setBounds(releaseSlider.getX() + 75, yPosition - 10, grMeter.getMeterWidth(), grMeter.getMeterHeight());
+    grMeter.setBounds(releaseSlider.getX() + 75, yPosition - 10, 
+        grMeter.getMeterWidth(), grMeter.getMeterHeight());
 }
 
 void LimiterAudioProcessorEditor::linkValueChanged()
 {
     if (linkFlag)
     {
-        // get value from knob
-        float trim = (float)linkKnob.getValue();
-        // add to parameter value and convert to normalized range -40 - 0
-        float newThreshold = (40.0f + thresholdValue + trim) / 40.0f;
-        float newCeiling = (40.f + ceilingValue + trim) / 40.0f;
+        const float trim = static_cast<float>(linkKnob.getValue());
+        // add trim to parameter value and convert to normalized range -40 - 0
+        const float newThreshold = (40.0f + thresholdValue + trim) / 40.0f;
+        const float newCeiling = (40.f + ceilingValue + trim) / 40.0f;
         // send new parameter values
         audioProcessor.parameters.getParameter("threshold")->setValueNotifyingHost(newThreshold);
         audioProcessor.parameters.getParameter("ceiling")->setValueNotifyingHost(newCeiling);
