@@ -39,20 +39,17 @@ LimiterAudioProcessor::LimiterAudioProcessor()
 void LimiterAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     limiter.prepare(sampleRate, samplesPerBlock);
-    limiter.updateLimiterValues(parameters);
+    limiter.setParameters(parameters);
 }
 
 void LimiterAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
 {
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
-
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+    for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
     // apply limiter
-    limiter.updateLimiterValues(parameters);
+    limiter.setParameters(parameters);
     limiter.process(buffer);
     // get gain reduction for meter
     gainReductionLeft = limiter.getGainReductionLeft();

@@ -41,20 +41,17 @@ DeesserAudioProcessor::DeesserAudioProcessor()
 void DeesserAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     deesser.prepare(sampleRate, samplesPerBlock);
-    deesser.setDeesserParameters(parameters, listen);
+    deesser.setParameters(parameters, listen);
 }
 
 void DeesserAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
 {
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
-
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+    for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
     // apply de-esser
-    deesser.setDeesserParameters(parameters, listen);
+    deesser.setParameters(parameters, listen);
     deesser.process(buffer);
     // get gain reduction for meter
     gainReductionLeft = deesser.getGainReductionLeft();

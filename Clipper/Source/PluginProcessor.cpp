@@ -34,21 +34,18 @@ ClipperAudioProcessor::ClipperAudioProcessor()
 void ClipperAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     clipper.prepare(sampleRate, samplesPerBlock);
-    clipper.updateClipperValues(parameters);
+    clipper.setParameters(parameters);
     setLatencySamples(clipper.getOversamplerLatency());
 }
 
 void ClipperAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
 {
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
-
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+    for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
     
     // apply clipper
-    clipper.updateClipperValues(parameters);
+    clipper.setParameters(parameters);
     juce::dsp::AudioBlock<float> block(buffer);
     juce::dsp::ProcessContextReplacing<float> context(block);
     clipper.process(context);

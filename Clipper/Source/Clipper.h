@@ -16,11 +16,7 @@
 class Clipper
 {
 public:
-    Clipper() {}
-
-    ~Clipper() {}
-
-    void updateClipperValues(const juce::AudioProcessorValueTreeState& apvts)
+    void setParameters(const juce::AudioProcessorValueTreeState& apvts)
     {
         threshold = apvts.getRawParameterValue("threshold")->load();
         ceiling = apvts.getRawParameterValue("ceiling")->load();
@@ -49,9 +45,24 @@ public:
         // apply autogain and ceiling
         applyGain(outputBuffer.getChannelPointer(0), outputBuffer.getChannelPointer(1), bufferSize);
     }
+    
+    // get combined gain reduction of both clipping stages
+    float getGainReductionLeft()
+    {
+        return oversampledGainReduction[0] + normalGainReduction[0];
+    }
+    float getGainReductionRight()
+    {
+        return oversampledGainReduction[1] + normalGainReduction[1];
+    }
+    int getOversamplerLatency()
+    {
+        return (int)oversampler.getLatencyInSamples();
+    }
 
+private:
     // take in a buffer, clip based on threshold, output to the same buffer
-    void clipBuffer(float* bufferLeft, float* bufferRight, int blockSize, 
+    void clipBuffer(float* bufferLeft, float* bufferRight, int blockSize,
         std::array<float, numOutputs>& stageGainReduction)
     {
         stageGainReduction = { 0.0f, 0.0f };
@@ -101,21 +112,7 @@ public:
             bufferRight[sample] = output[1];
         }
     }
-    // get combined gain reduction of both clipping stages
-    float getGainReductionLeft()
-    {
-        return oversampledGainReduction[0] + normalGainReduction[0];
-    }
-    float getGainReductionRight()
-    {
-        return oversampledGainReduction[1] + normalGainReduction[1];
-    }
-    int getOversamplerLatency()
-    {
-        return (int)oversampler.getLatencyInSamples();
-    }
 
-private:
     double sampleRate{ 0.0 };
     int bufferSize{ 0 };
     int oversampledBufferSize{ 0 };

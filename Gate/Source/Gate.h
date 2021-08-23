@@ -15,10 +15,6 @@
 class Gate
 {
 public:
-	Gate() {}
-
-	~Gate() {}
-
 	void setParameters(const juce::AudioProcessorValueTreeState& apvts, bool isListen)
 	{
 		threshold = apvts.getRawParameterValue("threshold")->load();
@@ -83,6 +79,17 @@ public:
 		}
 	}
 
+	float getGainReductionLeft()
+	{
+		return juce::Decibels::gainToDecibels(outputGainReduction[0]) * -1.0f;
+	}
+
+	float getGainReductionRight()
+	{
+		return juce::Decibels::gainToDecibels(outputGainReduction[1]) * -1.0f;
+	}
+
+private:
 	// apply hpf and lpf to sidechain buffer
 	void applyFilters()
 	{
@@ -132,7 +139,7 @@ public:
 					}
 				}
 				// set gain reduction for meter
-				outputGainReduction[channel] = (currentState[channel] > outputGainReduction[channel]) ? 
+				outputGainReduction[channel] = (currentState[channel] > outputGainReduction[channel]) ?
 					currentState[channel] : outputGainReduction[channel];
 				// output multiplier to gr buffer
 				gainReductionBuffer.setSample(channel, sample, currentState[channel]);
@@ -140,17 +147,6 @@ public:
 		}
 	}
 
-	float getGainReductionLeft()
-	{
-		return juce::Decibels::gainToDecibels(outputGainReduction[0]) * -1.0f;
-	}
-
-	float getGainReductionRight()
-	{
-		return juce::Decibels::gainToDecibels(outputGainReduction[1]) * -1.0f;
-	}
-
-private:
 	double sampleRate{ 0.0 };
 	int bufferSize{ 0 };
 	float threshold{ 0.0f };

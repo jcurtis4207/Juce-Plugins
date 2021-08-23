@@ -27,11 +27,32 @@ struct ParameterValues
 class Equalizer
 {
 public:
-    Equalizer() {}
-    ~Equalizer() {}
+    void prepare(double newSampleRate, int maxBlockSize)
+    {
+        sampleRate = newSampleRate;
+        bufferSize = maxBlockSize;
+        juce::dsp::ProcessSpec spec;
+        spec.sampleRate = newSampleRate;
+        spec.maximumBlockSize = maxBlockSize;
+        spec.numChannels = numOutputs;
+        processChain.prepare(spec);
+    }
 
+    void process(juce::AudioBuffer<float>& inputBuffer, const juce::AudioProcessorValueTreeState& apvts)
+    {
+        // get parameter values and setup coefficients
+        const auto parameterValues = setParameters(apvts);
+        updateFilters(parameterValues);
+        updateEqBands(parameterValues);
+        // process filters
+        juce::dsp::AudioBlock<float> block(inputBuffer);
+        juce::dsp::ProcessContextReplacing<float> context(block);
+        processChain.process(context);
+    }
+
+private:
     // populate settings struct from parameters
-    ParameterValues getParameterValues(const juce::AudioProcessorValueTreeState& apvts)
+    ParameterValues setParameters(const juce::AudioProcessorValueTreeState& apvts)
     {
         ParameterValues values;
         values.hpfFreq = apvts.getRawParameterValue("hpfFreq")->load();
@@ -57,29 +78,6 @@ public:
         return values;
     }
 
-    void prepare(double newSampleRate, int maxBlockSize)
-    {
-        sampleRate = newSampleRate;
-        bufferSize = maxBlockSize;
-        juce::dsp::ProcessSpec spec;
-        spec.sampleRate = newSampleRate;
-        spec.maximumBlockSize = maxBlockSize;
-        spec.numChannels = numOutputs;
-        processChain.prepare(spec);
-    }
-
-    void process(juce::AudioBuffer<float>& inputBuffer, const juce::AudioProcessorValueTreeState& apvts)
-    {
-        // get parameter values and setup coefficients
-        const auto parameterValues = getParameterValues(apvts);
-        updateFilters(parameterValues);
-        updateEqBands(parameterValues);
-        // process filters
-        juce::dsp::AudioBlock<float> block(inputBuffer);
-        juce::dsp::ProcessContextReplacing<float> context(block);
-        processChain.process(context);
-    }
-
     // update filter coefficients from settings struct
     void updateFilters(const ParameterValues& inputValues)
     {
@@ -92,7 +90,7 @@ public:
         {
             processChain.setBypassed<ChainIndex::HPF>(false);
             *processChain.get<ChainIndex::HPF>().state = *juce::dsp::FilterDesign<float>::
-                designIIRHighpassHighOrderButterworthMethod(inputValues.hpfFreq, sampleRate, 
+                designIIRHighpassHighOrderButterworthMethod(inputValues.hpfFreq, sampleRate,
                     2 * (inputValues.hpfSlope + 1))[0];
         }
         // setup lpf
@@ -104,7 +102,7 @@ public:
         {
             processChain.setBypassed<ChainIndex::LPF>(false);
             *processChain.get<ChainIndex::LPF>().state = *juce::dsp::FilterDesign<float>::
-                designIIRLowpassHighOrderButterworthMethod(inputValues.lpfFreq, sampleRate, 
+                designIIRLowpassHighOrderButterworthMethod(inputValues.lpfFreq, sampleRate,
                     2 * (inputValues.lpfSlope + 1))[0];
         }
     }
@@ -119,10 +117,10 @@ public:
             *juce::dsp::IIR::Coefficients<float>::makeLowShelf(sampleRate, inputValues.band1Freq,
                 inputValues.band1Q, juce::Decibels::decibelsToGain(inputValues.band1Gain));;
         *processChain.get<ChainIndex::Band2>().state = *juce::dsp::IIR::Coefficients<float>::
-            makePeakFilter(sampleRate, inputValues.band2Freq, inputValues.band2Q, 
+            makePeakFilter(sampleRate, inputValues.band2Freq, inputValues.band2Q,
                 juce::Decibels::decibelsToGain(inputValues.band2Gain));;
         *processChain.get<ChainIndex::Band3>().state = *juce::dsp::IIR::Coefficients<float>::
-            makePeakFilter(sampleRate, inputValues.band3Freq, inputValues.band3Q, 
+            makePeakFilter(sampleRate, inputValues.band3Freq, inputValues.band3Q,
                 juce::Decibels::decibelsToGain(inputValues.band3Gain));;
         *processChain.get<ChainIndex::Band4>().state = (inputValues.band4Bell) ?
             *juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, inputValues.band4Freq,
@@ -131,7 +129,6 @@ public:
                 inputValues.band4Q, juce::Decibels::decibelsToGain(inputValues.band4Gain));
     }
 
-private:
     double sampleRate{ 0.0 };
     int bufferSize{ 0 };
     using StereoFilter = juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, 

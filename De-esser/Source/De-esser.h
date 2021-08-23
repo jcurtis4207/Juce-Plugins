@@ -18,11 +18,7 @@
 class Deesser
 {
 public:
-    Deesser() {}
-
-    ~Deesser() {}
-
-    void setDeesserParameters(const juce::AudioProcessorValueTreeState& apvts, bool isListen)
+    void setParameters(const juce::AudioProcessorValueTreeState& apvts, bool isListen)
     {
         crossoverFreq = apvts.getRawParameterValue("crossoverFreq")->load();
         threshold = apvts.getRawParameterValue("threshold")->load();
@@ -95,6 +91,17 @@ public:
         }
     }
 
+    float getGainReductionLeft()
+    {
+        return (outputGainReduction[0] * -1.0f);
+    }
+
+    float getGainReductionRight()
+    {
+        return (outputGainReduction[1] * -1.0f);
+    }
+
+private:
     // use high buffer to compute compression envelope
     void createEnvelope()
     {
@@ -103,7 +110,7 @@ public:
             // stereo mode - max channel value used and output stored in both channels
             if (stereo)
             {
-                const float maxSample = juce::jmax(std::abs(highBuffer.getSample(0, sample)), 
+                const float maxSample = juce::jmax(std::abs(highBuffer.getSample(0, sample)),
                     std::abs(highBuffer.getSample(1, sample)));
                 // apply attack
                 if (compressionLevel[0] < maxSample)
@@ -147,7 +154,7 @@ public:
     // use envelope buffer to calculate compression multiplier to compression buffer
     void calculateGainReduction()
     {
-        outputGainReduction[0]= 0.0f;
+        outputGainReduction[0] = 0.0f;
         outputGainReduction[1] = 0.0f;
         for (int sample = 0; sample < bufferSize; sample++)
         {
@@ -170,17 +177,6 @@ public:
         }
     }
 
-    float getGainReductionLeft()
-    {
-        return (outputGainReduction[0] * -1.0f);
-    }
-
-    float getGainReductionRight()
-    {
-        return (outputGainReduction[1] * -1.0f);
-    }
-
-private:
     double sampleRate{ 0.0 };
     int bufferSize{ 0 };
     float crossoverFreq{ 1000.0f };

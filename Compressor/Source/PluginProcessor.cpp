@@ -49,20 +49,17 @@ CompressorAudioProcessor::CompressorAudioProcessor()
 void CompressorAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     compressor.prepare(sampleRate, samplesPerBlock);
-    compressor.updateCompressorValues(parameters);
+    compressor.setParameters(parameters);
 }
 
 void CompressorAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
 {
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
-
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+    for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
     // apply compression
-    compressor.updateCompressorValues(parameters);
+    compressor.setParameters(parameters);
     compressor.process(buffer);
     // get gain reduction for meter
     gainReductionLeft = compressor.getGainReductionLeft();

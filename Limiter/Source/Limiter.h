@@ -18,11 +18,7 @@
 class Limiter
 {
 public:
-    Limiter(){}
-
-    ~Limiter() {}
-
-    void updateLimiterValues(const juce::AudioProcessorValueTreeState& apvts)
+    void setParameters(const juce::AudioProcessorValueTreeState& apvts)
     {
         threshold = apvts.getRawParameterValue("threshold")->load();
         ceiling = apvts.getRawParameterValue("ceiling")->load();
@@ -56,6 +52,17 @@ public:
         }
     }
 
+    float getGainReductionLeft()
+    {
+        return (outputGainReduction[0] * -1.0f);
+    }
+
+    float getGainReductionRight()
+    {
+        return (outputGainReduction[1] * -1.0f);
+    }
+
+private:
     // use sidechain to create compression envelope
     void createEnvelope()
     {
@@ -64,7 +71,7 @@ public:
             // stereo mode - max channel value used and output stored in both channels
             if (stereo)
             {
-                const float maxSample = juce::jmax(std::abs(sideChainBuffer.getSample(0, sample)), 
+                const float maxSample = juce::jmax(std::abs(sideChainBuffer.getSample(0, sample)),
                     std::abs(sideChainBuffer.getSample(1, sample)));
                 // apply instant attack
                 if (compressionLevel[0] < maxSample)
@@ -94,7 +101,7 @@ public:
                     // apply release
                     else
                     {
-                        compressionLevel[channel] = inputSample + releaseTime * 
+                        compressionLevel[channel] = inputSample + releaseTime *
                             (compressionLevel[channel] - inputSample);
                     }
                     // write envelope
@@ -130,17 +137,6 @@ public:
         }
     }
 
-    float getGainReductionLeft()
-    {
-        return (outputGainReduction[0] * -1.0f);
-    }
-
-    float getGainReductionRight()
-    {
-        return (outputGainReduction[1] * -1.0f);
-    }
-
-private:
     double sampleRate{ 0.0 };
     int bufferSize{ 0 };
     float threshold{ 0.0f };

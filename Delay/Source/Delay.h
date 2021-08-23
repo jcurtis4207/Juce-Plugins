@@ -15,9 +15,6 @@
 class Delay
 {
 public:
-    Delay(){}
-    ~Delay(){}
-
     void setParameters(const juce::AudioProcessorValueTreeState& apvts, double inputBPM)
     {
         bpm = inputBPM;
@@ -96,6 +93,7 @@ public:
         }
     }
 
+private:
     // write dry buffer into delay buffer
     void fillDelayBuffer()
     {
@@ -144,19 +142,19 @@ public:
         {
             if (delayBufferSize > bufferSize + writePosition)
             {
-                delayBuffer.addFromWithRamp(channel, writePosition, 
+                delayBuffer.addFromWithRamp(channel, writePosition,
                     wetBuffer.getWritePointer(channel), bufferSize, feedbackGain, feedbackGain);
             }
             else
             {
                 const int bufferRemaining = delayBufferSize - writePosition;
-                delayBuffer.addFromWithRamp(channel, bufferRemaining, 
+                delayBuffer.addFromWithRamp(channel, bufferRemaining,
                     wetBuffer.getWritePointer(channel), bufferRemaining, feedbackGain, feedbackGain);
-                delayBuffer.addFromWithRamp(channel, 0, wetBuffer.getWritePointer(channel), 
+                delayBuffer.addFromWithRamp(channel, 0, wetBuffer.getWritePointer(channel),
                     bufferSize - bufferRemaining, feedbackGain, feedbackGain);
             }
         }
-    } 
+    }
 
     // apply filters to wet buffer
     void applyFilters()
@@ -180,7 +178,7 @@ public:
                 float wetSample = wetBuffer.getSample(channel, sample);
                 // apply gain, distortion, and autogain
                 wetSample *= (drive / 30.0f) + 1.0f;
-                wetSample = (2.0f / juce::float_Pi) * atan((juce::float_Pi / 2.0f) * wetSample);    
+                wetSample = (2.0f / juce::float_Pi) * atan((juce::float_Pi / 2.0f) * wetSample);
                 wetSample *= juce::Decibels::decibelsToGain(drive / -12.0f);
                 wetBuffer.setSample(channel, sample, wetSample);
             }
@@ -217,7 +215,6 @@ public:
         }
     }
 
-private:
     double sampleRate{ 0.0 };
     int bufferSize{ 0 };
     int delayBufferSize{ 0 };

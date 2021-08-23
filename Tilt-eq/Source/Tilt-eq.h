@@ -13,10 +13,7 @@
 class Tilteq
 {
 public:
-	Tilteq(){}
-	~Tilteq(){}
-
-	void setParameters(const juce::AudioProcessorValueTreeState& apvts)
+    void setParameters(const juce::AudioProcessorValueTreeState& apvts)
 	{
 		freq = apvts.getRawParameterValue("freq")->load();
 		gain = apvts.getRawParameterValue("gain")->load();

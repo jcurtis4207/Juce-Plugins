@@ -16,10 +16,9 @@ class Reverb
 public:
     Reverb() 
     {
-        // reset delayline to use constructor with maximum delay
+        // reset delayline to use constructor with maximum delay argument
         processChain.get<ChainIndex::Delay>() = juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Linear>(44100);
     }
-    ~Reverb() {}
 
     void setParameters(const juce::AudioProcessorValueTreeState& apvts)
     {
@@ -73,6 +72,7 @@ public:
         }
     }
 
+private:
     void setupDelay()
     {
         processChain.get<ChainIndex::Delay>().setDelay(static_cast<float>(predelay * sampleRate * 0.001f));
@@ -124,7 +124,6 @@ public:
         }
     }
 
-private:
     double sampleRate{ 0.0 };
     int bufferSize{ 0 };
     float roomSize{ 0.0f };

@@ -15,9 +15,6 @@
 class Distortion
 {
 public:
-    Distortion(){}
-    ~Distortion(){}
-
     void setParameters(const juce::AudioProcessorValueTreeState& apvts)
     {
         drive = apvts.getRawParameterValue("drive")->load();
@@ -65,6 +62,12 @@ public:
         oversampler.processSamplesDown(context.getOutputBlock());
     }
 
+    int getOversamplerLatency()
+    {
+        return static_cast<int>(oversampler.getLatencyInSamples());
+    }
+
+private:
     void applyInputFilters(juce::dsp::AudioBlock<float>& buffer)
     {
         // apply coefficients to filters
@@ -148,12 +151,6 @@ public:
         }
     }
 
-    int getOversamplerLatency()
-    {
-        return static_cast<int>(oversampler.getLatencyInSamples());
-    }
-
-private:
     double sampleRate{ 0.0 };
     int bufferSize{ 0 };
     float drive{ 0.0f };

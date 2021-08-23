@@ -19,10 +19,6 @@
 class MultiBandComp
 {
 public:
-    MultiBandComp(){}
-
-    ~MultiBandComp(){}
-
     void setParameters(const juce::AudioProcessorValueTreeState& apvts, 
         const std::array<bool, numBands>& listenArr)
     {
@@ -162,6 +158,17 @@ public:
         }
     }
 
+    std::array<float, numBands * numOutputs>& getGainReduction()
+    {
+        // invert gain reduction values and return pointer to array
+        for (int i = 0; i < numBands * numOutputs; i++)
+        {
+            outputGainReduction[i] *= -1.0f;
+        }
+        return outputGainReduction;
+    }
+
+private:
     void applyStage1Filters()
     {
         // setup filters
@@ -215,13 +222,13 @@ public:
     {
         for (int sample = 0; sample < bufferSize; sample++)
         {
-            for(int band = 0; band < numBands; band++)
+            for (int band = 0; band < numBands; band++)
             {
                 // stereo mode - max channel value used and output stored in both channels
                 if (stereo)
                 {
                     const float maxSample = juce::jmax(
-                        std::abs(bandBuffers[band].getSample(0, sample)),std::abs(bandBuffers[band].getSample(1, sample)));
+                        std::abs(bandBuffers[band].getSample(0, sample)), std::abs(bandBuffers[band].getSample(1, sample)));
                     // apply attack
                     if (compressionLevel[band] < maxSample)
                     {
@@ -246,13 +253,13 @@ public:
                         // apply attack
                         if (compressionLevel[band * 2 + channel] < inputSample)
                         {
-                            compressionLevel[band * 2 + channel] = inputSample + attackTime[band] * 
+                            compressionLevel[band * 2 + channel] = inputSample + attackTime[band] *
                                 (compressionLevel[band * 2 + channel] - inputSample);
                         }
                         // apply release
                         else
                         {
-                            compressionLevel[band * 2 + channel] = inputSample + releaseTime[band] * 
+                            compressionLevel[band * 2 + channel] = inputSample + releaseTime[band] *
                                 (compressionLevel[band * 2 + channel] - inputSample);
                         }
                         // write envelope
@@ -277,7 +284,7 @@ public:
                 for (int channel = 0; channel < numOutputs; channel++)
                 {
                     // apply threshold and ratio to envelope
-                    float currentGainReduction = slope[band] * (threshold[band] - 
+                    float currentGainReduction = slope[band] * (threshold[band] -
                         juce::Decibels::gainToDecibels(envelopeBuffers[band].getSample(channel, sample)));
                     // remove positive gain reduction
                     currentGainReduction = juce::jmin(0.0f, currentGainReduction);
@@ -296,17 +303,6 @@ public:
         }
     }
 
-    std::array<float, numBands * numOutputs>& getGainReduction()
-    {
-        // invert gain reduction values and return pointer to array
-        for (int i = 0; i < numBands * numOutputs; i++)
-        {
-            outputGainReduction[i] *= -1.0f;
-        }
-        return outputGainReduction;
-    }
-
-private:
     double sampleRate{ 0.0 };
     int bufferSize{ 0 };
     const juce::NormalisableRange<float> freqRange{ 20.0f, 15000.0f, 1.0f, 0.25f };
