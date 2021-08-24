@@ -65,7 +65,7 @@ void ClipperAudioProcessorEditor::resized()
     ceilingSlider.setBounds(110, yPosition, sliderWidth, sliderHeight);
     ceilingLabel.setBounds(ceilingSlider.getX() - 10, ceilingSlider.getY() - 20, 70, 20);
     linkKnob.setBounds(78, 130, 24, 44);
-    grMeter.setBounds(170, yPosition - 10, grMeter.getMeterWidth(), grMeter.getMeterHeight());
+    grMeter.setBounds(180, yPosition - 16, grMeter.getMeterWidth(), grMeter.getMeterHeight());
 }
 
 void ClipperAudioProcessorEditor::linkValueChanged()

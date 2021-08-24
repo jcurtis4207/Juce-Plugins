@@ -75,7 +75,7 @@ void LimiterAudioProcessorEditor::resized()
     releaseLabel.setBounds(releaseSlider.getX() - 10, releaseSlider.getY() - 20, 70, 20);
     linkKnob.setBounds(thresholdSlider.getX() + 58, 130, 24, 40);
     stereoButton.setBounds(releaseSlider.getX(), releaseSlider.getBottom() + 9, 50, 50);
-    grMeter.setBounds(releaseSlider.getX() + 75, yPosition - 10, 
+    grMeter.setBounds(releaseSlider.getX() + 85, yPosition - 16, 
         grMeter.getMeterWidth(), grMeter.getMeterHeight());
 }
 

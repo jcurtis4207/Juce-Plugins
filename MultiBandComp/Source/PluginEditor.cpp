@@ -81,7 +81,7 @@ void MultiBandCompAudioProcessorEditor::resized()
 		attackKnobs[band].setBounds(ratioKnobs[band].getX() - 10, ratioKnobs[band].getBottom() - 25, 40, 70);
 		releaseKnobs[band].setBounds(attackKnobs[band].getRight() + 20, attackKnobs[band].getY(), 40, 70);
 		makeUpKnobs[band].setBounds(attackKnobs[band].getX() + 30, attackKnobs[band].getBottom(), 40, 70);
-		grMeters[band].setBounds(ratioKnobs[band].getRight() + 10, ratioKnobs[band].getY() - 10, 
+		grMeters[band].setBounds(ratioKnobs[band].getRight() + 20, ratioKnobs[band].getY() - 10, 
 			grMeters[band].getMeterWidth(), grMeters[band].getMeterHeight());
 		bandLabels[band].setBounds(ratioKnobs[band].getX() - 10, ratioKnobs[band].getY() - 30, 160, 15);
 		listenButtons[band].setBounds(makeUpKnobs[band].getX() - 5, makeUpKnobs[band].getBottom() + 30, 50, 50);

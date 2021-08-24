@@ -51,7 +51,6 @@ void DeesserAudioProcessorEditor::resized()
     powerLine.setBounds(0, 10, 260, 50);
     const int col1XPosition = 40;
     const int col2XPosition = 115;
-    const int col3XPosition = 175;
     const int knobWidth = 50;
     thresholdKnob.setBounds(col1XPosition, 60, knobWidth, knobWidth + 25);
     crossoverKnob.setBounds(col1XPosition, 150, knobWidth, knobWidth + 25);
@@ -60,5 +59,5 @@ void DeesserAudioProcessorEditor::resized()
     stereoButton.setBounds(col2XPosition, 125, knobWidth, knobWidth);
     wideButton.setBounds(col2XPosition, 215, knobWidth, knobWidth);
     listenButton.setBounds(col2XPosition, 305, knobWidth, knobWidth);
-    grMeter.setBounds(col3XPosition, 113, grMeter.getMeterWidth(), grMeter.getMeterHeight());
+    grMeter.setBounds(185, 108, grMeter.getMeterWidth(), grMeter.getMeterHeight());
 }

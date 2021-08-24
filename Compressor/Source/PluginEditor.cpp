@@ -70,6 +70,6 @@ void CompressorAudioProcessorEditor::resized()
     scFreqKnob.setBounds(col2XPosition, 260, sliderWidth, sliderWidth + 25);
     scBypassButton.setBounds(col2XPosition, 360, sliderWidth, sliderWidth);
     // col 3
-    grMeter.setBounds(col3XPosition, 70, grMeter.getMeterWidth(), grMeter.getMeterHeight());
+    grMeter.setBounds(col3XPosition + 10, 70, grMeter.getMeterWidth(), grMeter.getMeterHeight());
     mixKnob.setBounds(col3XPosition + 4, 332, sliderWidth, sliderWidth + 25);
 }

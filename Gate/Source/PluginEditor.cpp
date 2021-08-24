@@ -55,7 +55,7 @@ void GateAudioProcessorEditor::resized()
 {
 	bgImage.setBounds(getLocalBounds());
 	powerLine.setBounds(0, 10, 250, 50);
-	grMeter.setBounds(10, 55, grMeter.getMeterWidth(), grMeter.getMeterHeight());
+	grMeter.setBounds(20, 55, grMeter.getMeterWidth(), grMeter.getMeterHeight());
 	thresholdKnob.setBounds(80, 75, 70, 100);
 	ratioKnob.setBounds(thresholdKnob.getX(), thresholdKnob.getBottom() + 30, 70, 100);
 	attackKnob.setBounds(thresholdKnob.getRight() + 30, 60, 50, 80);
