@@ -28,7 +28,7 @@ private:
     PowerLine powerLine{ "Gain", "Jacob Curtis", 30 };
     SmallKnob gainKnob{ "Gain", "dB"};
     SmallButton phaseButton{ "Phase" };
-    Meter meter;
+    LevelMeter meter;
 
     std::unique_ptr <juce::AudioProcessorValueTreeState::SliderAttachment> gainAttach;
     std::unique_ptr <juce::AudioProcessorValueTreeState::ButtonAttachment> phaseAttach;

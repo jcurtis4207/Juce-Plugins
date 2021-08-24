@@ -15,7 +15,9 @@
 #pragma once
 #include <JuceHeader.h>
 
-class GainReductionMeter : public juce::Component, public juce::Timer
+#define numOutputs 2
+
+class LevelLabel : public juce::TextButton
 {
 public:
     class LevelLabelLookAndFeel : public juce::LookAndFeel_V4
@@ -24,147 +26,59 @@ public:
         void drawButtonBackground(juce::Graphics&, juce::Button&, const juce::Colour&, bool, bool) override {}
         void drawButtonText(juce::Graphics& g, juce::TextButton& button, bool, bool) override
         {
-            const auto font = juce::Font(juce::Typeface::createSystemTypefaceFor(BinaryData::XXIIAvenRegular_ttf, 
-                BinaryData::XXIIAvenRegular_ttfSize));
-            g.setFont(font.withHeight(14.0f));
+            g.setFont(xxii.withHeight(14.0f));
             g.setColour(juce::Colours::grey);
-            const auto yIndent = juce::jmin(4, button.proportionOfHeight(0.3f));
-            const auto cornerSize = juce::jmin(button.getHeight(), button.getWidth()) / 2;
-            const auto fontHeight = juce::roundToInt(font.getHeight() * 0.6f);
-            const auto leftIndent = juce::jmin(fontHeight, 2 + cornerSize / (button.isConnectedOnLeft() ? 4 : 2));
-            const auto rightIndent = juce::jmin(fontHeight, 2 + cornerSize / (button.isConnectedOnRight() ? 4 : 2));
-            const auto textWidth = button.getWidth() - leftIndent - rightIndent;
-            if (textWidth > 0)
-                g.drawFittedText(button.getButtonText(),
-                    leftIndent, yIndent, textWidth, button.getHeight() - yIndent * 2,
-                    juce::Justification::centredTop, 2);
+            g.drawFittedText(button.getButtonText(), button.getLocalBounds(), 
+                juce::Justification::centred, 1);
         }
+    private:
+        const juce::Font xxii{ juce::Typeface::createSystemTypefaceFor(BinaryData::XXIIAvenRegular_ttf,
+            BinaryData::XXIIAvenRegular_ttfSize) };
     };
 
-    GainReductionMeter(float& inputL, float& inputR)
+    LevelLabel()
     {
-        meterOverlay.addColour(0.5f, juce::Colour(0x99ff0000));
-        levelLabel.setBounds(levelLabelBounds);
-        levelLabel.setLookAndFeel(&levelLabelLookAndFeel);
-        levelLabel.onClick = [&]() {
-            currentLevelValue = -100.0f;
+        setLookAndFeel(&laf);
+        onClick = [&]() {
+            reset();
         };
-        addAndMakeVisible(levelLabel);
-        startTimerHz(fps);
-        // read in inputs from processor
-        gainReductionLeft = &inputL;
-        gainReductionRight = &inputR;
     }
 
-    void paint(juce::Graphics& g) override
+    // update level label if new peak found
+    void updateValue(float inputLevel)
     {
-        // draw label
-        g.setFont(xxii.withHeight(14.0f));
-        g.setColour(juce::Colours::grey);
-        g.drawText("GR", juce::Rectangle<int>(meterXPosition, 0, 20, meterYPosition), 
-            juce::Justification::centredTop, false);
-        // draw meter outline
-        g.setColour(juce::Colour(0xff303030));
-        g.drawRect(meterOutlineBounds, 1);
-        g.fillRect(meterSplitLine);
-        // draw scale markings
-        g.setFont(9.0f);
-        g.setColour(juce::Colours::grey);
-        for (const int& mark : marksText)
+        if (inputLevel > currentLevelValue)
         {
-            const int markYPosition = static_cast<int>(round(1.0f + meterYPosition + meterTotalHeight * 
-                (mark * 1.0f / meterBottomLevel)));
-            g.drawText(juce::String(mark), markTextXPosition, static_cast<int>(markYPosition - 9 / 2) - 2,
-                20, 10, juce::Justification::centred, false);
-        }
-        // get max gain reduction from processor
-        std::array<float, 2> inputLevel = { *gainReductionLeft, *gainReductionRight };
-        const float maxInputLevel = std::max(inputLevel[0], inputLevel[1]);
-        // update level label if new peak found
-        if (maxInputLevel > currentLevelValue)
-        {
-            // convert -0.0 to 0.0
-            levelLabel.setButtonText(juce::String((maxInputLevel < 0.1f) ? 0.0f : maxInputLevel, 1) + " dB");
-            currentLevelValue = maxInputLevel;
-        }
-        for (int channel = 0; channel < 2; channel++)
-        {
-            // test gain reduction and meter level for decay purposes
-            if (inputLevel[channel] < meterLevel[channel])
+            float bufferDecibelValue = juce::Decibels::gainToDecibels(inputLevel);
+            juce::String labelText = "";
+            if (bufferDecibelValue == -100.0f)
             {
-                meterLevel[channel] *= (1 - (1.0f / decayRate));
+                labelText = "-INF";
+            }
+            else if (bufferDecibelValue > 0.0f)
+            {
+                labelText = "+" + (juce::String(juce::Decibels::gainToDecibels(inputLevel), 1)) + " dB";
             }
             else
             {
-                meterLevel[channel] = inputLevel[channel];
+                labelText = (juce::String(juce::Decibels::gainToDecibels(inputLevel), 1)) + " dB";
             }
-            // calculate meter height using Decibel scale within bounds
-            int meterTopPosition = meterYPosition - static_cast<int>(round(meterLevel[channel] * meterTotalHeight / meterBottomLevel));
-            meterTopPosition = std::min(std::max(meterTopPosition, meterYPosition), meterYPosition + meterTotalHeight);
-            const int bandXPosition = (channel == 0) ? meterXPosition : meterXPosition + meterWidth + 1;
-            // draw background
-            g.setColour(juce::Colours::black);
-            g.fillRect(bandXPosition, meterTopPosition, meterWidth, meterYPosition + meterTotalHeight - meterTopPosition);
-            // draw meter
-            g.setGradientFill(meterFgColor);
-            g.fillRect(bandXPosition, meterYPosition, meterWidth, meterTopPosition - meterYPosition);
-            g.setGradientFill(meterOverlay);
-            g.fillRect(bandXPosition, meterYPosition, meterWidth, meterTopPosition - meterYPosition);
+            setButtonText(labelText);
+            currentLevelValue = inputLevel;
         }
     }
-    void resized() override {}
-    // override timer to repaint only meter region
-    void timerCallback() override
+
+    void reset()
     {
-        repaint(meterXPosition, meterYPosition, meterTotalWidth, meterTotalHeight);
-    }
-    // get total used width and height for setting component bounds
-    int getMeterWidth()
-    {
-        return meterTotalWidth + meterXPosition + 20;
-    }
-    int getMeterHeight()
-    {
-        return meterTotalHeight + meterYPosition + 25;
+        currentLevelValue = -100.0f;
     }
 
 private:
-    const int fps{ 30 };
-    // meter bounds
-    const int meterXPosition{ 17 };
-    const int meterYPosition{ 20 };
-    const int meterWidth{ 10 };
-    const int meterTotalWidth{ meterWidth * 2 + 1};
-    const int meterTotalHeight{ 200 };
-    // meter settings
-    const float meterBottomLevel{ -40.f };  // lowest reoslution of meter
-    std::array<float, 2> meterLevel{ meterBottomLevel, meterBottomLevel };
-    const float decayRate{ 2.0f };
-    const juce::ColourGradient meterFgColor{ juce::Colours::yellow, juce::Point<int>(meterXPosition, meterYPosition).toFloat(), 
-        juce::Colours::red, juce::Point<int>(meterXPosition, meterYPosition + meterTotalHeight).toFloat(), false };
-    juce::ColourGradient meterOverlay{ juce::Colour(0x66ff0000), juce::Point<int>(meterXPosition, meterYPosition).toFloat(),
-        juce::Colour(0x66ff0000), juce::Point<int>(meterXPosition + meterTotalWidth, meterYPosition).toFloat(), false };
-    // meter markings
-    const int markTextXPosition{ meterXPosition + meterTotalWidth };
-    const std::array<int, 7> marksText{ 0, -6, -12, -18, -24, -30, -36 };
-    // level label
-    LevelLabelLookAndFeel levelLabelLookAndFeel;
-    juce::TextButton levelLabel;
+    LevelLabelLookAndFeel laf;
     float currentLevelValue{ -100.0f };
-    const juce::Rectangle<int> levelLabelBounds{ meterXPosition + meterWidth - 35, meterYPosition + meterTotalHeight + 3, 70, 20 };
-    const juce::Font xxii{ juce::Typeface::createSystemTypefaceFor(BinaryData::XXIIAvenRegular_ttf, 
-        BinaryData::XXIIAvenRegular_ttfSize) };
-    // meter outline
-    const juce::Rectangle<int> meterOutlineBounds{ meterXPosition - 1, meterYPosition - 1, meterTotalWidth + 2, meterTotalHeight + 2 };
-    const juce::Rectangle<int> meterSplitLine{ meterXPosition + meterWidth, meterYPosition, 2, meterTotalHeight };
-    // pointers for processor gain reduction variables
-    float* gainReductionLeft;
-    float* gainReductionRight;
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GainReductionMeter)
 };
 
-class Meter : public juce::Component, public juce::Timer
+class ClipLight : public juce::TextButton
 {
 public:
     class ClipLightLookAndFeel : public juce::LookAndFeel_V4
@@ -193,181 +107,280 @@ public:
         }
     };
 
-    class LevelLabelLookAndFeel : public juce::LookAndFeel_V4
+    ClipLight(LevelLabel& levelLabel)
     {
-    public:
-        void drawButtonBackground(juce::Graphics&, juce::Button&, const juce::Colour&, bool, bool) override {}
-        void drawButtonText(juce::Graphics& g, juce::TextButton& button, bool, bool) override
+        setLookAndFeel(&laf);
+        turnOff();
+        onClick = [&]() {
+            turnOff();
+            levelLabel.reset();
+        };
+    }
+
+    void updateValue(float maxBufferLevel)
+    {
+        if (maxBufferLevel > 1.0f)
         {
-            const auto xxii = juce::Font(juce::Typeface::createSystemTypefaceFor(BinaryData::XXIIAvenRegular_ttf, 
-                BinaryData::XXIIAvenRegular_ttfSize));
-            g.setFont(xxii.withHeight(14.0f));
-            g.setColour(juce::Colours::grey);
-            const auto yIndent = juce::jmin(4, button.proportionOfHeight(0.3f));
-            const auto cornerSize = juce::jmin(button.getHeight(), button.getWidth()) / 2;
-            const auto fontHeight = juce::roundToInt(xxii.getHeight() * 0.6f);
-            const auto leftIndent = juce::jmin(fontHeight, 2 + cornerSize / (button.isConnectedOnLeft() ? 4 : 2));
-            const auto rightIndent = juce::jmin(fontHeight, 2 + cornerSize / (button.isConnectedOnRight() ? 4 : 2));
-            const auto textWidth = button.getWidth() - leftIndent - rightIndent;
-            if (textWidth > 0)
-                g.drawFittedText(button.getButtonText(),
-                    leftIndent, yIndent, textWidth, button.getHeight() - yIndent * 2,
-                    juce::Justification::centredTop, 2);
+            turnOn();
         }
+    }
+
+private:
+    void turnOn()
+    {
+        setColour(juce::TextButton::buttonColourId, juce::Colours::black);
     };
 
-    Meter(float& inputL, float& inputR)
+    void turnOff()
+    {
+        setColour(juce::TextButton::buttonColourId, juce::Colours::white);
+    };
+
+    ClipLightLookAndFeel laf;
+};
+
+class GainReductionMeter : public juce::Component, public juce::Timer
+{
+public:
+    GainReductionMeter(float& inputL, float& inputR)
     {
         meterOverlay.addColour(0.5f, juce::Colour(0x99ff0000));
         levelLabel.setBounds(levelLabelBounds);
-        levelLabel.setLookAndFeel(&levelLabelLookAndFeel);
-        levelLabel.onClick = [&]() {
-            currentLevelValue = -100.0f;
-        };
         addAndMakeVisible(levelLabel);
-        clipLight.setBounds(clipLightBounds);
-        clipLight.setLookAndFeel(&clipLightLookAndFeel);
-        clipLight.setColour(juce::TextButton::buttonColourId, juce::Colours::white);
-        clipLight.onClick = [&]() {
-            clipLight.setColour(juce::TextButton::buttonColourId, juce::Colours::white);
-            currentLevelValue = -100.0f;
-        };
-        addAndMakeVisible(clipLight);
-        startTimerHz(fps);
-        // read in inputs from processor
-        bufferMagnitudeL = &inputL;
-        bufferMagnitudeR = &inputR;
+        startTimerHz(30);
+        gainReduction = { &inputL, &inputR };
+    }
+
+    void drawLabel(juce::Graphics& g)
+    {
+        g.setFont(xxii.withHeight(14.0f));
+        g.setColour(juce::Colours::grey);
+        g.drawText("GR", juce::Rectangle<int>(bandBounds[0].getX(), 0, 20, bandBounds[0].getY()),
+            juce::Justification::centredTop, false);
+    }
+
+    void drawMeterOutline(juce::Graphics& g)
+    {
+        g.setColour(juce::Colour(0xff303030));
+        g.drawRect(bandBounds[0].expanded(1), 1);
+        g.drawRect(bandBounds[1].expanded(1), 1);
+    }
+
+    void drawScaleMarkings(juce::Graphics& g)
+    {
+        g.setFont(9.0f);
+        for (const int& mark : marksText)
+        {
+            const float heightPercentage = bandBounds[0].getHeight() * mark * (1.0f / meterBottomLevel);
+            const int markYPosition = static_cast<int>(1 + bandBounds[0].getY() + heightPercentage);
+            g.setColour(juce::Colours::grey);
+            g.drawText(juce::String(mark), bandBounds[1].getRight(), markYPosition - 6,
+                20, 10, juce::Justification::centred, false);
+            g.drawRect(0, markYPosition - 1, 4, 1);
+        }
+    }
+
+    void drawMeter(juce::Graphics& g, float level, int channel)
+    {
+        const auto bounds = bandBounds[channel];
+        int currentLevelY = bounds.getY() - static_cast<int>(level * bounds.getHeight() / meterBottomLevel);
+        currentLevelY = std::min(std::max(currentLevelY, bounds.getY()), bounds.getBottom());
+        // draw background
+        g.setColour(juce::Colours::black);
+        g.fillRect(juce::Rectangle<int>(
+            bounds.getX(), currentLevelY, bounds.getWidth(), bounds.getBottom() - currentLevelY
+            ));
+        // draw foreground
+        g.setGradientFill(meterFgColor);
+        g.fillRect(bounds.getX(), bounds.getY(), bounds.getWidth(), currentLevelY - bounds.getY());
+        g.setGradientFill(meterOverlay);
+        g.fillRect(bounds.getX(), bounds.getY(), bounds.getWidth(), currentLevelY - bounds.getY());
     }
 
     void paint(juce::Graphics& g) override
     {
-        // draw meter outline
-        g.setColour(juce::Colour(0xff303030));
-        g.drawRect(meterOutlineBounds, 1);
-        g.fillRect(meterSplitLine);
-        g.drawRect(clipLightBounds.expanded(1), 1);
-        // draw scale markings
-        g.setFont(9.0f);
-        for (const int& mark : marksText)
+        drawLabel(g);
+        drawMeterOutline(g);
+        drawScaleMarkings(g);
+        std::array<float, 2> inputLevel = { *gainReduction[0], *gainReduction[1] };
+        const float maxInputLevel = std::max(inputLevel[0], inputLevel[1]);
+        levelLabel.updateValue(juce::Decibels::decibelsToGain(maxInputLevel));
+        for (int channel = 0; channel < numOutputs; channel++)
         {
-            const int markYPosition = static_cast<int>(round(1.0f + meterYPosition + meterTotalHeight * (mark * 1.0f / meterBottomLevel)));
-            g.setColour(juce::Colours::grey);
-            g.drawText(juce::String(mark), markTextXPosition, static_cast<int>(markYPosition - 9 / 2) - 2,
-                20, 10, juce::Justification::centred, false);
-            g.drawRect(markTickXPosition, markYPosition - 1, 4, 1);
-        }
-        // get magnitude from processor
-        std::array<float, 2> bufferLevel = { *bufferMagnitudeL, *bufferMagnitudeR };
-        // update level label if new peak found
-        const float maxBufferLevel = std::max(bufferLevel[0], bufferLevel[1]);
-        if (maxBufferLevel > currentLevelValue)
-        {
-            float bufferDecibelValue = juce::Decibels::gainToDecibels(maxBufferLevel);
-            juce::String labelText = "";
-            if (bufferDecibelValue == -100.0f)
-            {
-                labelText = "-INF";
-            }
-            else if (bufferDecibelValue > 0.0f)
-            {
-                labelText = "+" + (juce::String(juce::Decibels::gainToDecibels(maxBufferLevel), 1)) + " dB";
-            }
-            else
-            {
-                labelText = (juce::String(juce::Decibels::gainToDecibels(maxBufferLevel), 1)) + " dB";
-            }
-            levelLabel.setButtonText(labelText);
-            currentLevelValue = maxBufferLevel;
-        }
-        // turn on clip light if level goes over 0.0dBFS -> 1.0f gain
-        if (maxBufferLevel > 1.0f)
-        {
-            clipLight.setColour(juce::TextButton::buttonColourId, juce::Colours::black);
-        }
-        for (int channel = 0; channel < 2; channel++)
-        {
-            // test buffer level and meter level for decay purposes
-            if (bufferLevel[channel] < meterLevel[channel])
+            // test gain reduction and meter level for decay purposes
+            if (inputLevel[channel] < meterLevel[channel])
             {
                 meterLevel[channel] *= (1 - (1.0f / decayRate));
             }
             else
             {
-                meterLevel[channel] = bufferLevel[channel];
+                meterLevel[channel] = inputLevel[channel];
             }
-            // calculate meter height using Decibel scale within bounds
-            int meterTopPosition = meterYPosition - static_cast<int>(round(juce::Decibels::gainToDecibels(
-                meterLevel[channel]) * meterTotalHeight / meterBottomLevel * -1));
-            meterTopPosition = std::min(std::max(meterTopPosition, meterYPosition), meterYPosition + meterTotalHeight);
-            const int bandXPosition = (channel == 0) ? meterXPosition : meterXPosition + meterWidth + 1;
-            // draw meter background
-            g.setColour(juce::Colours::black);
-            g.fillRect(bandXPosition, meterYPosition, meterWidth, meterTopPosition - meterYPosition);
-            // draw meter foreground
-            g.setGradientFill(meterFgColor);
-            g.fillRect(bandXPosition, meterTopPosition, meterWidth, meterYPosition + meterTotalHeight - meterTopPosition);
-            g.setGradientFill(meterOverlay);
-            g.fillRect(bandXPosition, meterTopPosition, meterWidth, meterYPosition + meterTotalHeight - meterTopPosition);
+            drawMeter(g, meterLevel[channel], channel);
         }
     }
     void resized() override {}
-    // override timer to repaint only meter region
+
     void timerCallback() override
     {
-        repaint(meterXPosition, meterYPosition, meterTotalWidth, meterTotalHeight);
+        for (const auto& bounds : bandBounds)
+            repaint(bounds);
     }
-    // get total used width and height for setting component bounds
+
     int getMeterWidth()
     {
-        return meterTotalWidth + meterXPosition + 20;
+        return bandBounds[1].getRight() + 20;
     }
+
     int getMeterHeight()
     {
-        return meterTotalHeight + meterYPosition + 25;
+        return bandBounds[0].getBottom() + 28;
     }
 
 private:
-    const int fps{ 30 };
-    // meter settings
-    const float meterBottomLevel{ -60.f };  // lowest reoslution of meter
-    std::array<float, 2> meterLevel{ meterBottomLevel, meterBottomLevel };
-    const float decayRate{ 5.0f };
-    // meter bounds
-    const int meterXPosition{ 15 };
-    const int meterYPosition{ 12 };
-    const int meterWidth{ 10 };
-    const int meterTotalWidth{ 1 + meterWidth * 2 };
-    const int meterTotalHeight{ 200 };
-    // meter markings
-    const int markTextXPosition{ meterXPosition + meterTotalWidth };
-    const int markTickXPosition{ meterXPosition - 9 };
-    const std::array<int, 8> marksText{ 0, -3, -6, -10, -16, -22, -32, -48 };
-    // meter colors
-    const juce::ColourGradient meterFgColor{ juce::Colours::yellow, juce::Point<int>(meterXPosition, meterYPosition).toFloat(),
-        juce::Colours::orangered, juce::Point<int>(meterXPosition, meterYPosition + meterTotalHeight).toFloat(), false };
-    juce::ColourGradient meterOverlay{ juce::Colour(0x66ff0000), juce::Point<int>(meterXPosition, meterYPosition).toFloat(),
-        juce::Colour(0x66ff0000), juce::Point<int>(meterXPosition + meterTotalWidth, meterYPosition).toFloat(), false };
-    // level label/button
-    LevelLabelLookAndFeel levelLabelLookAndFeel;
-    juce::TextButton levelLabel;
-    float currentLevelValue{ -100.0f };
-    const int levelLabelWidth{ 70 };
-    const juce::Rectangle<int> levelLabelBounds{ meterXPosition + meterWidth - (levelLabelWidth / 2), 
-        meterYPosition + meterTotalHeight + 3, levelLabelWidth, 20 };
-    // clip light/button
-    ClipLightLookAndFeel clipLightLookAndFeel;
-    juce::TextButton clipLight;
-    const int clipLightHeight{ 10 };
-    const juce::Rectangle<int> clipLightBounds{ meterXPosition, meterYPosition - clipLightHeight, 
-        meterTotalWidth, clipLightHeight - 1};
-    // meter outline
-    const juce::Rectangle<int> meterOutlineBounds{ meterXPosition - 1, meterYPosition - clipLightHeight - 1, 
-        meterTotalWidth + 2, meterTotalHeight + clipLightHeight + 2 };
-    const juce::Rectangle<int> meterSplitLine{ meterXPosition + meterWidth, meterYPosition - clipLightHeight, 
-        2, meterTotalHeight + clipLightHeight };
-    // pointers for processor magnitude variables
-    float* bufferMagnitudeL;
-    float* bufferMagnitudeR;
+    const float meterBottomLevel{ -40.f };  // lowest reoslution of meter
+    const float decayRate{ 2.0f };
+    std::array<float, numOutputs> meterLevel{ meterBottomLevel, meterBottomLevel };
+    std::array<float*, numOutputs> gainReduction;
+    const std::array<int, 7> marksText{ 0, -6, -12, -18, -24, -30, -36 };
+    LevelLabel levelLabel;
+    const std::array<juce::Rectangle<int>, numOutputs> bandBounds{
+        juce::Rectangle<int>(10, 20, 10, 200),
+        juce::Rectangle<int>(21, 20, 10, 200) };
+    const juce::Rectangle<int> levelLabelBounds{ 0, bandBounds[0].getBottom() + 5,
+        bandBounds[1].getRight() + 10, 20 };
+    const juce::ColourGradient meterFgColor{ juce::Colours::yellow,
+        juce::Point<int>(bandBounds[0].getX(), bandBounds[0].getY()).toFloat(),
+        juce::Colours::orangered,
+        juce::Point<int>(bandBounds[0].getX(), bandBounds[0].getBottom()).toFloat(), false };
+    juce::ColourGradient meterOverlay{ juce::Colour(0x66ff0000),
+        juce::Point<int>(bandBounds[0].getX(), bandBounds[0].getY()).toFloat(),
+        juce::Colour(0x66ff0000),
+        juce::Point<int>(bandBounds[1].getRight(), bandBounds[0].getY()).toFloat(), false };
+    const juce::Font xxii{ juce::Typeface::createSystemTypefaceFor(BinaryData::XXIIAvenRegular_ttf,
+        BinaryData::XXIIAvenRegular_ttfSize) };
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Meter)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GainReductionMeter)
+};
+
+class LevelMeter : public juce::Component, public juce::Timer
+{
+public:
+    LevelMeter(float& inputL, float& inputR)
+    {
+        meterOverlay.addColour(0.5f, juce::Colour(0x99ff0000));
+        levelLabel.setBounds(levelLabelBounds);
+        addAndMakeVisible(levelLabel);
+        clipLight.setBounds(clipLightBounds);
+        addAndMakeVisible(clipLight);
+        startTimerHz(30);
+        bufferMagnitude = { &inputL, &inputR };
+    }
+
+    void drawMeterOutline(juce::Graphics& g)
+    {
+        g.setColour(juce::Colour(0xff303030));
+        g.drawRect(clipLightBounds.expanded(1), 1);
+        g.drawRect(bandBounds[0].expanded(1), 1);
+        g.drawRect(bandBounds[1].expanded(1), 1);
+    }
+    
+    void drawScaleMarkings(juce::Graphics& g)
+    {
+        g.setFont(9.0f);
+        for (const int& mark : marksText)
+        {
+            const float heightPercentage = bandBounds[0].getHeight() * mark * (1.0f / meterBottomLevel);
+            const int markYPosition = static_cast<int>(1 + bandBounds[0].getY() + heightPercentage);
+            g.setColour(juce::Colours::grey);
+            g.drawText(juce::String(mark), bandBounds[1].getRight(), markYPosition - 6,
+                20, 10, juce::Justification::centred, false);
+            g.drawRect(0, markYPosition - 1, 4, 1);
+        }
+    }
+
+    void drawMeter(juce::Graphics& g, float level, int channel)
+    {
+        const auto bounds = bandBounds[channel];
+        int currentLevelY = bounds.getY() + static_cast<int>(juce::Decibels::gainToDecibels(level)
+            * bounds.getHeight() / meterBottomLevel);
+        currentLevelY = std::min(std::max(currentLevelY, bounds.getY()), bounds.getBottom());
+        // draw background
+        g.setColour(juce::Colours::black);
+        g.fillRect(bounds.withHeight(currentLevelY - bounds.getY()));
+        // draw foreground
+        g.setGradientFill(meterFgColor);
+        g.fillRect(bounds.getX(), currentLevelY, bounds.getWidth(), 
+            bounds.getY() + bounds.getHeight() - currentLevelY);
+        g.setGradientFill(meterOverlay);
+        g.fillRect(bounds.getX(), currentLevelY, bounds.getWidth(), 
+            bounds.getY() + bounds.getHeight() - currentLevelY);
+    }
+
+    void paint(juce::Graphics& g) override
+    {
+        drawMeterOutline(g);
+        drawScaleMarkings(g);
+        // get magnitude from processor
+        std::array<float, numOutputs> inputLevel = { *bufferMagnitude[0], *bufferMagnitude[1] };
+        const float maxBufferLevel = std::max(inputLevel[0], inputLevel[1]);
+        levelLabel.updateValue(maxBufferLevel);
+        clipLight.updateValue(maxBufferLevel);
+        for (int channel = 0; channel < numOutputs; channel++)
+        {
+            // test input level and meter level for decay purposes
+            if (inputLevel[channel] < meterLevel[channel])
+            {
+                meterLevel[channel] *= (1 - (1.0f / decayRate));
+            }
+            else
+            {
+                meterLevel[channel] = inputLevel[channel];
+            }
+            drawMeter(g, meterLevel[channel], channel);
+        }
+    }
+
+    void resized() override {}
+
+    void timerCallback() override
+    {
+        for (const auto& bounds : bandBounds)
+            repaint(bounds);
+    }
+
+    int getMeterWidth()
+    {
+        return bandBounds[1].getRight() + 20;
+    }
+
+    int getMeterHeight()
+    {
+        return bandBounds[0].getBottom() + 28;
+    }
+
+private:
+    const float meterBottomLevel{ -60.f };  // lowest reoslution of meter
+    const float decayRate{ 5.0f };
+    std::array<float, numOutputs> meterLevel{ meterBottomLevel, meterBottomLevel };
+    std::array<float*, numOutputs> bufferMagnitude;
+    const std::array<int, 8> marksText{ 0, -3, -6, -10, -16, -22, -32, -48 };
+    LevelLabel levelLabel;
+    ClipLight clipLight{ levelLabel };
+    const std::array<juce::Rectangle<int>, numOutputs> bandBounds{
+        juce::Rectangle<int>(10, 12, 10, 200),
+        juce::Rectangle<int>(21, 12, 10, 200) };
+    const juce::Rectangle<int> clipLightBounds{ 10, 1, 21, 10 };
+    const juce::Rectangle<int> levelLabelBounds{ 0, bandBounds[0].getBottom() + 5, 
+        bandBounds[1].getRight() + 10, 20 };
+    const juce::ColourGradient meterFgColor{ juce::Colours::yellow, 
+        juce::Point<int>(bandBounds[0].getX(), bandBounds[0].getY()).toFloat(),
+        juce::Colours::orangered, 
+        juce::Point<int>(bandBounds[0].getX(), bandBounds[0].getBottom()).toFloat(), false };
+    juce::ColourGradient meterOverlay{ juce::Colour(0x66ff0000), 
+        juce::Point<int>(bandBounds[0].getX(), bandBounds[0].getY()).toFloat(),
+        juce::Colour(0x66ff0000), 
+        juce::Point<int>(bandBounds[1].getRight(), bandBounds[0].getY()).toFloat(), false };
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LevelMeter)
 };
