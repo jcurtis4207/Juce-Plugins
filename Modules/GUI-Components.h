@@ -19,44 +19,34 @@ public:
         {
             return juce::BubbleComponent::above;
         }
+
         juce::Font getSliderPopupFont(juce::Slider&) override
         {
             return juce::Font(12.0f, juce::Font::plain);
         }
+
         void drawBubble(juce::Graphics& g, juce::BubbleComponent&, const juce::Point<float>&, 
             const juce::Rectangle<float>& body) override
         {
             g.setColour(juce::Colours::black);
             g.fillRect(body);
         }
-        void drawRotarySlider(juce::Graphics& g, int, int, int width, int height, float sliderPos, 
-            float rotaryStartAngle, float rotaryEndAngle, juce::Slider& slider)
+
+        void drawShadow(juce::Graphics& g, juce::Rectangle<float> circleArea)
         {
-            // disable textbox
-            slider.setTextBoxStyle(juce::Slider::NoTextBox, true, 0, 0);
-            slider.setPopupDisplayEnabled(true, true, nullptr);
-            // get dimensions
-            const float textHeight = 14.0f;
-            const float diameter = juce::jmin(static_cast<float>(height - textHeight), static_cast<float>(width));
-            const float radius = diameter * 0.5f;
-            const float centerX = static_cast<float>(width * 0.5f);
-            const float centerY = radius;
-            const float xPosition = centerX - radius;
-            const float angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
-            const auto circleArea = juce::Rectangle<float>(xPosition, 0.0f, diameter, diameter);
-            // set hit box
-            SmallKnob* knob = static_cast<SmallKnob*>(&slider);
-            knob->setHitArea(juce::Point<float>(centerX, centerY), radius);
-            // create shadow
             juce::Path shadow;
             shadow.addEllipse(circleArea.reduced(4.0f));
-            const auto dropShadow = juce::DropShadow(juce::Colour(0xff000000), 15, juce::Point<int>(0, 10));
             dropShadow.drawForPath(g, shadow);
-            // draw bumps
+        }
+
+        void drawBumps(juce::Graphics& g, juce::Rectangle<float> circleArea, 
+            float angle, float diameter, float centerX, float centerY)
+        {
             const float bumpGap = 0.15f;
             const auto bumpFill = juce::Rectangle<float>(
-                juce::Point<float>(centerX, centerY).getPointOnCircumference(radius, (juce::float_Pi / 3.0f) + bumpGap),
-                juce::Point<float>(centerX, centerY).getPointOnCircumference(radius, 
+                juce::Point<float>(centerX, centerY).getPointOnCircumference(centerY, 
+                    (juce::float_Pi / 3.0f) + bumpGap),
+                juce::Point<float>(centerX, centerY).getPointOnCircumference(centerY,
                     (2 * juce::float_Pi / 3.0f) - bumpGap).translated(-10.0f, 0.0f));
             juce::Path bumps;
             for (int i = 0; i < 6; i++)
@@ -66,35 +56,66 @@ public:
                 bumps.applyTransform(juce::AffineTransform::rotation(juce::float_Pi / 3.0f, centerX, centerY));
             }
             bumps.applyTransform(juce::AffineTransform::rotation(angle, centerX, centerY));
-            g.setGradientFill(juce::ColourGradient(juce::Colour(0xffb0b0b0), centerX, 0, 
+            g.setGradientFill(juce::ColourGradient(juce::Colour(0xffb0b0b0), centerX, 0,
                 juce::Colour(0xff303030), centerX, diameter, false));
             g.fillPath(bumps);
-            // draw outer circle
+        }
+
+        void drawKnobFace(juce::Graphics& g, juce::Rectangle<float> circleArea, float diameter)
+        {
             g.drawEllipse(circleArea.reduced(4.0f), 4.0f);
-            // draw inner circle
-            auto innerGradient = juce::ColourGradient(juce::Colour(0xff303030), centerX, 0, 
-                juce::Colour(0xff303030), centerX, diameter, false);
+            auto innerGradient = juce::ColourGradient(juce::Colour(0xff303030), 0, 0,
+                juce::Colour(0xff303030), 0, diameter, false);
             innerGradient.addColour(0.5f, juce::Colour(0xff202020));
             g.setGradientFill(innerGradient);
             g.fillEllipse(circleArea.reduced(4.0f));
-            g.setGradientFill(juce::ColourGradient(juce::Colour(0xff505050), centerX, 0, 
-                juce::Colour(0xff101010), centerX, diameter, false));
+            g.setGradientFill(juce::ColourGradient(juce::Colour(0xff505050), 0, 0,
+                juce::Colour(0xff101010), 0, diameter, false));
             g.drawEllipse(circleArea.reduced(4.0f), 2.0f);
-            // draw pointer
+        }
+
+        void drawPointer(juce::Graphics& g, float angle, float centerX, float centerY)
+        {
             juce::Path pointer;
-            const float pointerLength = radius * 0.8f;
+            const float pointerLength = centerY * 0.8f;
             const float pointerThickness = 4.0f;
             pointer.addRectangle(centerX - (pointerThickness * 0.5f), 4.0f, pointerThickness, pointerLength);
             pointer.applyTransform(juce::AffineTransform::rotation(angle, centerX, centerY));
             g.setColour(juce::Colour(0xffa0a0a0));
             g.fillPath(pointer);
-            // draw label
+        }
+
+        void drawLabel(juce::Graphics& g, juce::Rectangle<float> circleArea, 
+            float textHeight, juce::String labelText)
+        {
             g.setColour(juce::Colours::grey);
             g.setFont(xxii.withHeight(textHeight));
-            g.drawText(slider.getName(), 0, static_cast<int>(diameter + 10), width, static_cast<int>(textHeight), 
-                juce::Justification::centredTop, false);
+            g.drawText(labelText, juce::Rectangle<float>(0, circleArea.getBottom() + 10.0f, 
+                circleArea.getWidth(), textHeight), juce::Justification::centredTop, false);
+        }
+
+        void drawRotarySlider(juce::Graphics& g, int, int, int width, int height, float sliderPos, 
+            float rotaryStartAngle, float rotaryEndAngle, juce::Slider& slider)
+        {
+            slider.setTextBoxStyle(juce::Slider::NoTextBox, true, 0, 0);
+            slider.setPopupDisplayEnabled(true, true, nullptr);
+            const float textHeight = 14.0f;
+            const float diameter = juce::jmin(static_cast<float>(height - textHeight), static_cast<float>(width));
+            const float centerX = static_cast<float>(width * 0.5f);
+            const float centerY = diameter * 0.5f;
+            const float angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
+            const auto circleArea = juce::Rectangle<float>(centerX - centerY, 0.0f, diameter, diameter);
+            drawShadow(g, circleArea);
+            drawBumps(g, circleArea, angle, diameter, centerX, centerY);
+            drawKnobFace(g, circleArea, diameter);
+            drawPointer(g, angle, centerX, centerY);
+            drawLabel(g, circleArea, textHeight, slider.getName());
+            // set hit box
+            SmallKnob* knob = static_cast<SmallKnob*>(&slider);
+            knob->setHitArea(juce::Point<float>(centerX, centerY), centerY);
         }
     private:
+        const juce::DropShadow dropShadow{ juce::Colour(0xff000000), 15, juce::Point<int>(0, 10) };
         const juce::Font xxii{ juce::Typeface::createSystemTypefaceFor(BinaryData::XXIIAvenRegular_ttf, 
             BinaryData::XXIIAvenRegular_ttfSize) };
     };
@@ -105,12 +126,8 @@ public:
         setLookAndFeel(&laf);
         setName(name);
         setTextValueSuffix(juce::String(" ")+suffix);
-        knobRadius = 0.0f;
-        center = juce::Point<float>(0.0f, 0.0f);
         setPaintingIsUnclipped(true);
     }
-
-    ~SmallKnob() {}
 
     void setHitArea(juce::Point<float> p, float r)
     {
@@ -127,8 +144,8 @@ public:
     }
     
 private:
-    juce::Point<float> center;
-    float knobRadius;
+    juce::Point<float> center{ 0.0f, 0.0f };
+    float knobRadius{ 0.0f };
     SmallKnobLaF laf;
 };
 
@@ -143,61 +160,78 @@ public:
         {
             return juce::BubbleComponent::above;
         }
+
         juce::Font getSliderPopupFont(juce::Slider&) override
         {
             return juce::Font(12.0f, juce::Font::plain);
         }
+
         void drawBubble(juce::Graphics& g, juce::BubbleComponent&, const juce::Point<float>&, 
             const juce::Rectangle<float>& body) override
         {
             g.setColour(juce::Colours::black);
             g.fillRect(body);
         }
-        void drawRotarySlider(juce::Graphics& g, int, int, int width, int height, float sliderPos, 
-            float rotaryStartAngle, float rotaryEndAngle, juce::Slider& slider)
+
+        void drawKnobFace(juce::Graphics& g, juce::Rectangle<float> circleArea)
         {
-            // disable textbox
-            slider.setTextBoxStyle(juce::Slider::NoTextBox, true, 0, 0);
-            slider.setPopupDisplayEnabled(true, true, nullptr);
-            // get dimensions
-            const float textHeight = 14.0f;
-            const float diameter = juce::jmin(static_cast<float>(height - textHeight), static_cast<float>(width));
-            const float radius = diameter * 0.5f;
-            const float centerX = static_cast<float>(width * 0.5f);
-            const float centerY = radius;
-            const float xPosition = centerX - radius;
-            const float angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
-            const auto circleArea = juce::Rectangle<float>(xPosition, 0.0f, diameter, diameter);
-            // set hit box
-            OuterKnob* knob = static_cast<OuterKnob*>(&slider);
-            knob->setHitArea(juce::Point<float>(centerX, centerY), radius);
-			// create shadow
+            // create shadow
             juce::Path shadow;
             shadow.addEllipse(circleArea.reduced(2.0f));
-            const auto dropShadow = juce::DropShadow(juce::Colour(0xff000000), 10, juce::Point<int>(0, 5));
             dropShadow.drawForPath(g, shadow);
             // draw knob face
-            g.setGradientFill(juce::ColourGradient(juce::Colour(0xffb0b0b0), centerX, 0, 
-                juce::Colour(0xff303030), centerX, diameter, false));
+            g.setGradientFill(juce::ColourGradient(juce::Colour(0xffb0b0b0), 0, 0,
+                juce::Colour(0xff303030), 0, circleArea.getWidth(), false));
             g.fillEllipse(circleArea);
             g.setColour(juce::Colours::black);
             g.drawEllipse(circleArea, 1.0f);
-            // draw knob hole
+        }
+
+        void drawKnobHole(juce::Graphics& g, juce::Rectangle<float> circleArea)
+        {
+            // draw hole
             g.setColour(juce::Colours::black);
-            auto hole = juce::Rectangle<float>(circleArea.getCentreX() - 28, circleArea.getCentreY() - 28, 56, 56);
+            auto hole = juce::Rectangle<float>(circleArea.getCentreX() - 28, 
+                circleArea.getCentreY() - 28, 56, 56);
             g.fillEllipse(hole);
-            // draw knob hole rim
+            // draw hole rim
             hole.expand(1.0f, 1.0f);
             g.setGradientFill(juce::ColourGradient(juce::Colour(0xff303030), hole.getX(), hole.getY(),
                 juce::Colour(0xffb0b0b0), hole.getX(), hole.getBottom(), false));
             g.drawEllipse(hole, 2.0f);
-            // draw pointer
+        }
+
+        void drawPointer(juce::Graphics& g, float angle, float center)
+        {
             juce::Path pointer;
-            pointer.addEllipse(centerX - 2.5f, 3.0f, 5.0f, 5.0f);
-            pointer.applyTransform(juce::AffineTransform::rotation(angle, centerX, centerY));
+            pointer.addEllipse(center - 2.5f, 3.0f, 5.0f, 5.0f);
+            pointer.applyTransform(juce::AffineTransform::rotation(angle, center, center));
             g.setColour(juce::Colour(0xff202020));
             g.fillPath(pointer);
         }
+
+        void drawRotarySlider(juce::Graphics& g, int, int, int width, int height, 
+            float sliderPos, float rotaryStartAngle, float rotaryEndAngle, juce::Slider& slider)
+        {
+            slider.setTextBoxStyle(juce::Slider::NoTextBox, true, 0, 0);
+            slider.setPopupDisplayEnabled(true, true, nullptr);
+            const float textHeight = 14.0f;
+            const float diameter = juce::jmin(static_cast<float>(height - textHeight), 
+                static_cast<float>(width));
+            const float angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
+            const auto circleArea = juce::Rectangle<float>((width * 0.5f) - (diameter * 0.5f), 
+                0.0f, diameter, diameter);
+            drawKnobFace(g, circleArea);
+            drawKnobHole(g, circleArea);
+            drawPointer(g, angle, circleArea.getCentreX());
+            // set hit box
+            OuterKnob* knob = static_cast<OuterKnob*>(&slider);
+            knob->setHitArea(juce::Point<float>(circleArea.getCentreX(), 
+                circleArea.getCentreY()), diameter * 0.5f);
+        }
+
+    private:
+        const juce::DropShadow dropShadow{ juce::Colour(0xff000000), 10, juce::Point<int>(0, 5) };
     };
 
     OuterKnob(const juce::String& suffix="")
@@ -205,11 +239,7 @@ public:
         setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
         setTextValueSuffix(juce::String(" ") + suffix);
         setLookAndFeel(&laf);
-        knobRadius = 0.0f;
-        center = juce::Point<float>(0.0f, 0.0f);
     }
-
-    ~OuterKnob() {}
 
     void setHitArea(juce::Point<float> p, float r)
     {
@@ -236,8 +266,8 @@ public:
     }
 
 private:
-    juce::Point<float> center;
-    float knobRadius;
+    juce::Point<float> center{ 0.0f, 0.0f };
+    float knobRadius{ 0.0f };
     OuterKnobLaF laf;
 };
 
@@ -252,93 +282,117 @@ public:
         {
             return juce::BubbleComponent::above;
         }
+
         juce::Font getSliderPopupFont(juce::Slider&) override
         {
             return juce::Font(12.0f, juce::Font::plain);
         }
+
         void drawBubble(juce::Graphics& g, juce::BubbleComponent&, const juce::Point<float>&, 
             const juce::Rectangle<float>& body) override
         {
             g.setColour(juce::Colours::black);
             g.fillRect(body);
         }
-        void drawRotarySlider(juce::Graphics& g, int, int, int width, int height, float sliderPos, 
-            float rotaryStartAngle, float rotaryEndAngle, juce::Slider& slider)
+
+        void drawMarks(juce::Graphics& g, float rotaryStartAngle, float rotaryEndAngle, 
+            float angle, float centerX, float centerY)
         {
-            // disable textbox
-            slider.setTextBoxStyle(juce::Slider::NoTextBox, true, 0, 0);
-            slider.setPopupDisplayEnabled(true, true, nullptr);
-            // get dimensions
-            const float textHeight = 14.0f;
-            const float diameter = juce::jmin(static_cast<float>(height - textHeight), static_cast<float>(width));
-            const float radius = diameter * 0.5f;
-            const float centerX = static_cast<float>(width * 0.5f);
-            const float centerY = radius;
-            const float xPosition = centerX - radius;
-            const float angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
-            auto circleArea = juce::Rectangle<float>(xPosition, 0.0f, diameter, diameter);
-            // calculate marks
             const float markAngle = (rotaryEndAngle - rotaryStartAngle) / 12;
-            const int markBin = static_cast<int>((angle - rotaryStartAngle) / ((rotaryEndAngle - rotaryStartAngle) / 12.0f));
+            const int activePosition = static_cast<int>((angle - rotaryStartAngle) / 
+                ((rotaryEndAngle - rotaryStartAngle) / 12.0f));
             juce::Path activeMarks, inactiveMarks;
             for (int i = 12; i >= 0; i--)
             {
-                if (i > markBin)
+                if (i > activePosition)
                     inactiveMarks.addRoundedRectangle(centerX - 1.0f, 0.0f, 2.0f, 8.0f, 1.0f);
                 else
                     activeMarks.addRoundedRectangle(centerX - 1.0f, 0.0f, 2.0f, 8.0f, 1.0f);
                 activeMarks.applyTransform(juce::AffineTransform::rotation(markAngle, centerX, centerY));
                 inactiveMarks.applyTransform(juce::AffineTransform::rotation(markAngle, centerX, centerY));
             }
-            activeMarks.applyTransform(juce::AffineTransform::rotation(rotaryStartAngle - 
+            activeMarks.applyTransform(juce::AffineTransform::rotation(rotaryStartAngle -
                 ((rotaryEndAngle - rotaryStartAngle) / 12), centerX, centerY));
-            inactiveMarks.applyTransform(juce::AffineTransform::rotation(rotaryStartAngle - 
+            inactiveMarks.applyTransform(juce::AffineTransform::rotation(rotaryStartAngle -
                 ((rotaryEndAngle - rotaryStartAngle) / 12), centerX, centerY));
             // fill marks
             g.setColour(juce::Colour(0xff404040));
             g.fillPath(inactiveMarks);
             g.setColour(juce::Colours::yellow);
             g.fillPath(activeMarks);
-            const auto glow = juce::DropShadow(juce::Colour(0x99ff0000), 20, juce::Point<int>(0, 0));
             glow.drawForPath(g, activeMarks);
-            // set hit box
-            circleArea.reduce(15.0f, 15.0f);
-            BigKnob* bigKnob = static_cast<BigKnob*>(&slider);
-            bigKnob->setHitArea(juce::Point<float>(centerX, centerY), circleArea.getWidth() * 0.5f);
-			// create shadow
+        }
+
+        void drawKnobFace(juce::Graphics& g, juce::Rectangle<float> circleArea)
+        {
+            // create shadow
             juce::Path shadow;
             shadow.addEllipse(circleArea);
-            const auto dropShadow = juce::DropShadow(juce::Colour(0xff000000), 15, juce::Point<int>(0, 10));
             dropShadow.drawForPath(g, shadow);
             // draw inner circle
-            auto innerGradient = juce::ColourGradient(juce::Colour(0xff303030), centerX, circleArea.getY(),
-                juce::Colour(0xff303030), centerX, circleArea.getBottom(), false);
+            auto innerGradient = juce::ColourGradient(juce::Colour(0xff303030), 0, circleArea.getY(),
+                juce::Colour(0xff303030), 0, circleArea.getBottom(), false);
             innerGradient.addColour(0.5f, juce::Colour(0xff202020));
             g.setGradientFill(innerGradient);
             g.fillEllipse(circleArea);
             // draw rim
-            g.setGradientFill(juce::ColourGradient(juce::Colour(0xff505050), centerX, circleArea.getY(),
-                juce::Colour(0xff000000), centerX, circleArea.getBottom(), false));
+            g.setGradientFill(juce::ColourGradient(juce::Colour(0xff505050), 0, circleArea.getY(),
+                juce::Colour(0xff000000), 0, circleArea.getBottom(), false));
             g.drawEllipse(circleArea.reduced(1.0f), 2.0f);
-            // draw pointer
+        }
+
+        void drawPointer(juce::Graphics& g, float angle, float centerX, float centerY)
+        {
             juce::Path pointer;
             pointer.addTriangle(centerX, 22.0f, centerX - 4.0f, 30.0f, centerX + 4.0f, 30.0f);
             pointer.applyTransform(juce::AffineTransform::rotation(angle, centerX, centerY));
             const auto pointerArea = pointer.getBounds();
-            g.setGradientFill(juce::ColourGradient(juce::Colours::yellow, pointerArea.getCentreX(), pointerArea.getCentreY(),
+            g.setGradientFill(juce::ColourGradient(juce::Colours::yellow, 
+                pointerArea.getCentreX(), pointerArea.getCentreY(),
                 juce::Colours::orange, pointerArea.getX(), pointerArea.getY(), true));
             g.fillPath(pointer);
-            g.setGradientFill(juce::ColourGradient(juce::Colour(0xff101010), pointerArea.getCentreX(), pointerArea.getY(),
+            g.setGradientFill(juce::ColourGradient(juce::Colour(0xff101010), 
+                pointerArea.getCentreX(), pointerArea.getY(),
                 juce::Colour(0xff505050), pointerArea.getCentreX(), pointerArea.getBottom(), false));
             g.strokePath(pointer, { 1.0f, juce::PathStrokeType::mitered, juce::PathStrokeType::butt });
             glow.drawForPath(g, pointer);
-            // draw label
+        }
+
+        void drawLabel(juce::Graphics& g, juce::Rectangle<float> circleArea, 
+            float textHeight, juce::String labelText)
+        {
             g.setColour(juce::Colours::grey);
             g.setFont(xxii.withHeight(textHeight));
-            g.drawText(slider.getName(), 0, static_cast<int>(diameter + 10), width, static_cast<int>(textHeight), 
-                juce::Justification::centredTop, false);
+            g.drawText(labelText, juce::Rectangle<float>(circleArea.getX(), circleArea.getBottom() + 15.0f, 
+                circleArea.getWidth(), textHeight), juce::Justification::centredTop, false);
         }
+
+        void drawRotarySlider(juce::Graphics& g, int, int, int width, int height, float sliderPos, 
+            float rotaryStartAngle, float rotaryEndAngle, juce::Slider& slider)
+        {
+            slider.setTextBoxStyle(juce::Slider::NoTextBox, true, 0, 0);
+            slider.setPopupDisplayEnabled(true, true, nullptr);
+            const float textHeight = 14.0f;
+            const float diameter = juce::jmin(static_cast<float>(height - textHeight), 
+                static_cast<float>(width));
+            const float centerX = static_cast<float>(width * 0.5f);
+            const float centerY = diameter * 0.5f;
+            const float angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
+            auto circleArea = juce::Rectangle<float>(centerX - centerY, 0.0f, diameter, diameter);
+            drawMarks(g, rotaryStartAngle, rotaryEndAngle, angle, centerX, centerY);
+            circleArea.reduce(15.0f, 15.0f);
+            drawKnobFace(g, circleArea);
+            drawPointer(g, angle, centerX, centerY);
+            drawLabel(g, circleArea, textHeight, slider.getName());
+            // set hit box
+            BigKnob* bigKnob = static_cast<BigKnob*>(&slider);
+            bigKnob->setHitArea(juce::Point<float>(centerX, centerY), circleArea.getWidth() * 0.5f);
+        }
+
     private:
+        const juce::DropShadow glow{ juce::Colour(0x99ff0000), 20, juce::Point<int>(0, 0) };
+        const juce::DropShadow dropShadow{ juce::Colour(0xff000000), 15, juce::Point<int>(0, 10) };
+
         const juce::Font xxii{ juce::Typeface::createSystemTypefaceFor(BinaryData::XXIIAvenRegular_ttf, 
             BinaryData::XXIIAvenRegular_ttfSize) };
     };
@@ -349,11 +403,7 @@ public:
         setTextValueSuffix(juce::String(" ") + suffix);
         setLookAndFeel(&laf);
         setName(name);
-        knobRadius = 0.0f;
-        center = juce::Point<float>(0.0f, 0.0f);
     }
-
-    ~BigKnob() {}
 
     void setHitArea(juce::Point<float> p, float r)
     {
@@ -371,8 +421,8 @@ public:
     }
 
 private:
-    juce::Point<float> center;
-    float knobRadius;
+    juce::Point<float> center{ 0.0f, 0.0f };
+    float knobRadius{ 0.0f };
     BigKnobLaF laf;
 };
 
@@ -383,47 +433,60 @@ public:
     class VerticalSliderLaF : public juce::LookAndFeel_V4
     {
     public:
-        void drawLinearSlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPos, float,
-            float, const juce::Slider::SliderStyle, juce::Slider& slider) override
-        {
-            // disable textbox
-            slider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
-            // draw track
-            const float trackWidth = 6.0f;
-            const auto trackRectangle = juce::Rectangle<float>(static_cast<float>(x + width * 0.5f) - (trackWidth * 0.5f), 
-                static_cast<float>(y), trackWidth, static_cast<float>(height + y - 5));
+        void drawTrack(juce::Graphics& g, juce::Rectangle<float> trackRectangle)
+        {           
             g.setColour(juce::Colours::black);
             g.fillRoundedRectangle(trackRectangle, 2.0f);
             g.setColour(juce::Colour(0xff303030));
             g.drawRoundedRectangle(trackRectangle, 2.0f, 1.0f);
-            // calculate thumb
-            const auto maxPoint = juce::Point<float>(trackRectangle.getCentreX(), sliderPos).toInt();
-            const auto thumbBounds = juce::Rectangle<int>(40, 20).withCentre(maxPoint);
-            // set hit box
-            VerticalSlider* verticalSlider = static_cast<VerticalSlider*>(&slider);
-            verticalSlider->setHitArea(maxPoint);
-            // draw shadow
-            const auto dropShadow = juce::DropShadow(juce::Colour(0xdd000000), 10, juce::Point<int>(0, 5));
+        }
+
+        void drawThumb(juce::Graphics& g, juce::Rectangle<int> thumbBounds)
+        {
             dropShadow.drawForRectangle(g, thumbBounds.reduced(2));
             // draw thumb
-            auto thumbGradient = juce::ColourGradient(juce::Colour(0xff303030), 
-                juce::Point<int>(thumbBounds.getX(), thumbBounds.getY()).toFloat(), 
-                juce::Colour(0xff303030), juce::Point<int>(thumbBounds.getX(), thumbBounds.getBottom()).toFloat(), false);
+            auto thumbGradient = juce::ColourGradient(juce::Colour(0xff303030),
+                juce::Point<int>(thumbBounds.getX(), thumbBounds.getY()).toFloat(),
+                juce::Colour(0xff303030), juce::Point<int>(thumbBounds.getX(), 
+                    thumbBounds.getBottom()).toFloat(), false);
             thumbGradient.addColour(0.5f, juce::Colour(0xff272727));
             g.setGradientFill(thumbGradient);
             g.fillRoundedRectangle(thumbBounds.toFloat(), 2.0f);
             // draw rim
             g.setGradientFill(juce::ColourGradient(juce::Colour(0xff505050),
                 juce::Point<int>(thumbBounds.getX(), thumbBounds.getY()).toFloat(),
-                juce::Colour(0xff101010), juce::Point<int>(thumbBounds.getX(), thumbBounds.getBottom()).toFloat(), false));
+                juce::Colour(0xff101010), juce::Point<int>(thumbBounds.getX(), 
+                    thumbBounds.getBottom()).toFloat(), false));
             g.drawRoundedRectangle(thumbBounds.toFloat(), 2.0f, 1.0f);
-            // draw value
+        }
+
+        void drawLabel(juce::Graphics& g, juce::Rectangle<int> thumbBounds, double value)
+        {
             g.setColour(juce::Colours::grey);
             g.setFont(xxii.withHeight(16.0f));
-            g.drawText(juce::String(slider.getValue(), 1), thumbBounds.translated(0, -1).toFloat(), 
+            g.drawText(juce::String(value, 1), thumbBounds.translated(0, -1).toFloat(),
                 juce::Justification::centred, false);
         }
+
+        void drawLinearSlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPos, 
+            float, float, const juce::Slider::SliderStyle, juce::Slider& slider) override
+        {
+            slider.setTextBoxStyle(juce::Slider::TextEntryBoxPosition::NoTextBox, true, 0, 0);
+            const float trackWidth = 6.0f;
+            const auto trackRectangle = juce::Rectangle<float>(
+                static_cast<float>(x + width * 0.5f) - (trackWidth * 0.5f), 
+                static_cast<float>(y), trackWidth, static_cast<float>(height + y - 5));
+            drawTrack(g, trackRectangle);
+            const auto maxPoint = juce::Point<float>(trackRectangle.getCentreX(), sliderPos).toInt();
+            const auto thumbBounds = juce::Rectangle<int>(40, 20).withCentre(maxPoint);
+            drawThumb(g, thumbBounds);
+            drawLabel(g, thumbBounds, slider.getValue());
+            // set hit box
+            VerticalSlider* verticalSlider = static_cast<VerticalSlider*>(&slider);
+            verticalSlider->setHitArea(maxPoint);
+        }
     private:
+        const juce::DropShadow dropShadow{ juce::Colour(0xdd000000), 10, juce::Point<int>(0, 5) };
         const juce::Font xxii{ juce::Typeface::createSystemTypefaceFor(BinaryData::XXIIAvenRegular_ttf, 
             BinaryData::XXIIAvenRegular_ttfSize) };
     };
@@ -434,7 +497,6 @@ public:
         setTextValueSuffix(juce::String(" ") + suffix);
         setLookAndFeel(&laf);
     }
-    ~VerticalSlider(){}
 
     void setHitArea(juce::Point<int> p)
     {
@@ -462,19 +524,9 @@ public:
     class LinkKnobLaF : public juce::LookAndFeel_V4
     {
     public:
-        void drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height, float,
-            const float, const float, juce::Slider& slider) override
+        void drawKnobFace(juce::Graphics& g, juce::Rectangle<float> boxArea)
         {
-            const float textHeight = 14.0f;
-            const float diameter = juce::jmin(static_cast<float>(width), static_cast<float>(height - textHeight)) - 4.0f;
-            const auto boxArea = juce::Rectangle<float>(static_cast<float>(width / 2 + x) - (diameter * 0.5f), 
-                static_cast<float>(y + textHeight), diameter, diameter);
-            // set hit box
-            LinkKnob* linkKnob = static_cast<LinkKnob*>(&slider);
-            linkKnob->setHitArea(boxArea);
-            // disable textbox
-            slider.setTextBoxStyle(juce::Slider::NoTextBox, true, 0, 0);
-            // draw outline
+            //draw outline
             g.setColour(juce::Colours::black);
             g.fillRoundedRectangle(boxArea.expanded(2.0f), 3.0f);
             // draw knob
@@ -487,21 +539,44 @@ public:
             g.setGradientFill(juce::ColourGradient(juce::Colour(0xff505050), boxArea.getX(), boxArea.getY(),
                 juce::Colour(0xff101010), boxArea.getX(), boxArea.getBottom(), false));
             g.drawRoundedRectangle(boxArea, 3.0f, 1.0f);
-            // draw triangles
+        }
+
+        void drawTriangles(juce::Graphics& g, juce::Rectangle<float> boxArea)
+        {
             g.setColour(juce::Colours::grey);
             juce::Path triangles;
             const float centerX = boxArea.getWidth() * 0.5f + boxArea.getX();
             const float centerY = boxArea.getHeight() * 0.5f + boxArea.getY();
-            triangles.addTriangle(centerX - 1, boxArea.getY() + 7, centerX - 1, boxArea.getBottom() - 7, 
-                boxArea.getX() + 5, centerY);
-            triangles.addTriangle(centerX + 1, boxArea.getY() + 7, centerX + 1, boxArea.getBottom() - 7, 
-                boxArea.getRight() - 5, centerY);
+            triangles.addTriangle(centerX - 1, boxArea.getY() + 7, centerX - 1, 
+                boxArea.getBottom() - 7, boxArea.getX() + 5, centerY);
+            triangles.addTriangle(centerX + 1, boxArea.getY() + 7, centerX + 1, 
+                boxArea.getBottom() - 7, boxArea.getRight() - 5, centerY);
             g.fillPath(triangles);
-            // draw label
+        }
+
+        void drawLabel(juce::Graphics& g, juce::Rectangle<float> boxArea, float textHeight)
+        {
             g.setColour(juce::Colours::grey);
             g.setFont(xxii.withHeight(textHeight));
-            g.drawText("Link", juce::Rectangle<int>(x, y, width, static_cast<int>(textHeight)).toFloat(), 
+            g.drawText("Link", 
+                juce::Rectangle<float>(boxArea.getX(), boxArea.getY() - textHeight, boxArea.getWidth(), textHeight),
                 juce::Justification::centred, false);
+        }
+
+        void drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height, float,
+            const float, const float, juce::Slider& slider) override
+        {
+            slider.setTextBoxStyle(juce::Slider::NoTextBox, true, 0, 0);
+            const float textHeight = 14.0f;
+            const float diameter = juce::jmin(static_cast<float>(width), static_cast<float>(height - textHeight)) - 4.0f;
+            const auto boxArea = juce::Rectangle<float>(static_cast<float>(width / 2 + x) - (diameter * 0.5f), 
+                static_cast<float>(y + textHeight), diameter, diameter);
+            drawKnobFace(g, boxArea);
+            drawTriangles(g, boxArea);
+            drawLabel(g, boxArea, textHeight);
+            // set hit box
+            LinkKnob* linkKnob = static_cast<LinkKnob*>(&slider);
+            linkKnob->setHitArea(boxArea);
         }
     private:
         const juce::Font xxii{ juce::Typeface::createSystemTypefaceFor(BinaryData::XXIIAvenRegular_ttf, 
@@ -517,8 +592,6 @@ public:
         setPaintingIsUnclipped(true);
         setBufferedToImage(true);
     }
-
-    ~LinkKnob() {}
 
     void setHitArea(juce::Rectangle<float> r)
     {
@@ -542,48 +615,39 @@ class SmallButton : public juce::TextButton
 public:
     class SmallButtonLaF : public juce::LookAndFeel_V4
     {
-        void drawButtonBackground(juce::Graphics& g, juce::Button& button, const juce::Colour&, bool, bool) override
+        void drawButtonFace(juce::Graphics& g, juce::Rectangle<float> buttonArea)
         {
-            button.setClickingTogglesState(true);
-            // get dimensions
-            const auto area = button.getLocalBounds().toFloat();
-            const float width = area.getWidth() - 4.0f;
-            const float height = 20.0f;
-            const float xPosition = area.getX() + 2.0f;
-            const float yPosition = area.getY() + 2.0f;
-            const float centerX = width * 0.5f + xPosition;
-            const float centerY = height * 0.5f + yPosition;
-            const auto buttonArea = juce::Rectangle<float>(xPosition, yPosition, width, height);
-            // set hit box
-            SmallButton* smallButton = static_cast<SmallButton*>(&button);
-            smallButton->setHitArea(buttonArea);
             // draw outline
             g.setColour(juce::Colours::black);
             g.fillRoundedRectangle(buttonArea.expanded(2.0f), 3.0f);
-            // draw button face
-            auto innerGradient = juce::ColourGradient(juce::Colour(0xff303030), centerX, buttonArea.getY(),
-                juce::Colour(0xff303030), centerX, buttonArea.getBottom(), false);
+            // draw face
+            auto innerGradient = juce::ColourGradient(juce::Colour(0xff303030), 0, buttonArea.getY(),
+                juce::Colour(0xff303030), 0, buttonArea.getBottom(), false);
             innerGradient.addColour(0.5f, juce::Colour(0xff272727));
             g.setGradientFill(innerGradient);
             g.fillRoundedRectangle(buttonArea, 2.0f);
             // draw rim
-            g.setGradientFill(juce::ColourGradient(juce::Colour(0xff505050), centerX, buttonArea.getY(),
-                juce::Colour(0xff101010), centerX, buttonArea.getBottom(), false));
+            g.setGradientFill(juce::ColourGradient(juce::Colour(0xff505050), 0, buttonArea.getY(),
+                juce::Colour(0xff101010), 0, buttonArea.getBottom(), false));
             g.drawRoundedRectangle(buttonArea, 2.0f, 1.0f);
-            // create light
-            const auto glow = juce::DropShadow(juce::Colour(0x66ff0000), 14, juce::Point<int>(0, -5));
-            const auto line = juce::Rectangle<float>(xPosition + 5.0f, centerY - 1.5f, width - 10.0f, 3.0f);
-            auto lightOnGradient = juce::ColourGradient(juce::Colours::orange, line.getX(), centerY, 
-                juce::Colours::orange, line.getRight(), centerY, false);
+        }
+
+        void drawLight(juce::Graphics& g, juce::Rectangle<float> buttonArea, bool toggle)
+        {
+            const auto line = juce::Rectangle<float>(buttonArea.getX() + 5.0f, 
+                buttonArea.getCentreY() - 1.5f, buttonArea.getWidth() - 10.0f, 3.0f);
+            auto lightOnGradient = juce::ColourGradient(juce::Colours::orange, line.getX(), 0,
+                juce::Colours::orange, line.getRight(), 0, false);
             lightOnGradient.addColour(0.5f, juce::Colours::yellow);
-            auto lightOffGradient = juce::ColourGradient(juce::Colour(0xff252525), line.getX(), centerY, 
-                juce::Colour(0xff252525), line.getRight(), centerY, false);
+            auto lightOffGradient = juce::ColourGradient(juce::Colour(0xff252525), line.getX(), 0,
+                juce::Colour(0xff252525), line.getRight(), 0, false);
             lightOffGradient.addColour(0.5f, juce::Colour(0xff303030));
-            // draw light dip
-            g.setGradientFill(juce::ColourGradient(juce::Colour(0xff101010), line.getX(), line.getY(), 
+            // draw dip
+            g.setGradientFill(juce::ColourGradient(juce::Colour(0xff101010), line.getX(), line.getY(),
                 juce::Colour(0xff505050), line.getX(), line.getBottom(), false));
             g.drawRoundedRectangle(line.expanded(1.0f), 1.5f, 1.0f);
-            if (button.getToggleState())
+            // draw interior
+            if (toggle)
             {
                 g.setGradientFill(lightOnGradient);
                 g.fillRoundedRectangle(line, 1.5f);
@@ -593,20 +657,38 @@ public:
             {
                 g.setGradientFill(lightOffGradient);
                 g.fillRoundedRectangle(line, 1.5f);
-                // draw light rim
-                g.setGradientFill(juce::ColourGradient(juce::Colour(0xff101010), line.getX(), line.getBottom(), 
+                // draw rim
+                g.setGradientFill(juce::ColourGradient(juce::Colour(0xff101010), line.getX(), line.getBottom(),
                     juce::Colour(0xff505050), line.getX(), line.getY(), false));
                 g.drawRoundedRectangle(line, 1.5f, 1.0f);
             }
-            // draw label
+        }
+
+        void drawLabel(juce::Graphics& g, juce::Rectangle<float> buttonArea, juce::String labelText)
+        {
             g.setColour(juce::Colours::grey);
             g.setFont(xxii.withHeight(14.0f));
-            g.drawText(button.getName(), juce::Rectangle<float>(xPosition, yPosition + height + 10.0f, width, 20.0f), 
-                juce::Justification::centredTop, false);
+            g.drawText(labelText, juce::Rectangle<float>(buttonArea.getX(), buttonArea.getBottom() + 10.0f, 
+                buttonArea.getWidth(), 20.0f), juce::Justification::centredTop, false);
         }
+
+        void drawButtonBackground(juce::Graphics& g, juce::Button& button, const juce::Colour&, bool, bool) override
+        {
+            button.setClickingTogglesState(true);
+            const auto area = button.getLocalBounds().toFloat();
+            const auto buttonArea = area.reduced(2.0f).withHeight(20.0f);
+            drawButtonFace(g, buttonArea);
+            drawLight(g, buttonArea, button.getToggleState());
+            drawLabel(g, buttonArea, button.getName());
+            // set hit box
+            SmallButton* smallButton = static_cast<SmallButton*>(&button);
+            smallButton->setHitArea(buttonArea);
+        }
+
         void drawButtonText(juce::Graphics&, juce::TextButton&, bool, bool) override {}
 
     private:
+        const juce::DropShadow glow{ juce::Colour(0x66ff0000), 14, juce::Point<int>(0, -5) };
         const juce::Font xxii{ juce::Typeface::createSystemTypefaceFor(BinaryData::XXIIAvenRegular_ttf, 
             BinaryData::XXIIAvenRegular_ttfSize) };
     };
@@ -618,7 +700,6 @@ public:
         setPaintingIsUnclipped(true);
         setBufferedToImage(true);
     }
-    ~SmallButton(){}
 
     void setHitArea(juce::Rectangle<float> r)
     {
@@ -643,35 +724,25 @@ public:
     class BigButtonLaF : public juce::LookAndFeel_V4
     {
     public:
-        void drawButtonBackground(juce::Graphics& g, juce::Button& button, const juce::Colour&, bool, bool) override
+        void drawButtonFace(juce::Graphics& g, juce::Rectangle<float> buttonArea)
         {
-            button.setClickingTogglesState(true);
-            // get dimensions
-            const auto area = button.getLocalBounds().toFloat();
-            const float width = area.getWidth() - 4.0f;
-            const float height = area.getHeight() - 4.0f;
-            const float xPosition = area.getX() + 2.0f;
-            const float yPosition = area.getY() + 2.0f;
-            const float centerX = width * 0.5f + xPosition;
-            const auto buttonArea = juce::Rectangle<float>(xPosition, yPosition, width, height);
-            // set hit box
-            BigButton* bigButton = static_cast<BigButton*>(&button);
-            bigButton->setHitArea(buttonArea);
             // draw outline
             g.setColour(juce::Colours::black);
             g.fillRoundedRectangle(buttonArea.expanded(2.0f), 4.0f);
             // draw button face
-            auto innerGradient = juce::ColourGradient(juce::Colour(0xff303030), centerX, buttonArea.getY(),
-                juce::Colour(0xff303030), centerX, buttonArea.getBottom(), false);
+            auto innerGradient = juce::ColourGradient(juce::Colour(0xff303030), 0, buttonArea.getY(),
+                juce::Colour(0xff303030), 0, buttonArea.getBottom(), false);
             innerGradient.addColour(0.5f, juce::Colour(0xff272727));
             g.setGradientFill(innerGradient);
             g.fillRoundedRectangle(buttonArea, 3.0f);
             // draw rim
-            g.setGradientFill(juce::ColourGradient(juce::Colour(0xff505050), centerX, buttonArea.getY(),
-                juce::Colour(0xff101010), centerX, buttonArea.getBottom(), false));
+            g.setGradientFill(juce::ColourGradient(juce::Colour(0xff505050), 0, buttonArea.getY(),
+                juce::Colour(0xff101010), 0, buttonArea.getBottom(), false));
             g.drawRoundedRectangle(buttonArea, 3.0f, 1.0f);
-            // draw light
-            const auto glow = juce::DropShadow(juce::Colour(0x88ff0000), 14, juce::Point<int>(0, 0));
+        }
+
+        void drawLight(juce::Graphics& g, juce::Rectangle<float> buttonArea, bool toggle)
+        {
             const auto light = buttonArea.reduced(15.0f);
             auto lightOnGradient = juce::ColourGradient(juce::Colours::orange, light.getX(), light.getY(),
                 juce::Colours::orange, light.getRight(), light.getBottom(), false);
@@ -679,30 +750,40 @@ public:
             auto lightOffGradient = juce::ColourGradient(juce::Colour(0xff252525), light.getX(), light.getY(),
                 juce::Colour(0xff252525), light.getRight(), light.getBottom(), false);
             lightOffGradient.addColour(0.5f, juce::Colour(0xff303030));
-            // draw light dip
-            g.setGradientFill(juce::ColourGradient(juce::Colour(0xff101010), light.getX(), light.getY(), 
-                juce::Colour(0xff505050), light.getX(), light.getBottom(), false));
+            // draw dip
+            g.setGradientFill(juce::ColourGradient(juce::Colour(0xff101010), 0, light.getY(),
+                juce::Colour(0xff505050), 0, light.getBottom(), false));
             g.drawRoundedRectangle(light.expanded(1.0f), 1.5f, 1.0f);
-            if (button.getToggleState())
-            {
-                g.setGradientFill(lightOnGradient);
-            }
-            else
-            {
-                g.setGradientFill(lightOffGradient);
-            }
+            // fill interior
+            g.setGradientFill((toggle) ? lightOnGradient : lightOffGradient);
             g.fillRoundedRectangle(light, 2.0f);
-            // draw light rim
-            g.setGradientFill(juce::ColourGradient(juce::Colour(0xff505050), light.getCentreX(), light.getY(),
-                juce::Colour(0xff101010), light.getCentreX(), light.getBottom(), false));
+            // draw rim
+            g.setGradientFill(juce::ColourGradient(juce::Colour(0xff505050), 0, light.getY(),
+                juce::Colour(0xff101010), 0, light.getBottom(), false));
             g.drawRoundedRectangle(light, 2.0f, 1.0f);
             // draw glow
-            if (button.getToggleState())
+            if (toggle)
             {
                 glow.drawForRectangle(g, light.toNearestInt());
             }
         }
+
+        void drawButtonBackground(juce::Graphics& g, juce::Button& button, const juce::Colour&, bool, bool) override
+        {
+            button.setClickingTogglesState(true);
+            const auto area = button.getLocalBounds().toFloat();
+            const auto buttonArea = area.reduced(2.0f);
+            drawButtonFace(g, buttonArea);
+            drawLight(g, buttonArea, button.getToggleState());
+            // set hit box
+            BigButton* bigButton = static_cast<BigButton*>(&button);
+            bigButton->setHitArea(buttonArea);
+        }
+
         void drawButtonText(juce::Graphics&, juce::TextButton&, bool, bool) override {}
+
+    private:
+        const juce::DropShadow glow{ juce::Colour(0x88ff0000), 14, juce::Point<int>(0, 0) };
     };
 
     BigButton(const juce::String& name="")
@@ -712,7 +793,6 @@ public:
         setPaintingIsUnclipped(true);
         setBufferedToImage(true);
     }
-    ~BigButton() {}
 
     void setHitArea(juce::Rectangle<float> r)
     {
@@ -739,10 +819,8 @@ public:
     public:
         void drawLabel(juce::Graphics& g, juce::Label& label) override
         {
-            // set font
             g.setFont(xxii.withHeight(14.0f));
             g.setColour(juce::Colours::grey);
-            // draw text
             const auto textArea = getLabelBorderSize(label).subtractedFrom(label.getLocalBounds());
             g.drawText(label.getText(), textArea, juce::Justification::centred, false);
         }
@@ -758,7 +836,6 @@ public:
         setPaintingIsUnclipped(true);
         setBufferedToImage(true);
     }
-    ~GreyLabel() {}
 
 private:
     LabelLaF laf;
@@ -774,18 +851,20 @@ public:
         setPaintingIsUnclipped(true);
         setBufferedToImage(true);
     }
-    ~MultiLabel() {}
-    void paint(juce::Graphics& g)
+
+    juce::Rectangle<float> drawText(juce::Graphics& g, juce::Rectangle<float> area)
     {
-        auto area = getLocalBounds().toFloat();
-        area.reduce(2.0f, 0.0f);
-        // draw text
         g.setFont(xxii.withHeight(14.0f));
         g.setColour(juce::Colours::grey);
         const float textWidth = g.getCurrentFont().getStringWidthFloat(text) + 10.0f;
-        const auto textArea = juce::Rectangle<float>(area.getCentreX() - (textWidth * 0.5f), area.getY(), textWidth, 16.0f);
+        const auto textArea = juce::Rectangle<float>(area.getCentreX() - (textWidth * 0.5f), 
+            area.getY(), textWidth, 16.0f);
         g.drawText(text, textArea, juce::Justification::centred, false);
-        // draw lines
+        return textArea;
+    }
+
+    void drawLines(juce::Graphics& g, juce::Rectangle<float> area, juce::Rectangle<float> textArea)
+    {
         juce::Path lines;
         lines.startNewSubPath(area.getBottomLeft());
         lines.lineTo(area.getX(), textArea.getCentreY());
@@ -794,6 +873,13 @@ public:
         lines.lineTo(area.getRight(), textArea.getCentreY());
         lines.lineTo(area.getBottomRight());
         g.strokePath(lines, { 1, juce::PathStrokeType::mitered, juce::PathStrokeType::square });
+    }
+
+    void paint(juce::Graphics& g)
+    {
+        const auto area = getLocalBounds().toFloat().reduced(2.0f, 0.0f);
+        const auto textArea = drawText(g, area);
+        drawLines(g, area, textArea);
     }
 
 private:
@@ -808,48 +894,54 @@ class PowerLine : public juce::Component
 public:
     PowerLine(const juce::String& textA, const juce::String& textB, float inputHeight)
     {
-        text[0] = textA;
-        text[1] = textB;
+        text = { textA, textB };
         height = inputHeight;
+        offset = height * 0.5f;
+        edgeGradient = juce::ColourGradient(juce::Colour(0xffe0e0e0), 0, 0,
+            juce::Colour(0xff707070), 0, height, false );
+        edgeGradient.addColour(0.49f, juce::Colour(0xffe0e0e0));
+        edgeGradient.addColour(0.51f, juce::Colour(0xff707070));
         setPaintingIsUnclipped(true);
         setBufferedToImage(true);
     }
 
-    void paint(juce::Graphics& g)
+    void getWidths(juce::Graphics& g)
     {
-        g.setFont(domitian.withHeight(height * 0.6f));
-        const float offset = height * 0.5f;
-        // get widths and x positions
         for (int i = 0; i < 2; i++)
         {
             width[i] = g.getCurrentFont().getStringWidthFloat(text[i]) + 35.0f;
         }
         xPosition[0] = 10.0f;
         xPosition[1] = xPosition[0] + width[0] + int(height / 4);
+    }
+
+    juce::Path getShape(int i)
+    {
+        juce::Path shape;
+        shape.startNewSubPath(xPosition[i], 0);
+        shape.lineTo(xPosition[i] + width[i], 0);
+        shape.lineTo(xPosition[i] + width[i] + offset, offset);
+        shape.lineTo(xPosition[i] + width[i], height);
+        shape.lineTo(xPosition[i], height);
+        shape.lineTo(xPosition[i] + offset, offset);
+        shape.closeSubPath();
+        return shape;
+    }
+
+    void paint(juce::Graphics& g)
+    {
+        g.setFont(domitian.withHeight(height * 0.6f));
+        getWidths(g);
         // draw shapes - 2nd first so shadow is underneath 1st
         for (int i = 1; i >= 0; i--)
         {
-            // create powerline path
-            juce::Path shape;
-            shape.startNewSubPath(xPosition[i], 0);
-            shape.lineTo(xPosition[i] + width[i], 0);
-            shape.lineTo(xPosition[i] + width[i] + offset, offset);
-            shape.lineTo(xPosition[i] + width[i], height);
-            shape.lineTo(xPosition[i], height);
-            shape.lineTo(xPosition[i] + offset, offset);
-            shape.closeSubPath();
-            // create dropshadow
-            const auto dropShadow = juce::DropShadow(juce::Colours::black, 10, juce::Point<int>(-2, 2));
+            juce::Path shape = getShape(i);
             dropShadow.drawForPath(g, shape);
             // create powerline shape
-            g.setGradientFill(juce::ColourGradient(shapeColors[i], xPosition[i], 0, shapeColors[i + 2], 
-                xPosition[i], height, false));
+            g.setGradientFill(juce::ColourGradient(shapeColors[i], xPosition[i], 0, 
+                shapeColors[i + 2], xPosition[i], height, false));
             g.fillPath(shape);
             // create powerline edge
-            auto edgeGradient = juce::ColourGradient(juce::Colour(0xffe0e0e0), xPosition[i], 0, 
-                juce::Colour(0xff707070), xPosition[i], height, false);
-            edgeGradient.addColour(0.49f, juce::Colour(0xffe0e0e0));
-            edgeGradient.addColour(0.51f, juce::Colour(0xff707070));
             g.setGradientFill(edgeGradient);
             g.strokePath(shape, { 1.0f, juce::PathStrokeType::mitered, juce::PathStrokeType::square });
             // draw text
@@ -861,11 +953,14 @@ public:
 
 private:
     std::array<juce::String, 2> text;
-    std::array<float, 2> xPosition;
-    std::array<float, 2> width;
+    std::array<float, 2> xPosition{ 0.0f, 0.0f };
+    std::array<float, 2> width{ 0.0f, 0.0f };
     float height;
+    float offset;
+    const juce::DropShadow dropShadow{ juce::Colours::black, 10, juce::Point<int>(-2, 2) };
     const juce::Font domitian{ juce::Typeface::createSystemTypefaceFor(BinaryData::DomitianRoman_otf, 
         BinaryData::DomitianRoman_otfSize) };
+    juce::ColourGradient edgeGradient;
     const std::array<juce::Colour, 4> shapeColors { 
         juce::Colour(0xff51afef),   // blue
         juce::Colour(0xff818e96),   // grey
