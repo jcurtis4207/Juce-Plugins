@@ -27,7 +27,6 @@ ClipperAudioProcessor::ClipperAudioProcessor()
         "Threshold", juce::NormalisableRange<float>(-40.0f, 0.0f, 0.1f), 0.0f, "dB"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("ceiling", 
         "Ceiling", juce::NormalisableRange<float>(-40.0f, 0.0f, 0.1f), 0.0f, "dB"));
-    // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
 }
 
@@ -44,14 +43,11 @@ void ClipperAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
     
-    // apply clipper
     clipper.setParameters(parameters);
     juce::dsp::AudioBlock<float> block(buffer);
     juce::dsp::ProcessContextReplacing<float> context(block);
     clipper.process(context);
-    // get gain reduction for meter
-    gainReductionLeft = clipper.getGainReductionLeft();
-    gainReductionRight = clipper.getGainReductionRight();
+    gainReduction = clipper.getGainReduction();
 }
 
 void ClipperAudioProcessor::getStateInformation(juce::MemoryBlock& destData)

@@ -13,13 +13,19 @@
 
 #define numOutputs 2
 
+using namespace juce;
+
+struct Parameters {
+    float threshold, ceiling;
+};
+
 class Clipper
 {
 public:
-    void setParameters(const juce::AudioProcessorValueTreeState& apvts)
+    void setParameters(const AudioProcessorValueTreeState& apvts)
     {
-        threshold = apvts.getRawParameterValue("threshold")->load();
-        ceiling = apvts.getRawParameterValue("ceiling")->load();
+        parameters.threshold = apvts.getRawParameterValue("threshold")->load();
+        parameters.ceiling = apvts.getRawParameterValue("ceiling")->load();
     }
 
     void prepare(double inputSampleRate, int maxBlockSize)
@@ -31,95 +37,75 @@ public:
         oversampler.initProcessing(oversampledBufferSize);
     }
 
-    void process(const juce::dsp::ProcessContextReplacing<float>& context)
+    void process(const dsp::ProcessContextReplacing<float>& context)
     {
-        const auto& outputBuffer = context.getOutputBlock();
-        // clip at 4x oversampling
-        auto upBlock = oversampler.processSamplesUp(context.getInputBlock());
-        clipBuffer(upBlock.getChannelPointer(0), upBlock.getChannelPointer(1), 
-            oversampledBufferSize, oversampledGainReduction);
+        auto& outputBuffer = context.getOutputBlock();
+        auto upsampledBlock = oversampler.processSamplesUp(context.getInputBlock());
+        // clip with 4x oversampling
+        clipBuffer(upsampledBlock, oversampledBufferSize, oversampledGainReduction);
         oversampler.processSamplesDown(context.getOutputBlock());
-        // clip at 1x oversampling
-        clipBuffer(outputBuffer.getChannelPointer(0), outputBuffer.getChannelPointer(1), 
-            bufferSize, normalGainReduction);
-        // apply autogain and ceiling
-        applyGain(outputBuffer.getChannelPointer(0), outputBuffer.getChannelPointer(1), bufferSize);
+        // clip with no oversampling
+        clipBuffer(outputBuffer, bufferSize, normalGainReduction);
+        applyGain(outputBuffer, bufferSize);
     }
     
-    // get combined gain reduction of both clipping stages
-    float getGainReductionLeft()
+    std::array<float, numOutputs> getGainReduction()
     {
-        return oversampledGainReduction[0] + normalGainReduction[0];
+        return std::array<float, numOutputs>{
+            oversampledGainReduction[0] + normalGainReduction[0],
+            oversampledGainReduction[1] + normalGainReduction[1]
+        };
     }
-    float getGainReductionRight()
-    {
-        return oversampledGainReduction[1] + normalGainReduction[1];
-    }
+
     int getOversamplerLatency()
     {
         return (int)oversampler.getLatencyInSamples();
     }
 
 private:
-    // take in a buffer, clip based on threshold, output to the same buffer
-    void clipBuffer(float* bufferLeft, float* bufferRight, int blockSize,
-        std::array<float, numOutputs>& stageGainReduction)
+    void clipBuffer(dsp::AudioBlock<float>& block, int blockSize, 
+        std::array<float, numOutputs>& outputGR)
     {
-        stageGainReduction = { 0.0f, 0.0f };
-        std::array<float, numOutputs> tempGainReduction = { 0.0f, 0.0f };
-        const float thresholdHigh = juce::Decibels::decibelsToGain(threshold);
+        outputGR = { 0.0f, 0.0f };
+        std::array<float, numOutputs> tempGR = { 0.0f, 0.0f };
+        const float thresholdHigh = Decibels::decibelsToGain(parameters.threshold);
         const float thresholdLow = thresholdHigh * -1.0f;
         for (int sample = 0; sample < blockSize; sample++)
         {
-            std::array<float, numOutputs> output = { bufferLeft[sample], bufferRight[sample] };
             for (int channel = 0; channel < numOutputs; channel++)
             {
-                // clip positive values
-                if (output[channel] > thresholdHigh)
+                const float inputSample = block.getSample(channel, sample);
+                const float outputSample = jmax(jmin(inputSample, thresholdHigh), thresholdLow);
+                if (inputSample != outputSample)
                 {
-                    tempGainReduction[channel] = juce::Decibels::gainToDecibels(output[channel]) - threshold;
-                    output[channel] = thresholdHigh;
+                    tempGR[channel] = Decibels::gainToDecibels(inputSample) - parameters.threshold;
                 }
-                // clip negative values
-                else if (output[channel] < thresholdLow)
-                {
-                    tempGainReduction[channel] = juce::Decibels::gainToDecibels(output[channel]) - threshold;
-                    output[channel] = thresholdLow;
-                }
-                // calculate gain reduction
-                stageGainReduction[channel] = (tempGainReduction[channel] > stageGainReduction[channel]) ?
-                    tempGainReduction[channel] : stageGainReduction[channel];
+                outputGR[channel] = jmax(tempGR[channel], outputGR[channel]);
+                block.setSample(channel, sample, outputSample);
             }
-            // write output to buffer
-            bufferLeft[sample] = output[0];
-            bufferRight[sample] = output[1];
         }
     }
 
-    // take in a buffer, apply autogain and ceiling, output to same buffer
-    void applyGain(float* bufferLeft, float* bufferRight, int blockSize)
+    void applyGain(dsp::AudioBlock<float>& block, int blockSize)
     {
         for (int sample = 0; sample < blockSize; sample++)
         {
-            std::array<float, numOutputs> output = { bufferLeft[sample], bufferRight[sample] };
             for (int channel = 0; channel < numOutputs; channel++)
             {
-                output[channel] *= juce::Decibels::decibelsToGain(threshold * -1.0f);
-                output[channel] *= juce::Decibels::decibelsToGain(ceiling);
+                float outputSample = block.getSample(channel, sample);
+                outputSample *= Decibels::decibelsToGain(parameters.threshold * -1.0f); // autogain
+                outputSample *= Decibels::decibelsToGain(parameters.ceiling);           // ceiling
+                block.setSample(channel, sample, outputSample);
             }
-            // write output to buffer
-            bufferLeft[sample] = output[0];
-            bufferRight[sample] = output[1];
         }
     }
 
     double sampleRate{ 0.0 };
     int bufferSize{ 0 };
     int oversampledBufferSize{ 0 };
-    float threshold{ 0.0f };
-    float ceiling{ 0.0f };
+    Parameters parameters;
     std::array<float, numOutputs> oversampledGainReduction{ 0.0f, 0.0f };
     std::array<float, numOutputs> normalGainReduction{ 0.0f, 0.0f };
-    juce::dsp::Oversampling<float> oversampler{ 2, 2, 
-        juce::dsp::Oversampling<float>::filterHalfBandPolyphaseIIR, false, true };
+    dsp::Oversampling<float> oversampler{ 2, 2, 
+        dsp::Oversampling<float>::filterHalfBandPolyphaseIIR, false, true };
 };

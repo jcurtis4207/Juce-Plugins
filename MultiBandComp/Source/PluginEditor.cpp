@@ -12,10 +12,10 @@
 
 MultiBandCompAudioProcessorEditor::MultiBandCompAudioProcessorEditor(MultiBandCompAudioProcessor& p)
 	: AudioProcessorEditor(&p), audioProcessor(p), grMeters{
-	GainReductionMeter(audioProcessor.gainReduction[0], audioProcessor.gainReduction[1]),
-	GainReductionMeter(audioProcessor.gainReduction[2], audioProcessor.gainReduction[3]),
-	GainReductionMeter(audioProcessor.gainReduction[4], audioProcessor.gainReduction[5]),
-	GainReductionMeter(audioProcessor.gainReduction[6], audioProcessor.gainReduction[7])
+	GainReductionMeter(audioProcessor.gainReduction[0]),
+	GainReductionMeter(audioProcessor.gainReduction[1]),
+	GainReductionMeter(audioProcessor.gainReduction[2]),
+	GainReductionMeter(audioProcessor.gainReduction[3])
 }
 {
 	addAndMakeVisible(bgImage);

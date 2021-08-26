@@ -23,7 +23,6 @@ LimiterAudioProcessor::LimiterAudioProcessor()
     parameters(*this, nullptr)
 #endif
 {
-    // create limiter parameters
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("threshold", 
         "Threshold", juce::NormalisableRange<float>(-40.0f, 0.0f, 0.1f), 0.0f, "dB"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("release", 
@@ -32,7 +31,6 @@ LimiterAudioProcessor::LimiterAudioProcessor()
         "Ceiling", juce::NormalisableRange<float>(-40.0f, 0.0f, 0.1f), 0.0f, "dB"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("stereo", 
         "Stereo", true));
-    // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
 }
 
@@ -48,12 +46,9 @@ void LimiterAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    // apply limiter
     limiter.setParameters(parameters);
     limiter.process(buffer);
-    // get gain reduction for meter
-    gainReductionLeft = limiter.getGainReductionLeft();
-    gainReductionRight = limiter.getGainReductionRight();
+    gainReduction = limiter.getGainReduction();
 }
 
 void LimiterAudioProcessor::getStateInformation(juce::MemoryBlock& destData)

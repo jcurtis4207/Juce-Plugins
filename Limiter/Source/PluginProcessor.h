@@ -39,8 +39,7 @@ public:
     bool hasEditor() const override { return true; }
 
     juce::AudioProcessorValueTreeState parameters;
-    float gainReductionLeft{ 0.0f };
-    float gainReductionRight{ 0.0f };
+    std::array<float, 2> gainReduction;
 
 private:
     Limiter limiter;

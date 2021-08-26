@@ -45,7 +45,6 @@ DelayAudioProcessor::DelayAudioProcessor()
         "BPM Sync", false));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterChoice>("subdivisionIndex", 
         "Subdivision", delaySubdivisions, 6));
-    // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
 }
 
@@ -60,7 +59,6 @@ void DelayAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
     juce::ScopedNoDenormals noDenormals;
     for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
-
     // get host bpm
     playHead = this->getPlayHead();
     if (playHead != nullptr)

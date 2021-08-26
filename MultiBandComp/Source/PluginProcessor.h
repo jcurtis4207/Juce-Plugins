@@ -41,7 +41,7 @@ public:
     bool hasEditor() const override { return true; }
 
     juce::AudioProcessorValueTreeState parameters;
-    std::array<float, numBands * 2> gainReduction;
+    std::array<std::array<float, 2>, numBands> gainReduction;
     std::array<bool, numBands> listen{ false, false, false, false };
 
 private:

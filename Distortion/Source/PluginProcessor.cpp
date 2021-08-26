@@ -43,7 +43,6 @@ DistortionAudioProcessor::DistortionAudioProcessor()
         "Shape Tilt", true));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterChoice>("type", 
         "Distortion Type", distortionTypes, 0));
-    // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
 }
 
@@ -60,7 +59,6 @@ void DistortionAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
     for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    // apply distortion
     juce::dsp::AudioBlock<float> block(buffer);
     juce::dsp::ProcessContextReplacing<float> context(block);
     distortion.setParameters(parameters);

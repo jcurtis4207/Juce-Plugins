@@ -11,8 +11,7 @@
 #include "PluginEditor.h"
 
 ClipperAudioProcessorEditor::ClipperAudioProcessorEditor(ClipperAudioProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p), 
-    grMeter(audioProcessor.gainReductionLeft, audioProcessor.gainReductionRight)
+    : AudioProcessorEditor(&p), audioProcessor(p), grMeter(audioProcessor.gainReduction)
 {
     addAndMakeVisible(bgImage);
     addAndMakeVisible(powerLine);

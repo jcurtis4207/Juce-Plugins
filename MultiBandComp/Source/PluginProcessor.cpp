@@ -46,7 +46,6 @@ MultiBandCompAudioProcessor::MultiBandCompAudioProcessor()
         parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("makeUp" + bandNum, 
             "Band " + bandNum + " Make Up", juce::NormalisableRange<float>(-10.0f, 20.0f, 0.1f), 0.0f, "dB"));
     }
-    // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
 }
 
@@ -62,10 +61,8 @@ void MultiBandCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    // apply multiband compression
     multibandComp.setParameters(parameters, listen);
     multibandComp.process(buffer);
-    // get gain reduction for meters
     gainReduction = multibandComp.getGainReduction();
 }
 

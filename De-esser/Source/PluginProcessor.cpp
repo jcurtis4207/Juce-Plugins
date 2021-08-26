@@ -23,7 +23,6 @@ DeesserAudioProcessor::DeesserAudioProcessor()
     parameters(*this, nullptr)
 #endif
 {
-    // create de-esser parameters
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("threshold", 
         "Threshold", juce::NormalisableRange<float>(-40.0f, 0.0f, 0.5f), 0.0f, "dB"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("crossoverFreq", 
@@ -34,7 +33,6 @@ DeesserAudioProcessor::DeesserAudioProcessor()
         "Release", juce::NormalisableRange<float>(5.0f, 100.0f, 0.1f, 0.35f), 10.0f, "ms"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("stereo", "Stereo", true));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("wide", "Wide Band", false));
-    // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
 }
 
@@ -50,12 +48,9 @@ void DeesserAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    // apply de-esser
     deesser.setParameters(parameters, listen);
     deesser.process(buffer);
-    // get gain reduction for meter
-    gainReductionLeft = deesser.getGainReductionLeft();
-    gainReductionRight = deesser.getGainReductionRight();
+    gainReduction = deesser.getGainReduction();
 }
 
 void DeesserAudioProcessor::getStateInformation(juce::MemoryBlock& destData)

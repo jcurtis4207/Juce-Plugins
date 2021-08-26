@@ -39,7 +39,6 @@ ReverbAudioProcessor::ReverbAudioProcessor()
         "HPF Frequency", juce::NormalisableRange<float>(20.0f, 2000.0f, 1.0f, 0.35f), 20.0f, "Hz"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("lpfFreq", 
         "LPF Frequency", juce::NormalisableRange<float>(500.0f, 20000.0f, 1.0f, 0.35f), 20000.0f, "Hz"));
-    // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
 }
 
@@ -55,7 +54,6 @@ void ReverbAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
     for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    // apply reverb
     reverb.setParameters(parameters);
     reverb.process(buffer);
 }

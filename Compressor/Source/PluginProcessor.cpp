@@ -23,7 +23,6 @@ CompressorAudioProcessor::CompressorAudioProcessor()
     parameters(*this, nullptr)
 #endif
 {
-    // create compressor parameters
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("threshold", 
         "Threshold", juce::NormalisableRange<float>(-50.0f, 0.0f, 0.1f), 0.0f, "dB"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("attack", 
@@ -42,7 +41,6 @@ CompressorAudioProcessor::CompressorAudioProcessor()
         "Stereo Mode", true));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("mix", 
         "Mix", juce::NormalisableRange<float>(0.0f, 100.0f, 1.0f), 100.0f, "%"));
-    // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
 }
 
@@ -58,12 +56,9 @@ void CompressorAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
     for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    // apply compression
     compressor.setParameters(parameters);
     compressor.process(buffer);
-    // get gain reduction for meter
-    gainReductionLeft = compressor.getGainReductionLeft();
-    gainReductionRight = compressor.getGainReductionRight();
+    gainReduction = compressor.getGainReduction();
 }
 
 void CompressorAudioProcessor::getStateInformation(juce::MemoryBlock& destData)

@@ -31,7 +31,6 @@ GateAudioProcessor::GateAudioProcessor()
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("hpfFreq", "HPF Frequency", juce::NormalisableRange<float>(20.0f, 10000.0f, 1.0f, 0.25f), 20.0f, "Hz"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterFloat>("lpfFreq", "LPF Frequency", juce::NormalisableRange<float>(200.0f, 20000.0f, 1.0f, 0.25f), 20000.0f, "Hz"));
     parameters.createAndAddParameter(std::make_unique<juce::AudioParameterBool>("filterEnable", "Enable SC Filters", false));
-    // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
 }
 
@@ -47,12 +46,9 @@ void GateAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mi
     for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    // apply gate
     gate.setParameters(parameters, listen);
     gate.process(buffer);
-    // get gain reduction for meter
-    gainReductionLeft = gate.getGainReductionLeft();
-    gainReductionRight = gate.getGainReductionRight();
+    gainReduction = gate.getGainReduction();
 }
 
 void GateAudioProcessor::getStateInformation(juce::MemoryBlock& destData)

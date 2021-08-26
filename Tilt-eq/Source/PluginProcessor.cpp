@@ -42,7 +42,6 @@ void TilteqAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
     for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    // apply tilt
     tiltEQ.setParameters(parameters);
     tiltEQ.process(buffer);
 }

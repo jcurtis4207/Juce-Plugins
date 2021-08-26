@@ -12,53 +12,60 @@
 
 #define numOutputs 2
 
+using namespace juce;
+
+struct Parameters {
+    float drive, volume, offset, mix, anger, 
+        hpfFreq, lpfFreq, shape;
+    int distortionType;
+    bool shapeTilt;
+};
+
 class Distortion
 {
 public:
-    void setParameters(const juce::AudioProcessorValueTreeState& apvts)
+    void setParameters(const AudioProcessorValueTreeState& apvts)
     {
-        drive = apvts.getRawParameterValue("drive")->load();
-        volume = apvts.getRawParameterValue("volume")->load();
-        offset = apvts.getRawParameterValue("offset")->load() * 0.005f;
-        mix = apvts.getRawParameterValue("mix")->load() * 0.01f;
-        anger = apvts.getRawParameterValue("anger")->load();
-        distortionType = static_cast<int>(apvts.getRawParameterValue("type")->load());
-        hpfFreq = apvts.getRawParameterValue("hpf")->load();
-        lpfFreq = apvts.getRawParameterValue("lpf")->load();
-        shape = apvts.getRawParameterValue("shape")->load();
-        shapeTilt = apvts.getRawParameterValue("shapeTilt")->load();
+        parameters.drive = apvts.getRawParameterValue("drive")->load();
+        parameters.volume = apvts.getRawParameterValue("volume")->load();
+        parameters.offset = apvts.getRawParameterValue("offset")->load() * 0.005f;
+        parameters.mix = apvts.getRawParameterValue("mix")->load() * 0.01f;
+        parameters.anger = apvts.getRawParameterValue("anger")->load();
+        parameters.distortionType = static_cast<int>(apvts.getRawParameterValue("type")->load());
+        parameters.hpfFreq = apvts.getRawParameterValue("hpf")->load();
+        parameters.lpfFreq = apvts.getRawParameterValue("lpf")->load();
+        parameters.shape = apvts.getRawParameterValue("shape")->load();
+        parameters.shapeTilt = apvts.getRawParameterValue("shapeTilt")->load();
     }
 
-    void prepare(double newSampleRate, int maxBlockSize)
+    void prepare(double inputSampleRate, int maxBlockSize)
     {
-        sampleRate = newSampleRate * 4.0;
+        sampleRate = inputSampleRate * 4.0;
         bufferSize = maxBlockSize * 4;
         dryBuffer.setSize(numOutputs, bufferSize);
-        juce::dsp::ProcessSpec spec;
+        dsp::ProcessSpec spec;
         spec.sampleRate = sampleRate;
         spec.maximumBlockSize = bufferSize;
         spec.numChannels = numOutputs;
         filterChain.prepare(spec);
         dcFilter.prepare(spec);
-        *dcFilter.state = *juce::dsp::FilterDesign<float>::
+        *dcFilter.state = *dsp::FilterDesign<float>::
             designIIRHighpassHighOrderButterworthMethod(10.0f, sampleRate, 4)[0];
         oversampler.reset();
         oversampler.initProcessing(bufferSize);
     }
 
-    void process(const juce::dsp::ProcessContextReplacing<float>& context)
+    void process(const dsp::ProcessContextReplacing<float>& context)
     {
-        auto upBlock = oversampler.processSamplesUp(context.getInputBlock());
+        auto upsampleBlock = oversampler.processSamplesUp(context.getInputBlock());
         for (int channel = 0; channel < numOutputs; channel++)
         {
-            juce::FloatVectorOperations::copy(dryBuffer.getWritePointer(channel), 
-                upBlock.getChannelPointer(channel), bufferSize);
+            dryBuffer.copyFrom(channel, 0, upsampleBlock.getChannelPointer(channel), bufferSize);
         }
-        // apply filters, distortion, and mix
-        applyInputFilters(upBlock);
-        distortBuffer(upBlock);
-        applyDcFilter(upBlock);
-        applyMix(upBlock, dryBuffer);
+        applyInputFilters(upsampleBlock);
+        distortBuffer(upsampleBlock);
+        applyDcFilter(upsampleBlock);
+        applyMix(upsampleBlock, dryBuffer);
         oversampler.processSamplesDown(context.getOutputBlock());
     }
 
@@ -68,45 +75,44 @@ public:
     }
 
 private:
-    void applyInputFilters(juce::dsp::AudioBlock<float>& buffer)
+    void applyInputFilters(dsp::AudioBlock<float>& block)
     {
-        // apply coefficients to filters
-        *filterChain.get<FilterChainIndex::HPF>().state = *juce::dsp::FilterDesign<float>::
-            designIIRHighpassHighOrderButterworthMethod(hpfFreq, sampleRate, 2)[0];
-        *filterChain.get<FilterChainIndex::LPF>().state = *juce::dsp::FilterDesign<float>::
-            designIIRLowpassHighOrderButterworthMethod(lpfFreq, sampleRate, 2)[0];
-        *filterChain.get<FilterChainIndex::LowShelf>().state = *juce::dsp::IIR::Coefficients<float>::
-            makeLowShelf(sampleRate, 900.0f, 0.4f, juce::Decibels::decibelsToGain(shape * -1.0f));
-        *filterChain.get<FilterChainIndex::HighShelf>().state = *juce::dsp::IIR::Coefficients<float>::
-            makeHighShelf(sampleRate, 900.0f, 0.4f, juce::Decibels::decibelsToGain(shape));
+        *filterChain.get<FilterChainIndex::HPF>().state = *dsp::FilterDesign<float>::
+            designIIRHighpassHighOrderButterworthMethod(parameters.hpfFreq, sampleRate, 2)[0];
+        *filterChain.get<FilterChainIndex::LPF>().state = *dsp::FilterDesign<float>::
+            designIIRLowpassHighOrderButterworthMethod(parameters.lpfFreq, sampleRate, 2)[0];
+        *filterChain.get<FilterChainIndex::LowShelf>().state = *dsp::IIR::Coefficients<float>::
+            makeLowShelf(sampleRate, 900.0f, 0.4f, Decibels::decibelsToGain(parameters.shape * -1.0f));
+        *filterChain.get<FilterChainIndex::HighShelf>().state = *dsp::IIR::Coefficients<float>::
+            makeHighShelf(sampleRate, 900.0f, 0.4f, Decibels::decibelsToGain(parameters.shape));
         // bypass high shelf if tilt disabled
-        filterChain.setBypassed<FilterChainIndex::HighShelf>(!shapeTilt);
-        // apply processing
-        juce::dsp::ProcessContextReplacing<float> filterContext(buffer);
+        filterChain.setBypassed<FilterChainIndex::HighShelf>(!parameters.shapeTilt);
+        dsp::ProcessContextReplacing<float> filterContext(block);
         filterChain.process(filterContext);
     }
 
-    void applyDcFilter(juce::dsp::AudioBlock<float>& buffer)
+    void applyDcFilter(dsp::AudioBlock<float>& block)
     {
-        juce::dsp::ProcessContextReplacing<float> filterContext(buffer);
+        dsp::ProcessContextReplacing<float> filterContext(block);
         dcFilter.process(filterContext);
     }
 
-    void distortBuffer(juce::dsp::AudioBlock<float>& buffer)
+    void distortBuffer(dsp::AudioBlock<float>& block)
     {
-        const float outputGain = juce::Decibels::decibelsToGain(volume);
-        const float autoGain = juce::Decibels::decibelsToGain(drive / -5.0f) * (-0.7f * anger + 1.0f);
+        const float outputGain = Decibels::decibelsToGain(parameters.volume);
+        const float autoGain = Decibels::decibelsToGain(parameters.drive / -5.0f) * 
+            (-0.7f * parameters.anger + 1.0f);
         for (int sample = 0; sample < bufferSize; sample++)
         {
             for (int channel = 0; channel < numOutputs; channel++)
             {
-                float wetSample = buffer.getSample(channel, sample);
-                wetSample *= (drive / 10.0f) + 1.0f;       // apply drive
-                wetSample += offset;                       // apply dc offset
-                distortSample(wetSample, distortionType);  // apply distortion
-                wetSample *= autoGain;                     // apply autogain
-                wetSample *= outputGain;                   // apply volume
-                buffer.setSample(channel, sample, wetSample);
+                float wetSample = block.getSample(channel, sample);
+                wetSample *= (parameters.drive / 10.0f) + 1.0f;         // apply drive
+                wetSample += parameters.offset;                         // apply dc offset
+                distortSample(wetSample, parameters.distortionType);    // apply distortion
+                wetSample *= autoGain;                                  // apply autogain
+                wetSample *= outputGain;                                // apply volume
+                block.setSample(channel, sample, wetSample);
             }
         }
     }
@@ -117,61 +123,48 @@ private:
         switch (type)
         {
         case 0: // inverse absolute value
-            angerValue = -0.9f * anger + 1.0f;   // 1.0 - 0.1
+            angerValue = -0.9f * parameters.anger + 1.0f;
             sample = sample / (angerValue + abs(sample));
             break;
         case 1: // arctan
-            angerValue = -2.5f * anger + 3.0f;    // 3.0 - 0.5
-            sample = (2.0f / juce::float_Pi) * atan((juce::float_Pi / angerValue) * sample);
+            angerValue = -2.5f * parameters.anger + 3.0f;
+            sample = (2.0f / float_Pi) * atan((float_Pi / angerValue) * sample);
             break;
         case 2: // erf
-            angerValue = -2.5f * anger + 3.0f;  // 3.0 - 0.5
-            sample = erf(sample * sqrt(juce::float_Pi) / angerValue);
+            angerValue = -2.5f * parameters.anger + 3.0f;
+            sample = erf(sample * sqrt(float_Pi) / angerValue);
             break;
         case 3: // inverse square root
-            angerValue = 4.5f * anger + 0.5f;    // 0.5 - 5.0
+            angerValue = 4.5f * parameters.anger + 0.5f;
             sample = sample / sqrt((1.0f / angerValue) + (sample * sample));
             break;
         }
     }
 
-    void applyMix(juce::dsp::AudioBlock<float>& wet, const juce::AudioBuffer<float>& dry)
+    void applyMix(dsp::AudioBlock<float>& wetBlock, const AudioBuffer<float>& dryBlock)
     {
-        // sin6dB
-        const float dryMix = std::pow(std::sin(0.5f * juce::float_Pi * (1.0f - mix)), 2.0f);
-        const float wetMix = std::pow(std::sin(0.5f * juce::float_Pi * mix), 2.0f);
+        const float dryMix = std::pow(std::sin(0.5f * float_Pi * (1.0f - parameters.mix)), 2.0f);
+        const float wetMix = std::pow(std::sin(0.5f * float_Pi * parameters.mix), 2.0f);
         for (int sample = 0; sample < bufferSize; sample++)
         {
             for (int channel = 0; channel < numOutputs; channel++)
             {
-                const float wetSample = wet.getSample(channel, sample) * wetMix;
-                const float drySample = dry.getSample(channel, sample) * dryMix;
-                wet.setSample(channel, sample, wetSample + drySample);
+                const float wetSample = wetBlock.getSample(channel, sample) * wetMix;
+                const float drySample = dryBlock.getSample(channel, sample) * dryMix;
+                wetBlock.setSample(channel, sample, wetSample + drySample);
             }
         }
     }
 
     double sampleRate{ 0.0 };
     int bufferSize{ 0 };
-    float drive{ 0.0f };
-    float volume{ 0.0f };
-    float offset{ 0.0f };
-    float mix{ 0.0f };
-    float anger{ 0.5f };
-    int distortionType{ 0 };
-    float hpfFreq{ 20.0f };
-    float lpfFreq{ 20000.0f };
-    float shape{ 0.0f };
-    bool shapeTilt{ true };
-    juce::AudioBuffer<float> dryBuffer;
-    using StereoFilter = juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, 
-        juce::dsp::IIR::Coefficients<float>>;
-    juce::dsp::ProcessorChain<StereoFilter, StereoFilter, StereoFilter, StereoFilter> filterChain;
-    enum FilterChainIndex
-    {
-        HPF, LPF, LowShelf, HighShelf
-    };
+    Parameters parameters;
+    AudioBuffer<float> dryBuffer;
+    using StereoFilter = dsp::ProcessorDuplicator<dsp::IIR::Filter<float>, 
+        dsp::IIR::Coefficients<float>>;
+    dsp::ProcessorChain<StereoFilter, StereoFilter, StereoFilter, StereoFilter> filterChain;
+    enum FilterChainIndex{ HPF, LPF, LowShelf, HighShelf };
     StereoFilter dcFilter;
-    juce::dsp::Oversampling<float> oversampler{ 2, 2, 
-        juce::dsp::Oversampling<float>::filterHalfBandPolyphaseIIR, false, true };
+    dsp::Oversampling<float> oversampler{ 2, 2, 
+        dsp::Oversampling<float>::filterHalfBandPolyphaseIIR, false, true };
 };

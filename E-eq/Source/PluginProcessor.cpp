@@ -56,13 +56,13 @@ EeqAudioProcessor::EeqAudioProcessor()
                 "band" + juce::String(band) + "Bell", "Band " + juce::String(band) + " Bell", false));
         }
     }
-    // set state to an empty value tree
     parameters.state = juce::ValueTree("savedParams");
 }
 
 void EeqAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     equalizer.prepare(sampleRate, samplesPerBlock);
+    equalizer.setParameters(parameters);
 }
 
 void EeqAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
@@ -71,7 +71,8 @@ void EeqAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mid
     for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    equalizer.process(buffer, parameters);
+    equalizer.setParameters(parameters);
+    equalizer.process(buffer);
 }
 
 void EeqAudioProcessor::getStateInformation(juce::MemoryBlock& destData)

@@ -12,7 +12,7 @@
 
 GainAudioProcessorEditor::GainAudioProcessorEditor(GainAudioProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p), 
-    meter(audioProcessor.bufferMagnitudeL, audioProcessor.bufferMagnitudeR)
+    meter(audioProcessor.bufferMagnitude)
 {
     addAndMakeVisible(bgImage);
     addAndMakeVisible(powerLine);

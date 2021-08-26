@@ -10,11 +10,12 @@
 #pragma once
 #include <JuceHeader.h>
 
+#define numOutputs 2
+
 class GainAudioProcessor : public juce::AudioProcessor
 {
 public:
     GainAudioProcessor();
-    void prepareToPlay(double sampleRate, int samplesPerBlock) override;
 #ifndef JucePlugin_PreferredChannelConfigurations
     bool isBusesLayoutSupported(const BusesLayout& layouts) const override;
 #endif
@@ -27,6 +28,7 @@ public:
     void setStateInformation(const void* data, int sizeInBytes) override;
 
     ~GainAudioProcessor() override {}
+    void prepareToPlay(double, int) override {};
     const juce::String getName() const override { return JucePlugin_Name; }
     double getTailLengthSeconds() const override { return 0.0; }
     int getNumPrograms() override { return 1; }
@@ -38,11 +40,10 @@ public:
     bool hasEditor() const override { return true; }
 
     juce::AudioProcessorValueTreeState parameters;
-    float bufferMagnitudeL{ -100.0f };
-    float bufferMagnitudeR{ -100.0f };
+    std::array<float, numOutputs> bufferMagnitude;
 
 private:
-    float previousGain{ 0.0f };
+    void GainAudioProcessor::applyGainAndPhase(juce::AudioBuffer<float>& buffer);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GainAudioProcessor)
 };

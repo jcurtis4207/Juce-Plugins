@@ -30,35 +30,25 @@ GainAudioProcessor::GainAudioProcessor()
     parameters.state = juce::ValueTree("savedParams");
 }
 
-void GainAudioProcessor::prepareToPlay(double, int)
-{
-    previousGain = parameters.getRawParameterValue("gain")->load();
-}
-
 void GainAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
 {
     juce::ScopedNoDenormals noDenormals;
     for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    const float currentGain = parameters.getRawParameterValue("gain")->load();
-    const float phase = parameters.getRawParameterValue("phase")->load();
-    // if phase is flipped (true) need to multiply gain by -1
-    const int phaseCoefficient = (phase) ? -1 : 1;
-    // apply gain, or ramp gain if changed, and phase
-    if (currentGain == previousGain)
+    applyGainAndPhase(buffer);
+}
+
+void GainAudioProcessor::applyGainAndPhase(juce::AudioBuffer<float>& buffer)
+{
+    const float gain = parameters.getRawParameterValue("gain")->load();
+    const bool phaseFlipped = parameters.getRawParameterValue("phase")->load();
+    const int phaseCoefficient = (phaseFlipped) ? -1 : 1;
+    buffer.applyGain(juce::Decibels::decibelsToGain(gain) * phaseCoefficient);
+    for (int channel = 0; channel < numOutputs; channel++)
     {
-        buffer.applyGain(juce::Decibels::decibelsToGain(currentGain) * phaseCoefficient);
+        bufferMagnitude[channel] = buffer.getMagnitude(channel, 0, buffer.getNumSamples());
     }
-    else
-    {
-        buffer.applyGainRamp(0, buffer.getNumSamples(), juce::Decibels::decibelsToGain(previousGain), 
-            juce::Decibels::decibelsToGain(currentGain) * phaseCoefficient);
-        previousGain = currentGain;
-    }
-    // get buffer magnitude for meter
-    bufferMagnitudeL = buffer.getMagnitude(0, 0, buffer.getNumSamples());
-    bufferMagnitudeR = buffer.getMagnitude(1, 0, buffer.getNumSamples());
 }
 
 void GainAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
